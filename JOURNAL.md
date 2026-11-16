@@ -99,3 +99,4 @@ attack (ATTACKS 4). **What did the oracle number do since the last milestone? If
 am I doing about it?** 16/20 + DuckDB 3 with 3 ATTACKS -> 17/20 + DuckDB 3 + GraphBLAS 2 with 4 ATTACKS. Not stalled,
 but slower: the three remaining cells are all problem 4 (Goose, Halide, Soufflé); Halide is building, Goose goes next.
 The 8-thread numbers are weak evidence because the machine was oversubscribed by my own helpers; reruns go in the Now line.
+- 2026-11-16T18:22:41Z launched Goose P4 builder, Futhark 3b follow-up, codex-cp7 (pieces vs time).

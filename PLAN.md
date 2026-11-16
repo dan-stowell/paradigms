@@ -53,7 +53,7 @@ Milestones log:
   (3.2x / ~5x C), tuned C P4 (p4par). Oracle number: **17/20** (+ DuckDB 3, GraphBLAS 2); **4 ATTACKS backed**.
 
 Now (2026-11-16T18:40Z): M3 done (MORNING.md). Running: Halide P4 builder (worktree, Agent; report
-systems/halide/P4-REPORT.md or its reply), M3 skeptic (reviews/inbox/*-M3.md: triage into REVIEWS.md). Next: merge
-Halide P4 after rerunning its check (that makes M4); then a third P4 paradigm (Goose: its inline data and arenas fit
-the emit), CP7 supernodes in C (fuse hole-free pieces at extraction; count pieces per byte), Futhark's slice-update
-copy applied to 3b (IDEAS I18), and quiet-machine reruns of the 8-thread numbers (load was 7-26 all of M3).
+systems/halide/P4-REPORT.md or its reply), M3 skeptic (reviews/inbox/*-M3.md: triage into REVIEWS.md). Also running (18:45Z): Goose P4 builder
+(worktree), the Futhark P4 builder resumed on 3b with its slice-update copy (IDEAS I18), Codex codex-cp7 in ~/paradigms-c
+(CP7 runs: pieces vs emit time, results/codex-cp7.md). Next: merge Halide P4 after rerunning its check (that makes M4),
+then Goose P4, CP7, Futhark 3b; and quiet-machine reruns of the 8-thread numbers (load was 7-26 all of M3).
