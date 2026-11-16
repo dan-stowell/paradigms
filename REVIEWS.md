@@ -12,7 +12,7 @@
 6. No work-avoidance passage -> nothing to do.
 
 ## M4 skeptic (reviews/done/20261116T1848-codex-skeptic-M4.md), triaged 2026-11-16T18:51Z
-1. Goose P4 check never compares function offsets -> **accept**: Codex job (branch codex-goose-fnoff) adds the nfn+1 offset compare + a planted fault; the cell stays counted only if it passes.
+1. Goose P4 check never compares function offsets -> **accept, fixed** (codex-goose-fnoff, merged): all 136,635 offsets compared in both joins; planted +1 fault fails; lead rebuilt + reran 8 workers: 0 differ, P4 OK.
 2. DuckDB P2 verdict now supported -> noted, nothing to do.
 3. Goose P4 "ties C" leaves out the join; Halide 1-thread P4 is CPU time -> **accept, fixed** in GRID (join cost stated as part of the cell; CPU/wall labelled).
 4. Futhark sequential worklist beats its parallel flood, ATTACKS said "no worklist" -> **accept, fixed** in ATTACKS 3 (the fastest Futhark flood is the one that drops data parallelism).
