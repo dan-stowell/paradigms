@@ -1,0 +1,146 @@
+Scope command line contains environment variable, which is not expanded by default for now, but will be expanded by default in the future. Use --expand-environment=yes/no to explicitly control it as needed.
+Running as unit: run-r8c4919a7f81c44e382b089920b1a92d7.scope; invocation ID: ce18aae8c0424fe9a8c5190a55c4d5fb
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 35.0 ms, 3a 315.2 ms, 3b 601.9 ms, write 0.0 ms, total 953.2 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 1 2
+e2e threads=1 layout=layout_c0_w1 reloc=reloc_f0_pt_v0: load 12.9 ms, 3a 237.2 ms, 3b 361.3 ms, write 0.0 ms, total 612.6 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 2 2
+e2e threads=1 layout=layout_c1_w0 reloc=reloc_f0_pt_v0: load 12.4 ms, 3a 243.6 ms, 3b 345.1 ms, write 0.0 ms, total 602.2 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 3 2
+e2e threads=1 layout=layout_c1_w1 reloc=reloc_f0_pt_v0: load 45.4 ms, 3a 523.3 ms, 3b 524.7 ms, write 0.0 ms, total 1102.5 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 4 2
+e2e threads=1 layout=layout_c2_w0 reloc=reloc_f0_pt_v0: load 25.1 ms, 3a 494.4 ms, 3b 421.6 ms, write 0.0 ms, total 955.1 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 5 2
+e2e threads=1 layout=layout_c2_w1 reloc=reloc_f0_pt_v0: load 24.8 ms, 3a 331.0 ms, 3b 206.3 ms, write 0.0 ms, total 563.4 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 6 2
+e2e threads=1 layout=layout_c3_w0 reloc=reloc_f0_pt_v0: load 15.6 ms, 3a 135.3 ms, 3b 172.1 ms, write 0.0 ms, total 324.1 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 7 2
+e2e threads=1 layout=layout_c3_w1 reloc=reloc_f0_pt_v0: load 18.4 ms, 3a 170.3 ms, 3b 222.3 ms, write 0.0 ms, total 412.8 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 0
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pf_v0: load 17.6 ms, 3a 166.2 ms, 3b 232.2 ms, write 0.0 ms, total 417.2 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 1
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pf_v32: load 15.2 ms, 3a 134.8 ms, 3b 289.6 ms, write 0.0 ms, total 440.6 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 32.7 ms, 3a 334.9 ms, 3b 490.9 ms, write 0.0 ms, total 859.6 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 3
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pt_v32: load 52.7 ms, 3a 378.1 ms, 3b 215.1 ms, write 0.0 ms, total 647.1 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 11.8 ms, 3a 48.5 ms, 3b 97.5 ms, write 0.0 ms, total 158.8 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 1 2
+e2e threads=8 layout=layout_c0_w1 reloc=reloc_f0_pt_v0: load 22.3 ms, 3a 63.0 ms, 3b 75.7 ms, write 0.0 ms, total 162.7 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 2 2
+e2e threads=8 layout=layout_c1_w0 reloc=reloc_f0_pt_v0: load 26.0 ms, 3a 114.3 ms, 3b 83.3 ms, write 0.0 ms, total 225.2 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 3 2
+e2e threads=8 layout=layout_c1_w1 reloc=reloc_f0_pt_v0: load 9.2 ms, 3a 88.8 ms, 3b 87.7 ms, write 0.0 ms, total 186.6 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 4 2
+e2e threads=8 layout=layout_c2_w0 reloc=reloc_f0_pt_v0: load 11.1 ms, 3a 59.1 ms, 3b 86.7 ms, write 0.0 ms, total 157.9 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 5 2
+e2e threads=8 layout=layout_c2_w1 reloc=reloc_f0_pt_v0: load 9.1 ms, 3a 90.0 ms, 3b 96.3 ms, write 0.0 ms, total 196.4 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 6 2
+e2e threads=8 layout=layout_c3_w0 reloc=reloc_f0_pt_v0: load 9.9 ms, 3a 58.5 ms, 3b 82.0 ms, write 0.0 ms, total 151.4 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 7 2
+e2e threads=8 layout=layout_c3_w1 reloc=reloc_f0_pt_v0: load 10.2 ms, 3a 93.5 ms, 3b 83.3 ms, write 0.0 ms, total 188.0 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 0
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pf_v0: load 13.7 ms, 3a 103.5 ms, 3b 260.2 ms, write 0.0 ms, total 378.5 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 1
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pf_v32: load 22.4 ms, 3a 90.0 ms, 3b 227.7 ms, write 0.0 ms, total 345.1 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 10.1 ms, 3a 53.1 ms, 3b 104.6 ms, write 0.0 ms, total 168.8 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+COMMAND: HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 3
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pt_v32: load 20.9 ms, 3a 43.4 ms, 3b 71.9 ms, write 0.0 ms, total 137.4 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0

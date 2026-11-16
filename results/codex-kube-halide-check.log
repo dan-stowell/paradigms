@@ -1,0 +1,124 @@
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p1 /home/exedev/paradigms/data/kube-apiserver e2e 0
+ 17:27:40 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+e2e threads=1 resolve_f: load 116.2 ms, counts 33.3, 1a 787.3, 1b 180.2, 1c 404.2 ms, total 1521.2 ms
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+internal checks (must be 0): 1a 0, 1c 0
+P1 OK
+EXIT: 0
+ 17:27:41 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p1 /home/exedev/paradigms/data/kube-apiserver e2e 1
+ 17:27:41 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+e2e threads=1 resolve_t: load 68.7 ms, counts 42.7, 1a 659.2, 1b 193.1, 1c 423.9 ms, total 1387.7 ms
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+internal checks (must be 0): 1a 0, 1c 0
+P1 OK
+EXIT: 0
+ 17:27:43 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 0
+ 17:27:43 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=1 flood_t_f: load 34.7 ms (setup not counted), flood 1181.1 ms, total 1215.8 ms (incl. setup 340.2)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:44 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 1
+ 17:27:44 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=1 flood_t_t: load 45.2 ms (setup not counted), flood 896.5 ms, total 941.7 ms (incl. setup 318.2)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:46 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 2
+ 17:27:46 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=1 flood_f_f: load 43.0 ms (setup not counted), flood 597.4 ms, total 640.4 ms (incl. setup 228.5)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:47 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 3
+ 17:27:47 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=1 flood_f_t: load 46.2 ms (setup not counted), flood 1200.4 ms, total 1246.6 ms (incl. setup 377.9)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:48 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+COMMAND: env HL_NUM_THREADS=1 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+ 17:27:48 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+e2e threads=1 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 12.0 ms, 3a 166.1 ms, 3b 213.1 ms, write 0.0 ms, total 392.2 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+ 17:27:49 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p1 /home/exedev/paradigms/data/kube-apiserver e2e 0
+ 17:27:49 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+e2e threads=8 resolve_f: load 63.1 ms, counts 13.9, 1a 385.8, 1b 120.1, 1c 268.6 ms, total 851.4 ms
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+internal checks (must be 0): 1a 0, 1c 0
+P1 OK
+EXIT: 0
+ 17:27:50 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p1 /home/exedev/paradigms/data/kube-apiserver e2e 1
+ 17:27:50 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+e2e threads=8 resolve_t: load 44.7 ms, counts 32.8, 1a 198.0, 1b 54.1, 1c 176.5 ms, total 506.1 ms
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+internal checks (must be 0): 1a 0, 1c 0
+P1 OK
+EXIT: 0
+ 17:27:51 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 0
+ 17:27:51 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=8 flood_t_f: load 40.4 ms (setup not counted), flood 758.2 ms, total 798.6 ms (incl. setup 303.5)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:52 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 1
+ 17:27:52 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=8 flood_t_t: load 56.8 ms (setup not counted), flood 497.9 ms, total 554.7 ms (incl. setup 246.3)
+88 levels in 7 rounds, 215325 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:53 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 2
+ 17:27:53 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=8 flood_f_f: load 73.5 ms (setup not counted), flood 763.0 ms, total 836.4 ms (incl. setup 360.1)
+88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:54 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p2 /home/exedev/paradigms/data/kube-apiserver e2e 3
+ 17:27:54 up  2:12,  0 user,  load average: 18.28, 15.99, 9.50
+non-relocation edges: 1592404 (of 15600772 in p2_edge)
+e2e threads=8 flood_f_t: load 48.1 ms (setup not counted), flood 456.9 ms, total 505.0 ms (incl. setup 327.5)
+88 levels in 7 rounds, 215407 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:55 up  2:12,  0 user,  load average: 17.77, 15.93, 9.52
+COMMAND: env HL_NUM_THREADS=8 systems/halide/cells/build/p3 /home/exedev/paradigms/data/kube-apiserver e2e 0 2
+ 17:27:55 up  2:12,  0 user,  load average: 17.77, 15.93, 9.52
+e2e threads=8 layout=layout_c0_w0 reloc=reloc_f0_pt_v0: load 19.9 ms, 3a 66.3 ms, 3b 57.3 ms, write 0.0 ms, total 148.6 ms
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+EXIT: 0
+ 17:27:55 up  2:12,  0 user,  load average: 17.77, 15.93, 9.52
