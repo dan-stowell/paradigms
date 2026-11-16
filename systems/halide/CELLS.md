@@ -14,7 +14,12 @@ edge split) · gen_p2 241 + driver 125 lines. Easy: each rule one select. Forced
 implicit frontier + block lists (no worklist), 3 iterations per edge (one site per iteration), a byte per fact with
 racy constant stores (atomic() on such an update = a mutex array per call, 3.5 s, and lost symbols). Impossible:
 worklist, fixpoint, test-and-set. ATTACKS 1: lazy is expressible but does not beat the eager C pipeline (30.1 ms);
-lazy is slower than eager in Halide.
+lazy is slower than eager in Halide. ATTACKS 3 (results/halide-levelfree.md, 19:16Z, load 6-10): the ~100 calls are
+not the cost. One call is 0.02 ms. An empty level is 0.63 / 0.23 ms (3 passes over the 325 K block summary), so
+62 / 23 ms of the flood. k levels per call (`flood_*_eK`: k = 2, 4, 8, lists built in-call from an aliased `stIn`,
+capped later lists) cut the calls 98 -> 17-58 but are 1.0-1.2x slower (1 thr 299-344 vs 294 min; 8 thr 73-83 vs
+66; p2par 26.7 / 10.3 in the same window). Forced: RDom bounds cannot come from data, so later levels in a call
+loop to a cap. gen_p2 274 + driver 188 lines with the variants.
 
 **3a. lay out** — correct: `$B/p3 $D 3a` (addr 0 differ). 53-58 / **20-23** · in e2e 22-31 · 154 lines.
 Easy: sizes, per-unit sums, alignment walk. Forced: two-site cursor bump as a phase RVar; merge sort with merge-path

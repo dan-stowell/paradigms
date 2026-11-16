@@ -1,0 +1,85 @@
+# 2026-11-16T19:15:15Z  19:15:15 up  3:59,  0 user,  load average: 7.13, 8.20, 7.65
+== flood_f_f threads=1 hyb=0 cap=1024
+  call alone (1-block state): min     0.02  med     0.02  max     0.02 ms (x18536)
+count flood_f_f threads=1: best flood 303.76 ms, 98 flood calls (7 rounds = method calls), 181706 blocks in first lists; calls sum 248.43 ms; 44 calls with < 64 blocks take 29.95 ms; empty call min     0.63  med     0.65  max     0.83 ms (x483)
+  outside the flood calls: prep 5.79 ms, init 40.12 ms, methods (7 calls) 9.38 ms
+98 flood calls, <= 98 levels, 7 rounds, 181706 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e1 threads=1 hyb=0 cap=1024
+  call alone (1-block state): min     0.02  med     0.02  max     0.02 ms (x20716)
+count flood_f_f_e1 threads=1: best flood 302.59 ms, 98 flood calls (7 rounds = method calls), 181706 blocks in first lists; calls sum 248.78 ms; 44 calls with < 64 blocks take 26.24 ms; empty call min     0.58  med     0.59  max     0.59 ms (x512)
+  outside the flood calls: prep 3.94 ms, init 40.51 ms, methods (7 calls) 9.31 ms
+98 flood calls, <= 98 levels, 7 rounds, 181706 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e2 threads=1 hyb=0 cap=4096
+  call alone (1-block state): min     0.36  med     0.37  max     0.37 ms (x798)
+count flood_f_f_e2 threads=1: best flood 328.54 ms, 61 flood calls (7 rounds = method calls), 82445 blocks in first lists; calls sum 275.17 ms; 22 calls with < 64 blocks take 34.38 ms; empty call min     1.50  med     1.51  max     1.58 ms (x191)
+  outside the flood calls: prep 3.95 ms, init 40.14 ms, methods (7 calls) 9.24 ms
+61 flood calls, <= 122 levels, 7 rounds, 82445 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e4 threads=1 hyb=0 cap=4096
+  call alone (1-block state): min     1.08  med     1.10  max     1.32 ms (x287)
+count flood_f_f_e4 threads=1: best flood 331.00 ms, 32 flood calls (7 rounds = method calls), 48222 blocks in first lists; calls sum 277.97 ms; 11 calls with < 64 blocks take 36.42 ms; empty call min     3.19  med     3.31  max     3.50 ms (x95)
+  outside the flood calls: prep 4.02 ms, init 39.66 ms, methods (7 calls) 9.32 ms
+32 flood calls, <= 128 levels, 7 rounds, 48222 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e8 threads=1 hyb=0 cap=4096
+  call alone (1-block state): min     2.58  med     2.63  max     3.51 ms (x54)
+count flood_f_f_e8 threads=1: best flood 354.90 ms, 17 flood calls (7 rounds = method calls), 28771 blocks in first lists; calls sum 297.59 ms; 5 calls with < 64 blocks take 38.14 ms; empty call min     6.87  med     6.96  max     8.30 ms (x45)
+  outside the flood calls: prep 4.14 ms, init 43.41 ms, methods (7 calls) 9.73 ms
+17 flood calls, <= 136 levels, 7 rounds, 28771 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e4 threads=1 hyb=1 cap=256
+  call alone (1-block state): min     0.08  med     0.08  max     0.08 ms (x3742)
+count flood_f_f_e4 threads=1: best flood 318.96 ms, 58 flood calls (7 rounds = method calls), 180227 blocks in first lists; calls sum 263.02 ms; 12 calls with < 64 blocks take 28.83 ms; empty call min     2.24  med     2.30  max     2.55 ms (x135)
+  outside the flood calls: prep 4.03 ms, init 41.43 ms, methods (7 calls) 10.43 ms
+58 flood calls, <= 109 levels, 7 rounds, 180227 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_f_e8 threads=1 hyb=1 cap=256
+  call alone (1-block state): min     0.17  med     0.18  max     0.18 ms (x1583)
+count flood_f_f_e8 threads=1: best flood 314.17 ms, 52 flood calls (7 rounds = method calls), 180127 blocks in first lists; calls sum 260.56 ms; 6 calls with < 64 blocks take 26.30 ms; empty call min     4.35  med     4.43  max     4.56 ms (x67)
+  outside the flood calls: prep 4.21 ms, init 40.08 ms, methods (7 calls) 9.29 ms
+52 flood calls, <= 129 levels, 7 rounds, 180127 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_t threads=8 hyb=0 cap=1024
+  call alone (1-block state): min     0.02  med     0.02  max     0.02 ms (x12414)
+count flood_f_t threads=8: best flood 75.41 ms, 99 flood calls (7 rounds = method calls), 180918 blocks in first lists; calls sum 61.79 ms; 47 calls with < 64 blocks take 12.22 ms; empty call min     0.23  med     0.23  max     0.26 ms (x1122)
+  outside the flood calls: prep 1.68 ms, init 9.36 ms, methods (7 calls) 2.56 ms
+99 flood calls, <= 99 levels, 7 rounds, 180918 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_t_e1 threads=8 hyb=0 cap=1024
+  call alone (1-block state): min     0.02  med     0.02  max     0.03 ms (x10818)
+count flood_f_t_e1 threads=8: best flood 63.25 ms, 101 flood calls (7 rounds = method calls), 181139 blocks in first lists; calls sum 53.79 ms; 45 calls with < 64 blocks take 19.82 ms; empty call min     0.26  med     0.30  max     0.31 ms (x1282)
+  outside the flood calls: prep 1.49 ms, init 5.89 ms, methods (7 calls) 2.04 ms
+101 flood calls, <= 101 levels, 7 rounds, 181139 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_t_e4 threads=8 hyb=0 cap=4096
+  call alone (1-block state): min     0.30  med     0.34  max     0.35 ms (x1283)
+count flood_f_t_e4 threads=8: best flood 74.76 ms, 33 flood calls (7 rounds = method calls), 48618 blocks in first lists; calls sum 61.69 ms; 13 calls with < 64 blocks take 13.51 ms; empty call min     0.98  med     1.08  max     1.14 ms (x334)
+  outside the flood calls: prep 1.97 ms, init 8.57 ms, methods (7 calls) 2.51 ms
+33 flood calls, <= 132 levels, 7 rounds, 48618 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_t_e8 threads=8 hyb=0 cap=4096
+  call alone (1-block state): min     0.63  med     0.64  max     0.75 ms (x581)
+count flood_f_t_e8 threads=8: best flood 79.35 ms, 18 flood calls (7 rounds = method calls), 28673 blocks in first lists; calls sum 67.00 ms; 7 calls with < 64 blocks take 13.39 ms; empty call min     1.97  med     2.09  max     2.28 ms (x144)
+  outside the flood calls: prep 1.56 ms, init 8.43 ms, methods (7 calls) 2.35 ms
+18 flood calls, <= 144 levels, 7 rounds, 28673 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_f_t_e4 threads=8 hyb=1 cap=256
+  call alone (1-block state): min     0.09  med     0.09  max     0.10 ms (x3198)
+count flood_f_t_e4 threads=8: best flood 64.13 ms, 58 flood calls (7 rounds = method calls), 179607 blocks in first lists; calls sum 53.71 ms; 12 calls with < 64 blocks take 9.95 ms; empty call min     0.94  med     0.98  max     1.04 ms (x425)
+  outside the flood calls: prep 1.41 ms, init 6.53 ms, methods (7 calls) 2.46 ms
+58 flood calls, <= 109 levels, 7 rounds, 179607 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_t_f threads=1 hyb=0 cap=1024
+  call alone (1-block state): min     0.01  med     0.02  max     0.02 ms (x20351)
+count flood_t_f threads=1: best flood 437.73 ms, 98 flood calls (7 rounds = method calls), 181706 blocks in first lists; calls sum 382.33 ms; 44 calls with < 64 blocks take 31.61 ms; empty call min     0.69  med     0.71  max     0.96 ms (x447)
+  outside the flood calls: prep 4.64 ms, init 41.07 ms, methods (7 calls) 9.63 ms
+98 flood calls, <= 98 levels, 7 rounds, 181706 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+== flood_t_t threads=8 hyb=0 cap=1024
+  call alone (1-block state): min     0.02  med     0.02  max     0.02 ms (x12026)
+count flood_t_t threads=8: best flood 184.76 ms, 102 flood calls (7 rounds = method calls), 180962 blocks in first lists; calls sum 162.34 ms; 47 calls with < 64 blocks take 27.43 ms; empty call min     0.23  med     0.24  max     0.50 ms (x977)
+  outside the flood calls: prep 2.43 ms, init 16.81 ms, methods (7 calls) 3.13 ms
+102 flood calls, <= 102 levels, 7 rounds, 180962 blocks of 16 ids in the calls' first lists; live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK

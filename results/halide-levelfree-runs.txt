@@ -1,0 +1,102 @@
+# round 1 2026-11-16T19:16:23Z  19:16:23 up  4:00,  0 user,  load average: 6.13, 7.53, 7.45
+flood_f_f threads=1 hyb=0 cap=1024 296.11 
+flood_f_f_e1 threads=1 hyb=0 cap=1024 299.58 
+flood_f_f_e2 threads=1 hyb=0 cap=4096 347.58 
+flood_f_f_e4 threads=1 hyb=1 cap=256 304.99 
+flood_f_f_e8 threads=1 hyb=0 cap=4096 349.07 
+flood_t_f threads=1 hyb=0 cap=1024 399.32 
+flood_t_f_e4 threads=1 hyb=1 cap=256 443.16 
+flood_f_t threads=8 hyb=0 cap=1024 65.76 
+flood_f_t_e1 threads=8 hyb=0 cap=1024 81.46 
+flood_f_t_e2 threads=8 hyb=0 cap=4096 82.50 
+flood_f_t_e4 threads=8 hyb=1 cap=256 73.35 
+flood_f_t_e8 threads=8 hyb=0 cap=4096 97.94 
+flood_t_t threads=8 hyb=0 cap=1024 134.01 
+flood_t_t_e4 threads=8 hyb=1 cap=256 188.48 
+p2par threads=1 hyb=- cap=- 34.2
+p2par threads=8 hyb=- cap=- 16.3
+# round 2 2026-11-16T19:17:46Z  19:17:46 up  4:02,  0 user,  load average: 8.58, 7.74, 7.51
+flood_f_f threads=1 hyb=0 cap=1024 300.58 
+flood_f_f_e1 threads=1 hyb=0 cap=1024 304.81 
+flood_f_f_e2 threads=1 hyb=0 cap=4096 323.22 
+flood_f_f_e4 threads=1 hyb=1 cap=256 311.20 
+flood_f_f_e8 threads=1 hyb=0 cap=4096 344.38 
+flood_t_f threads=1 hyb=0 cap=1024 431.43 
+flood_t_f_e4 threads=1 hyb=1 cap=256 431.06 
+flood_f_t threads=8 hyb=0 cap=1024 70.41 
+flood_f_t_e1 threads=8 hyb=0 cap=1024 98.34 
+flood_f_t_e2 threads=8 hyb=0 cap=4096 84.42 
+flood_f_t_e4 threads=8 hyb=1 cap=256 75.22 
+flood_f_t_e8 threads=8 hyb=0 cap=4096 74.95 
+flood_t_t threads=8 hyb=0 cap=1024 70.02 
+flood_t_t_e4 threads=8 hyb=1 cap=256 83.63 
+p2par threads=1 hyb=- cap=- 26.7
+p2par threads=8 hyb=- cap=- 10.3
+# round 3 2026-11-16T19:19:01Z  19:19:01 up  4:03,  0 user,  load average: 7.53, 7.59, 7.48
+flood_f_f threads=1 hyb=0 cap=1024 297.99 
+flood_f_f_e1 threads=1 hyb=0 cap=1024 351.74 
+flood_f_f_e2 threads=1 hyb=0 cap=4096 405.05 
+flood_f_f_e4 threads=1 hyb=1 cap=256 402.48 
+flood_f_f_e8 threads=1 hyb=0 cap=4096 351.10 
+flood_t_f threads=1 hyb=0 cap=1024 413.84 
+flood_t_f_e4 threads=1 hyb=1 cap=256 420.32 
+flood_f_t threads=8 hyb=0 cap=1024 144.07 
+flood_f_t_e1 threads=8 hyb=0 cap=1024 85.14 
+flood_f_t_e2 threads=8 hyb=0 cap=4096 140.11 
+flood_f_t_e4 threads=8 hyb=1 cap=256 94.52 
+flood_f_t_e8 threads=8 hyb=0 cap=4096 93.26 
+flood_t_t threads=8 hyb=0 cap=1024 191.48 
+flood_t_t_e4 threads=8 hyb=1 cap=256 106.03 
+p2par threads=1 hyb=- cap=- 31.2
+p2par threads=8 hyb=- cap=- 13.2
+# round 4 2026-11-16T19:20:26Z  19:20:26 up  4:04,  0 user,  load average: 9.44, 7.99, 7.61
+flood_f_f threads=1 hyb=0 cap=1024 312.64 
+flood_f_f_e1 threads=1 hyb=0 cap=1024 365.12 
+flood_f_f_e2 threads=1 hyb=0 cap=4096 342.50 
+flood_f_f_e4 threads=1 hyb=1 cap=256 309.60 
+flood_f_f_e8 threads=1 hyb=0 cap=4096 348.06 
+flood_t_f threads=1 hyb=0 cap=1024 478.63 
+flood_t_f_e4 threads=1 hyb=1 cap=256 432.92 
+flood_f_t threads=8 hyb=0 cap=1024 82.75 
+flood_f_t_e1 threads=8 hyb=0 cap=1024 106.87 
+flood_f_t_e2 threads=8 hyb=0 cap=4096 110.25 
+flood_f_t_e4 threads=8 hyb=1 cap=256 95.57 
+flood_f_t_e8 threads=8 hyb=0 cap=4096 96.72 
+flood_t_t threads=8 hyb=0 cap=1024 104.47 
+flood_t_t_e4 threads=8 hyb=1 cap=256 106.86 
+p2par threads=1 hyb=- cap=- 28.4
+p2par threads=8 hyb=- cap=- 11.6
+# round 5 2026-11-16T19:21:49Z  19:21:49 up  4:06,  0 user,  load average: 9.83, 8.33, 7.76
+flood_f_f threads=1 hyb=0 cap=1024 294.27 
+flood_f_f_e1 threads=1 hyb=0 cap=1024 312.00 
+flood_f_f_e2 threads=1 hyb=0 cap=4096 334.50 
+flood_f_f_e4 threads=1 hyb=1 cap=256 299.05 
+flood_f_f_e8 threads=1 hyb=0 cap=4096 348.94 
+flood_t_f threads=1 hyb=0 cap=1024 411.70 
+flood_t_f_e4 threads=1 hyb=1 cap=256 445.53 
+flood_f_t threads=8 hyb=0 cap=1024 90.11 
+flood_f_t_e1 threads=8 hyb=0 cap=1024 91.08 
+flood_f_t_e2 threads=8 hyb=0 cap=4096 108.32 
+flood_f_t_e4 threads=8 hyb=1 cap=256 124.78 
+flood_f_t_e8 threads=8 hyb=0 cap=4096 148.83 
+flood_t_t threads=8 hyb=0 cap=1024 101.22 
+flood_t_t_e4 threads=8 hyb=1 cap=256 89.64 
+p2par threads=1 hyb=- cap=- 26.9
+p2par threads=8 hyb=- cap=- 11.4
+# summary (ms, min / median / max over 5 rounds)
+flood_f_f threads=1 hyb=0 cap=1024  294.27 / 297.99 / 312.64
+flood_f_f_e1 threads=1 hyb=0 cap=1024  299.58 / 312.00 / 365.12
+flood_f_f_e2 threads=1 hyb=0 cap=4096  323.22 / 342.50 / 405.05
+flood_f_f_e4 threads=1 hyb=1 cap=256  299.05 / 309.60 / 402.48
+flood_f_f_e8 threads=1 hyb=0 cap=4096  344.38 / 348.94 / 351.10
+flood_f_t threads=8 hyb=0 cap=1024  65.76 / 82.75 / 144.07
+flood_f_t_e1 threads=8 hyb=0 cap=1024  81.46 / 91.08 / 106.87
+flood_f_t_e2 threads=8 hyb=0 cap=4096  82.50 / 108.32 / 140.11
+flood_f_t_e4 threads=8 hyb=1 cap=256  73.35 / 94.52 / 124.78
+flood_f_t_e8 threads=8 hyb=0 cap=4096  74.95 / 96.72 / 148.83
+flood_t_f threads=1 hyb=0 cap=1024  399.32 / 413.84 / 478.63
+flood_t_f_e4 threads=1 hyb=1 cap=256  420.32 / 432.92 / 445.53
+flood_t_t threads=8 hyb=0 cap=1024  70.02 / 104.47 / 191.48
+flood_t_t_e4 threads=8 hyb=1 cap=256  83.63 / 106.03 / 188.48
+p2par threads=1 hyb=- cap=-  26.7 / 28.4 / 34.2
+p2par threads=8 hyb=- cap=-  10.3 / 11.6 / 16.3
