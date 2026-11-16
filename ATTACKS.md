@@ -42,7 +42,7 @@ Soufflé's rule `live(t) <- live(s), rel(s, r), target(r, t)` evaluated semi-nai
 if its join on `rel` runs over the columns rather than a B-tree. That is the kill test for each paradigm's P2 cell:
 does it beat 108.7 / 30.1 ms (the eager pipeline) when its own input decode is counted?
 
-## 2. Relocate: the output's page faults are half the work (draft: quiet-machine numbers pending)
+## 2. Relocate: the output's page faults are half the work (2x on 1 core; 8 threads at 1.1-1.4x the floor)
 
 **Problem.** Relocate (3b): copy 76 MB of symbol bytes into a 109 MB image and patch 2.05 M relocations (MinIO).
 
@@ -56,9 +56,16 @@ about half of relocate.** (2026-11-16T16:05Z, load ~1-2.)
 **Attack.** Put the output on 2 MB huge pages (53 faults): `P3_THP=1 build/p3` maps the image MAP_HUGETLB (with
 `vm.nr_hugepages=512` reserved; this kernel has no transparent huge pages), faults included in the timed region.
 
-**Number (provisional, load 2-4.6 from the builders).** 1 thread: **25.0-29.2 ms vs 48-68 ms** on 4 KB pages (2x),
-P3 OK. 8 threads (`build/p3par`, the same loop under `omp parallel for`; placed symbols have disjoint ranges):
-16.8-27.4 ms huge vs 30.0-35.9 ms 4 KB. Still 3-5x the 4.92 ms floor; the 8-thread numbers need a quiet machine.
+**Number.** `P3_REPS=20` (a fresh output mapping per rep, its faults inside the timed region; input warm), three
+interleaved runs each, 2026-11-16T16:13Z, load 2.4-3.0, P3 OK:
+
+| | 4 KB pages | 2 MB pages |
+|---|---|---|
+| 1 thread (`build/p3`) | min 48.6, median 49.3-50.3, max 54-56 ms; 19,109 faults/rep | min 23.9-24.2, median 24.4-24.8, max 25-30 ms; 39 faults/rep |
+| 8 threads (`build/p3par`) | min 13.4-14.1, median 14.3-15.1, max 21-29 ms; 19,137 faults | min 5.4-6.0, median 6.1-6.8, max 7-12 ms; 155 faults |
+
+On 8 threads the huge-page relocate is **1.1-1.4x the FLOOR.md floor of 4.92 ms**; on 4 KB pages it is 3x. The ranges
+don't overlap at either thread count. The attack is not a new loop: it is the output's page size.
 
 **Note for the grid.** This VM had `vm.nr_hugepages=0`, and hlink was built to write its output on hugetlbfs: GRID's hlink
 times so far were taken without huge pages. hlink rerun with 512 reserved pages vs 0 (16:06Z, load 2.4-4.3, noisy):
