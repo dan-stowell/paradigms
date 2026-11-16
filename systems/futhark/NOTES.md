@@ -24,7 +24,9 @@ the outputs with the oracles. Build: `systems/futhark/build.sh` (`YIELD=1` also 
    `lmad_copy`). Put that loop inside a `map` over 64 equal blocks of the output and the copy is data-parallel
    again: P4's copy of 60.7 MB costs ~20-35 ms of CPU at 1 core this way vs ~110 ms as 32-byte rows of
    (index, byte) scattered (PARTS=1 minus PARTS=0, cpu/rep, 17:56Z, load ~13). 3b's note "no bulk copy into a
-   slice" holds only *inside a map*; a loop inside a map has one. Not yet tried on 3b (IDEAS I18).
+   slice" holds only *inside a map*; a loop inside a map has one. **Applied to 3b (`3b_blk`): 2.7x at 1 thread,
+   3.6x at 8**, see "3b in blocks" below. Use the multicore backend at 1 thread for it: the c backend compiles
+   the same map over blocks to a copy 3.8x slower (98 vs 26 ms for 3b's copy alone).
 
 1. **2 MB pages for the whole runtime are a 1.2-1.7x win on every cell, with no code change.**
    `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` makes glibc back its large mallocs with MAP_HUGETLB, and the Futhark
@@ -93,7 +95,34 @@ rows were taken at load 5-13 on 8 cores: they measure the machine as much as Fut
 \* 2lazy's e2e includes its untimed-in-warm setup (aux_edges: the funcdata and kind 1-3 rows, 260-530 ms), as
 ref/flat/p2lazy.c also excludes from its flood time.
 
-Best 8-core warm (min, 2 MB pages): 1a 24, 1b 18, 1c 38, 2 58, 2lazy 90, 3a 7.3-12, 3b 41 ms.
+Best 8-core warm (min, 2 MB pages): 1a 24, 1b 18, 1c 38, 2 58, 2lazy 90, 3a 7.3-12, 3b 41 ms (3b_blk: 23.5 ms,
+below).
+
+### 3b in blocks (`3b_blk`, IDEAS I18 applied, 2026-11-16T18:24Z)
+
+`copy_blocks` in p3.fut: the 109 MB image cut into 64 equal blocks; a map over the blocks, in each a sequential
+loop of slice updates (`row with [a:a+m] = dbin[f:f+m]`, a memcpy). Symbols are not in address order, so each
+(block, symbol) overlap is listed by an `expand` over the symbols (a symbol spans `nblk` blocks), grouped by a
+6-bit radix sort on the block number, and each block's range found by a scatter + min-scan. The patch is unchanged.
++20 lines. Correct: `build/p3_c.exe $D 1 1 3b_blk` and `build/p3_multicore.exe $D 8 1 3b_blk` -> P3b_blk OK.
+
+`systems/futhark/bench3b.sh` (5 interleaved rounds, one process per (cell, config) per round, 8 warm reps each,
+2 MB pages), 18:24:37-18:25:28Z, load 5.4 falling to 4.6; best min | per-process medians min / median / max, ms
+(raw: `p3b-blocks-bench-2026-11-16T1824Z.txt`):
+
+| cell | c backend, 1 core | multicore, 1 thread | multicore, 8 threads |
+|---|---|---|---|
+| 3b (64-byte chunk scatter) | 159.7 \| 161.0 / 166.7 / 169.1 | 175.5 \| 178.7 / 181.8 / 186.0 | 96.4 \| 107.8 / 110.9 / 113.6 |
+| **3b_blk** (blocked copy) | 117.4 \| 119.5 / 123.0 / 137.1 | **60.4 \| 60.8 / 62.0 / 65.0** | **23.5 \| 29.8 / 30.5 / 40.3** |
+| copy alone, chunks (`3b_copy`) | 120.5 \| 122.4 / 122.8 / 129.0 | 110.7 \| 111.4 / 116.1 / 118.9 | 51.9 \| 64.5 / 68.6 / 71.3 |
+| copy alone, blocks (`3b_blkcopy`) | 97.9 \| 98.5 / 101.0 / 113.3 | 26.0 \| 26.4 / 27.7 / 38.9 | 11.8 \| 16.4 / 19.4 / 21.2 |
+
+The ranges do not overlap: 3b 166.7 -> 62.0 ms median at 1 thread (best backend each: c for 3b, multicore for
+3b_blk; 2.7x), 110.9 -> 30.5 at 8 threads (3.6x). The copy itself 116 -> 28 ms (1) and 69 -> 19 (8). (Old 3b ran
+slower in this window than in the 16:3xZ table above: 160 vs 107 ms at 1 core; only the interleaved comparison
+counts.) Against C (ref/flat/p3.c 3b on 2 MB pages: 23.9 ms, 1 core; tuned C 5.4-6.8, 8): 2.5x at 1, ~4x at 8,
+was 4.5x / 7x. On the c backend the blocked copy is only 1.2x better: its generated code for the map over blocks
+copies 4x slower than multicore's (98 vs 26 ms), not investigated further.
 
 ## ATTACKS 1 (reach counting its own decode)
 
@@ -185,8 +214,10 @@ initialised every round (no uninitialised arrays). Impossible: a shared visited 
   scan is exact against the oracle). Forced: the typelink sort (the library's merge sort is GPU-shaped, 13 ms for
   33 K keys; a CPU-shaped bottom-up merge sort is 2 ms). The sequential cursor loop (`3a_loop`, in-place
   updates under uniqueness types) is as fast as the data-parallel scan here: 360 K symbols is too small.
-- **3b** (60 lines). Easy: patch values as a `match` over kinds. Forced: copying bytes as a scatter of
-  (index, byte) pairs in 64-byte chunks (per-byte binary search, `3b_bytes`, 480 ms); no bulk copy. Impossible:
+- **3b** (60 lines; +20 for `3b_blk`). Easy: patch values as a `match` over kinds. Forced: the copy, either as a
+  scatter of (index, byte) pairs in 64-byte chunks (per-byte binary search, `3b_bytes`, 480 ms) or, 2.7-3.6x
+  faster, as a map over 64 image blocks with a sequential memcpy loop inside (`3b_blk`), which needs the
+  symbols grouped by block (expand + radix sort). Impossible:
   choosing the output's page size from the language (done from outside, via glibc).
 
 ## Core code (excerpts)
