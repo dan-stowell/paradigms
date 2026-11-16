@@ -49,6 +49,22 @@ static Expr bit(Expr v, int b) { return (v & u8(b)) != 0; }
 // the frontier bit of parity p (0 or 1)
 static Expr frBit(Expr p) { return u8(select(p == 0, FR0, FR1)); }
 
+// the list of blocks whose summary byte (st(base + b)) is set: a serial scan over the few thousand blocks,
+// then a scatter
+static void blockList(Func st, Expr base, Expr nblk, Func list, Func count) {
+    Var b("b");
+    RDom r(0, nblk, "rb");
+    Func pos("pos");
+    pos(b) = 0;
+    pos(r) = select(r > 0, pos(max(r - 1, 0)), 0) + i32(st(base + r) != 0);
+    pos.compute_root();
+    list(b) = 0;
+    RDom rl(0, nblk, "rl");
+    rl.where(st(base + rl) != 0);
+    list(clamp(pos(rl) - 1, 0, nblk - 1)) = rl;
+    count() = pos(nblk - 1);
+}
+
 static void scheduleUpdate(Stage s, RVar outer, bool par, int chunk) {
     if (!par) return;
     s.atomic(true);  // (true: no associativity proof: the update reads other sites; Halide uses a CAS loop)
@@ -62,6 +78,8 @@ public:
     Input<Buffer<uint8_t, 1>> fl{"fl"};
     Input<Buffer<uint32_t, 1>> roots{"roots"};
     Output<Buffer<uint8_t, 1>> st{"st"};
+    Output<Buffer<int32_t, 1>> next{"next"};
+    Output<Buffer<int32_t, 0>> nnext{"nnext"};
     Var x{"x"};
     void generate() {
         Layout L(nid, nsig, nstr, nmeth);
@@ -72,6 +90,7 @@ public:
         Expr site = select(r.y == 0, t, L.SUM + t / BLK);
         st(site) = select(r.y == 0, st(site) | u8(LIVE | FR0), u8(1));
         st.parallel(x, 1 << 16, TailStrategy::GuardWithIf);
+        blockList(st, L.SUM, L.nblk, next, nnext);
     }
 };
 
@@ -83,6 +102,13 @@ public:
     GeneratorParam<int> chunk{"chunk", 4};    // blocks per parallel task
     SIZES
     Input<int> parity{"parity"};
+    // the blocks with a symbol in frontier `parity` (made by the previous call). A where on an outer RVar is an
+    // if around the innermost loop, re-tested for every op, and Halide does not hoist it (it reads st, which the
+    // loop writes): looping over all blocks costs every symbol's whole row every level. So the block loop runs
+    // over this list, and the symbol test is folded into the op loop's bound (the only where Halide turns into
+    // a bound is one on the innermost RVar).
+    Input<Buffer<int32_t, 1>> act{"act"};
+    Input<int> nact{"nact"};
     Input<Buffer<uint8_t, 1>> fl{"fl"};
     // lazy: the relocation columns and the 1a answer; the edges that are not relocations (xoff/xdst/xkind)
     Input<Buffer<uint32_t, 1>> canon{"canon"};
@@ -102,7 +128,8 @@ public:
     Input<Buffer<uint32_t, 1>> mtyp{"mtyp"};
     Input<Buffer<uint32_t, 1>> sigrep{"sigrep"};  // a signature's representative (equal (name, type) pairs)
     Output<Buffer<uint8_t, 1>> st{"st"};
-    Output<Buffer<int32_t, 0>> nnext{"nnext"};    // blocks in the next frontier
+    Output<Buffer<int32_t, 1>> next{"next"};      // the blocks in the next frontier (act of the next call)
+    Output<Buffer<int32_t, 0>> nnext{"nnext"};    // how many
 
     Var x{"x"};
 
@@ -118,8 +145,8 @@ public:
         st(L.SUM + (1 - p) * L.nblk + rz) = u8(0);
 
         // update 1: the expansion
-        RDom rk(0, 1 << 26, 0, BLK, 0, L.nblk, "rk");
-        Expr b = rk.z, c = min(b * BLK + rk.y, nid - 1);
+        RDom rk(0, 1 << 26, 0, BLK, 0, nact, "rk");
+        Expr b = clamp(act(rk.z), 0, L.nblk - 1), c = min(b * BLK + rk.y, nid - 1);
         Expr stc = st(c), flc = flag(c);
         Expr uii = bit(flc, fGoType) && bit(stc, IFACE);
         Expr proceed = c <= nsl && bit(flc, fDef) && !(uii && bit(stc, DONE));
@@ -128,9 +155,7 @@ public:
         Expr nx = i32(xoff(cs + 1) - xoff(cs));
         Expr nm = i32(moff(cs + 1) - moff(cs));
         Expr nops = 2 + nr + nx + 2 * nm;
-        rk.where(st(L.SUM + p * L.nblk + b) != 0);
-        rk.where((st(c) & frC) != 0);
-        rk.where(rk.x < 2 * nops);
+        rk.where(rk.x < select((stc & frC) != 0, 2 * nops, 0));
 
         // ops: 0 reflect, then the relocations, the other edges, two per method, and last the symbol itself (clear
         // its frontier bit, set DONE). atomic() refuses an update whose written SITE depends on the Func's own
@@ -189,8 +214,7 @@ public:
         Expr new1 = select(mark, u8(1), old);
         st(site) = select(ph == 0, new0, new1);
 
-        RDom rn(0, L.nblk, "rn");
-        nnext() = sum(i32(st(L.SUM + (1 - p) * L.nblk + rn) != 0));
+        blockList(st, L.SUM + (1 - p) * L.nblk, L.nblk, next, nnext);
 
         scheduleUpdate(st.update(1), rk.z, par, chunk);
     }
@@ -211,6 +235,7 @@ public:
     Input<Buffer<uint8_t, 1>> mexp{"mexp"};
     Input<Buffer<int32_t, 1>> msig{"msig"};  // the representative signature with the method's (name, type), or -1
     Output<Buffer<uint8_t, 1>> st{"st"};
+    Output<Buffer<int32_t, 1>> next{"next"};
     Output<Buffer<int32_t, 0>> nnext{"nnext"};
     Var x{"x"};
     void generate() {
@@ -235,8 +260,7 @@ public:
         Expr old = st(site);
         Expr v0 = select(node, old | select(!bit(old, LIVE), u8(LIVE) | frP, u8(0)), op == 3, old | u8(2), old);
         st(site) = select(ph == 0, v0, select(mark, u8(1), old));  // (sites from the inputs only: see Flood)
-        RDom rn(0, L.nblk, "rn");
-        nnext() = sum(i32(st(L.SUM + parity * L.nblk + rn) != 0));
+        blockList(st, L.SUM + parity * L.nblk, L.nblk, next, nnext);
         scheduleUpdate(st.update(0), r.y, par, 4096);
     }
 };

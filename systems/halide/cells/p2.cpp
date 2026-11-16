@@ -87,20 +87,22 @@ int main(int argc, char **argv) {
     Buffer<u32, 1> sigrep(nsig);
     Buffer<int32_t, 1> msig(nmeth);
     Buffer<int32_t, 0> nnext = Buffer<int32_t, 0>::make_scalar();
+    Buffer<int32_t, 1> actA(nblk), actB(nblk);  // the blocks in the frontier: read one, write the other
     int levels = 0, rounds = 0;
     auto run = [&](int v) {
         bool lazy = floods[v].name[6] == 't', par = floods[v].name[strlen(floods[v].name) - 1] == 't';
         preps[par].fn(sname, stype, mname, mtyp, sigrep, msig);
-        init(nid, nsig, nstr, nmeth, fl, roots, st);
+        init(nid, nsig, nstr, nmeth, fl, roots, st, actA, nnext);
         levels = rounds = 0;
         for (int parity = 0;;) {
             rounds++;
             do {
-                floods[v].fn(nid, nsig, nstr, nmeth, parity, fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
-                             lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, nnext);
+                floods[v].fn(nid, nsig, nstr, nmeth, parity, actA, nnext(), fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
+                             lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, actB, nnext);
+                std::swap(actA, actB);
                 parity ^= 1, levels++;
             } while (nnext() != 0);
-            meths[par].fn(nid, nsig, nstr, nmeth, parity, mname, mtyp, mifn, mtfn, mexp, msig, st, nnext);
+            meths[par].fn(nid, nsig, nstr, nmeth, parity, mname, mtyp, mifn, mtfn, mexp, msig, st, actA, nnext);
             if (nnext() == 0) break;
         }
     };
