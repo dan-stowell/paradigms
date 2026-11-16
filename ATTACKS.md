@@ -81,6 +81,9 @@ threads: 109 MB read + 76 MB written -> ~3-6 ms) the 8-thread huge-page relocate
 rep**: the same 2x as the explicit MAP_HUGETLB, from an environment variable. (p3's "4 KB pages" label under the
 tunable is wrong: it reports the allocation path, not the page size.) Any paradigm whose runtime allocates through
 glibc malloc gets the attack for free, given reserved huge pages (`vm.nr_hugepages`).
+The tunable also speeds the hash join: p1compact's join on 1 thread 20.5-21.2 vs 30.1-32.3 ms (3 interleaved, 16:40Z)
+-- its tables and records are malloc'd and probed at random, so this is TLB reach, not faults. The floods (p2par, p2lazy)
+don't move (within noise): their inputs are mmap'd files, which the tunable doesn't touch.
 
 **Note for the grid.** hlink with `vm.nr_hugepages=512` vs `0`, 6 interleaved rounds on 8 cores (16:15Z, load 1.9-2.5):
 total 193-267 ms (median ~226) vs 205-249 (~225): **within noise**; write phase 17-56 vs 17-23. The earlier noisy
