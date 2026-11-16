@@ -1,0 +1,22 @@
+prep A: construct 535.670 ms, dedupe 0.001 ms, total 535.670 ms; runs 1033547 distinct 1033547 blob_bytes 60733909 holes 8018921 bytes_per_run 58.763 pieces_per_MB 17017.627 input_bytes 372816039
+output: MAP_HUGETLB 2 MB
+p4runs A (2 threads): emit 41.469 ms; GB/s 1.464554; reps 1 total 0.041 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep C: construct 592.266 ms, dedupe 259.166 ms, total 851.432 ms; runs 136634 distinct 55389 blob_bytes 48985021 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 332365935
+output: MAP_HUGETLB 2 MB
+p4runs C (2 threads): emit 46.253 ms; GB/s 1.313088; reps 1 total 0.046 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep C: construct 394.539 ms, dedupe 215.766 ms, total 610.305 ms; runs 136634 distinct 55389 blob_bytes 48985021 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 332365935
+output: MAP_HUGETLB 2 MB
+p4runs C (1 threads): emit 52.666 ms; GB/s 1.153195; reps 1 total 0.053 s
+function offsets: 136635 checked, 1 errors
+code: 60733909 bytes in 136634 functions, NOT equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 FAIL
+Independent CP7 checks OK; altered function offset correctly rejected.

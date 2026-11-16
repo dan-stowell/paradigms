@@ -178,3 +178,17 @@ core; what it had to force is the copy itself (a map cannot memcpy into a slice;
 a map over 64 blocks can, 3-5x cheaper than scattering bytes). **Next:** fewer, larger pieces: fuse a node's segments
 with hole-free neighbours and glue into one run at extraction (CP7 supernodes), counted as pieces per byte, and the
 Halide cell (running).
+
+**CP7 follow-up (2026-11-16): piece count alone is not the cost model.** The prepared
+unmerged control keeps all 2.38 M copies yet emits in 48.474 ms versus p4par's
+94.695 ms at one thread. Absorbing hole-free neighbours leaves 1.034 M runs
+(43.981 ms); one run per function leaves 136,634 (44.689 ms). Thus 17.43× fewer
+copies than the prepared control saves only 1.08× time; A/B ranges overlap.
+Preparation hoists lookup/search work and changes source locality; 8.02 M hole
+records and relocation work remain. Whole-function dedupe leaves 55,389 distinct
+runs / 49.0 MB versus 60.7 MB, with no established speed benefit. Logical prepared
+input is 344.1 MB for whole-function blobs; preparation costs 325 ms median, outside
+emit. All bytes, function offsets and sorted relocations match. Five interleaved
+128-repetition runs, 1/8 threads, load 2.53–4.85: `results/codex-cp7.md` and
+`ref/p4/bench-runs.sh`. This refines the earlier “pieces, not bytes” inference:
+removing piece-associated lookups matters far more here than removing copies alone.
