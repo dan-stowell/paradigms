@@ -57,3 +57,11 @@ lengths by map, places by exclusive scan, holes as a flat map over (node, hole) 
 relocations as three expands (no sort); forced: the copy (a map cannot memcpy into a slice: either one (index, byte)
 pair per byte, or a map over 64 blocks with a sequential loop of slice updates inside, which is C's loop and 3-5x
 cheaper), and hole -> segment -> item tables that C gets from its loop position; impossible: nothing.
+
+**4D emit from the flattened stream** (ATTACKS 4 control D; 18:40Z, load 2.7, 2 MB, 5 interleaved rounds) - correct
+(`build/p4_c.exe /home/exedev/paradigms/data/minio-p4 1 1 4D` -> P4D OK) - emit best | median of process medians:
+**65.1 | 67.8 (1, multicore 1 thread)**, 72.5 | 74.0 (1, c), **23.4 | 26.9 (8)**; vs 4bf in the same window
+283.8 | 303.3 (1) and 95.3 | 112.8 (8): 4.5x / 4.2x; vs C p4runs D 48.7 (1) / 14.2 (8) median: 1.4x / 1.9x; faster
+than C's template emit p4 (107.5). Flattening (`prepare`, in Futhark) 323.8 (1) / 138.4 (8) median, vs C's prep
+347-360 (serial) - +58 lines (prepare 50, emit_flat 8) - easy: the flat emit is a copy plus one flat map + scatter;
+the stream stays in Futhark as an opaque record between entries; forced: nothing new; cost: 266 MB of stream.

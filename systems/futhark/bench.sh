@@ -35,7 +35,8 @@ cells="1a p1 20 40
 4g p4 5 10
 4f p4 3 6
 4b p4 5 10
-4bf p4 5 10"
+4bf p4 5 10
+4D p4 10 20"
 echo "# ${HUGE:+HUGE=1 }$(date -u +%FT%TZ) load $(cut -d' ' -f1-3 /proc/loadavg) data $D"
 echo "$cells" | while read cell p r1 r8; do
 	[ -n "$CELLS" ] && ! echo " $CELLS " | grep -q " $cell " && continue
@@ -44,7 +45,7 @@ echo "$cells" | while read cell p r1 r8; do
 		IFS=: read be th lab <<< "$cfg"
 		reps=$r8; [ $th = 1 ] && reps=$r1
 		set -- $be $th $reps $lab${HUGE:++huge}
-		line=$(run build/${p}_$1.exe $dd $2 $3 $cell nocheck | grep ' | min')
+		line=$(run build/${p}_$1.exe $dd $2 $3 $cell nocheck | grep "^$cell .* | min")
 		printf "%-8s %-7s warm  %s\n" $cell $4 "$(echo "$line" | sed 's/.*| //')"
 		ts=""
 		for i in 1 2 3 4 5; do

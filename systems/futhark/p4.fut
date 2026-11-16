@@ -214,3 +214,71 @@ entry layout [N] [GL] [NN] [T] [G]
     (node_tmpl: [NN]u32) (tmpl_off: [T]u64) (tmpl_seg_off: [T]u32) (tseg_end: [G]u32) : [N]i64 =
   map (item_src item_kind item_ref item_seg glue_off node_tmpl tmpl_off tmpl_seg_off tseg_end) (iota N)
   |> map (.2) |> exscan
+
+-- The flattened stream (ATTACKS 4, control D of ref/p4/p4runs.c): resolve item -> template -> segment -> hole once,
+-- in `prepare`, into flat columns, so that `emit_flat` is a copy plus one flat map over hole records, with no
+-- lookups. blob: the image with every hole zeroed (the items' bytes laid out); a patch record per (4-byte part of
+-- an) integer or jump hole: absolute position, width, enc, value (an integer's bytes, already shifted for the high
+-- part of an 8-byte one; a jump's target item), aux (a jump's offset); the relocations, complete.
+type stream [N] [B] [F] [P] [R] = {blob: [B]u8, at: [N]i64, total: i64, fn_off: [F]i64,
+                                   pp: [P]i64, pn: [P]u8, pe: [P]u8, pv: [P]i64, pa: [P]i64,
+                                   ro: [R]i64, rs: [R]u8, rt: [R]u16, ry: [R]u32, ra: [R]i64}
+
+entry prepare [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
+    (fn_item: [F]u32) (fn_mark_off: [F]u32) (mark_off: [M]u32) (mark_type: [M]u16) (mark_sym: [M]u32) (mark_add: [M]i64)
+    (item_kind: [N]u8) (item_ref: [N]u32) (item_seg: [N]u32)
+    (glue_off: [GL]u64) (glue_bin: []u8) (glue_rel_off: [GL]u32)
+    (grel_off: [GR]u32) (grel_siz: [GR]u8) (grel_type: [GR]u16) (grel_sym: [GR]u32) (grel_add: [GR]i64)
+    (node_tmpl: [NN]u32) (node_op: []u32) (op_val: [O]i64) (op_aux: [O]i64)
+    (tmpl_off: [T]u64) (tmpl_bin: []u8) (tmpl_seg_off: [T]u32) (tseg_end: [G]u32)
+    (tmpl_hole_off: [T]u32) (hole_at: [H]u32) (hole_w: [H]u8) (hole_enc: [H]u8) (hole_rtype: [H]u16) : ?[B] [P] [R]. stream [N] [B] [F] [P] [R] =
+  let src = map (item_src item_kind item_ref item_seg glue_off node_tmpl tmpl_off tmpl_seg_off tseg_end) (iota N)
+  let lens = map (.2) src
+  let at = exscan lens
+  let total = if N == 0 then 0 else at[N - 1] + lens[N - 1]
+  let at_of i = if i == N then total else at[i]
+  let S = (total + 63) / 64
+  let blob = copy_blocks 64 total at src glue_bin tmpl_bin (\_ _ (row: *[S]u8) : *[S]u8 -> row)
+  let nseg r = let t = i64.u32 node_tmpl[r] in i64.u32 tmpl_seg_off[t + 1] - i64.u32 tmpl_seg_off[t]
+  let nseg_off = exscan (map nseg (iota NN))
+  let seg_item = scatter (replicate (N - GL + 1) 0i64)
+                         (map (\i -> if item_kind[i] == 0 then -1 else nseg_off[i64.u32 item_ref[i]] + i64.u32 item_seg[i]) (iota N))
+                         (iota N)
+  let hseg = hole_segs tmpl_seg_off tseg_end tmpl_hole_off hole_at
+  let holes_of (idx, start) =
+    expand (\r -> let t = i64.u32 node_tmpl[r] in start[t + 1] - start[t])
+           (\r j -> let (h, k) = idx[start[i64.u32 node_tmpl[r]] + j] in (r, h, k)) (iota NN)
+  let place r h =
+    let (s, lo, _) = hseg[h]
+    in (at[seg_item[nseg_off[r] + s]] + i64.u32 hole_at[h] - lo, i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[i64.u32 node_tmpl[r]])
+  let record (r, h, k) =
+    let (p, o) = place r h
+    in if hole_enc[h] == 2 then (p, 4u8, 2u8, op_val[o], op_aux[o])
+       else (p + 4 * k, u8.i64 (i64.u8 hole_w[h] - 4 * k), 1u8, op_val[o] >> (32 * k), 0)
+  let (pp, pn, pe, pv, pa) =
+    holes_of (class_holes tmpl_hole_off (map2 (\e w -> if e == 3 then 0 else if w == 8 then 2 else 1) hole_enc hole_w))
+    |> map record |> unzip5
+  let rel_holes = holes_of (class_holes tmpl_hole_off (map (\e -> i64.bool (e == 3)) hole_enc))
+                  |> map (\(r, h, _) -> let (p, o) = place r h
+                                        in (p, hole_w[h], hole_rtype[h], u32.i64 op_val[o], op_aux[o]))
+  let rel_glue = expand (\i -> if item_kind[i] != 0 then 0
+                               else let r = i64.u32 item_ref[i] in i64.u32 glue_rel_off[r + 1] - i64.u32 glue_rel_off[r])
+                        (\i j -> let k = i64.u32 glue_rel_off[i64.u32 item_ref[i]] + j
+                                 in (at[i] + i64.u32 grel_off[k], grel_siz[k], grel_type[k], grel_sym[k], grel_add[k]))
+                        (iota N)
+  let rel_mark = expand (\f -> if f == F - 1 then 0 else i64.u32 fn_mark_off[f + 1] - i64.u32 fn_mark_off[f])
+                        (\f j -> let m = i64.u32 fn_mark_off[f] + j
+                                 in (at_of (i64.u32 fn_item[f]) + i64.u32 mark_off[m], 0u8, mark_type[m], mark_sym[m], mark_add[m]))
+                        (iota F)
+  let (ro, rs, rt, ry, ra) = unzip5 (rel_mark ++ rel_glue ++ rel_holes)
+  in {blob, at, total, fn_off = map (\f -> at_of (i64.u32 fn_item[f])) (iota F), pp, pn, pe, pv, pa, ro, rs, rt, ry, ra}
+
+-- Emit from the flat stream: copy the blob, one flat map over the patch records (rows of 4 (index, byte) writes,
+-- a jump's rel32 by gathering at[v]) scattered into it, and the relocations copied out (as p4runs D collects them).
+entry emit_flat [N] [B] [F] [P] [R] (s: stream [N] [B] [F] [P] [R]) =
+  let at_of i = if i == N then s.total else s.at[i]
+  let bytes p n e v a = let x = if e == 2 then at_of v + a - (p + 4) else v
+                        in #[sequential] map (\k -> (if k < i64.u8 n then p + k else -1, u8.i64 (x >> (8 * k)))) (iota 4)
+  let (wi, wv) = map5 bytes s.pp s.pn s.pe s.pv s.pa |> flatten |> unzip
+  let code = scatter (copy s.blob) wi wv
+  in (code, copy s.fn_off, copy s.ro, copy s.rs, copy s.rt, copy s.ry, copy s.ra, 0i64)
