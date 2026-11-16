@@ -182,6 +182,10 @@ public:
     // at their first byte, a running fill carries it to every byte, and code(x) = src(x + fill(x))
     GeneratorParam<int> gform{"gform", 0};
     GeneratorParam<int> tile{"tile", 4096};
+    // the per-item facts the three item loops need (source, hole range, operand base, relocation base): 0 = derived
+    // inline in each loop (item -> node -> template -> segment, a dozen dependent loads, three times);
+    // 1 = computed once into a table (compute_root), which the loops then read in order
+    GeneratorParam<int> info{"info", 0};
     ITEM_INPUTS
     Input<Buffer<uint32_t, 1>> relHole{"relHole"};
     Input<Buffer<uint8_t, 1>> src{"src"};  // glue.bin, then tmpl.bin (segSrc points into it)
@@ -237,6 +241,22 @@ public:
         Expr nfn = fnItem.dim(0).extent() - 1;
         Expr nsrc = src.dim(0).extent();
 
+        // ---- the per-item facts
+        Func inf("info");
+        Var iv("iv");
+        {
+            Item d = item(*this, iv);
+            inf(iv) = Tuple(d.src, i32(at(iv)) - d.lo, d.h0, d.nh, d.opBase, select(d.glue, d.g0, d.r0), cast<uint8_t>(d.glue));
+        }
+        struct I { Expr src, pb, h0, nh, ob, rel0, glue, at, len; };
+        auto I_ = [&](Expr i) {
+            I r;
+            r.src = inf(i)[0], r.pb = inf(i)[1], r.h0 = inf(i)[2], r.nh = inf(i)[3], r.ob = inf(i)[4], r.rel0 = inf(i)[5];
+            r.glue = inf(i)[6] != 0;
+            r.at = i32(at(i)), r.len = i32(at(i + 1) - at(i));
+            return r;
+        };
+
         // ---- copy
         Over oc;
         Func mark("mark"), fill("fill"), first("first");
@@ -256,7 +276,7 @@ public:
                 bs(tl) = Tuple(select(go && le, mid, a), select(go && !le, mid - 1, b));
             }
             first(tl) = inside(bs(min(tl, ntile))[0], 0, n - 1);
-            auto delta = [&](Expr i) { i = inside(i, 0, n - 1); Item di = item(*this, i); return di.src - i32(at(i)); };
+            auto delta = [&](Expr i) { i = inside(i, 0, n - 1); return I_(i).src - i32(at(i)); };
             const int NONE = -(1 << 30);
             mark(xi, tl) = NONE;
             RDom ri(1, 1 << 22, "ri");
@@ -273,14 +293,14 @@ public:
         }
         if (gform == 1) {
         } else if (vec == 0) {  // (byte, item, chunk): the where on the byte is the inner loop's bound
-            oc = over({Range(0, 1 << 17)}, false, "rc");
-            Item ci = item(*this, oc.i);
+            oc = over({Range(0, 1 << 24)}, false, "rc");  // (an item is < 16 MB: a whole function, with P4_TOPK)
+            I ci = I_(oc.i);
             oc.r.where(oc.r[0] < select(oc.real, ci.len, 0));
             code(inside(i32(at(oc.i)) + oc.r[0], 0, NC - 1)) = src(inside(ci.src + oc.r[0], 0, nsrc - 1));
         } else {         // (lane, word, item, chunk, parity): the where on the word is its bound
             const int W = vec;
-            oc = over({Range(0, W), Range(0, (1 << 17) / W)}, true, "rc");
-            Item ci = item(*this, oc.i);
+            oc = over({Range(0, W), Range(0, (1 << 24) / W)}, true, "rc");
+            I ci = I_(oc.i);
             Expr len = select(oc.real, ci.len, 0);
             oc.r.where(oc.r[1] * W < len);
             Expr b = oc.r[1] * W + oc.r[0];
@@ -291,12 +311,12 @@ public:
         // ---- patch: (byte, hole in segment, item, chunk[, parity])
         Over op = over({Range(0, 8), Range(0, 1 << 15)}, pform == 1, "rp");
         {
-            Item pi = item(*this, op.i);
+            I pi = I_(op.i);
             op.r.where(op.r[1] < select(op.real, pi.nh, 0));
             Expr h = inside(pi.h0 + op.r[1], 0, holeAt.dim(0).extent() - 1);
-            Expr o = inside(pi.opBase + h, 0, opVal.dim(0).extent() - 1);
+            Expr o = inside(pi.ob + h, 0, opVal.dim(0).extent() - 1);
             Expr enc = holeEnc(h), w = i32(holeW(h)), bx = op.r[0];
-            Expr P = i32(at(op.i)) - pi.lo + i32(holeAt(h));
+            Expr P = pi.pb + i32(holeAt(h));
             Expr v = opVal(o);
             // (a real clamp: v is a jump's item only when enc says so)
             Expr val = select(enc == encRel32, i64(at(clamp(i32(v), 0, n))) + opAux(o) - i64(P + 4), v);
@@ -323,14 +343,14 @@ public:
         // segment's are its template's relocation holes in the segment (relHole), their symbols its operands
         Over orl = over({Range(0, 1 << 16)}, false, "rl");
         {
-            Item li = item(*this, orl.i);
+            I li = I_(orl.i);
             Expr kx = orl.r[0];
             orl.r.where(kx < select(orl.real, i32(rat(orl.i + 1) - rat(orl.i)), 0));
-            Expr g = inside(li.g0 + kx, 0, grelOff.dim(0).extent() - 1);
-            Expr hh = inside(i32(at_(relHole, li.r0 + kx)), 0, holeAt.dim(0).extent() - 1);
-            Expr oh = inside(li.opBase + hh, 0, opVal.dim(0).extent() - 1);
-            Expr base = i32(at(orl.i));
-            Expr Pn = base - li.lo + i32(holeAt(hh)), Pg = base + i32(grelOff(g));
+            // (real clamps: both branches of the selects below are evaluated, and rel0 means one or the other)
+            Expr g = clamp(li.rel0 + kx, 0, grelOff.dim(0).extent() - 1);
+            Expr hh = clamp(i32(relHole(clamp(li.rel0 + kx, 0, relHole.dim(0).extent() - 1))), 0, holeAt.dim(0).extent() - 1);
+            Expr oh = clamp(li.ob + hh, 0, opVal.dim(0).extent() - 1);
+            Expr Pn = li.pb + i32(holeAt(hh)), Pg = li.at + i32(grelOff(g));
             Expr slot = inside(i32(rat(orl.i)) + kx, 0, NR - 1);
             rel(slot) = Tuple(u64(select(li.glue, Pg, Pn)), select(li.glue, grelType(g), holeRtype(hh)),
                               select(li.glue, grelSym(g), u32(opVal(oh))), select(li.glue, grelAdd(g), opAux(oh)),
@@ -340,6 +360,11 @@ public:
         // ---- the schedule
         int pc = oc.ic + 1, pp = op.ic + 1;  // the chunk RVar of each update
         int pu = gform == 1 ? 0 : 1;          // the patch's update
+        if (info) {
+            inf.compute_root();
+            Var io("io"), ii("ii");
+            if (par) inf.split(iv, io, ii, 1 << 14, TailStrategy::GuardWithIf).parallel(io);
+        }
         if (gform == 1) {
             Var xt("xt"), xv("xv");
             code.split(x, xt, xv, tile).vectorize(xv, 32);

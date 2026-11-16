@@ -1,7 +1,7 @@
 // p4 driver: loads the flat files (mmap; ref/flat/flat.h), wraps them zero-copy as Halide buffers, runs the AOT
 // SegHoles, Layout and Emit pipelines, checks the code against oracle/p4_code.bin (+ p4_fn_off.u64) byte for byte
 // and the relocations, sorted, against oracle/p4_rel_*.
-//   p4 DATA [all|LAYOUT|EMIT]   every schedule variant (or one), warm (bench.h), each checked
+//   p4 DATA [all|layout|NAME]   every schedule variant (or those whose name starts with NAME), warm (bench.h), checked
 //   p4 DATA e2e LV EV [out]     one run of layout variant LV and emit variant EV (index into the tables), checked
 // Env: HL_NUM_THREADS (Halide's pool); P4_HUGE=1 maps the code output on 2 MB pages (MAP_HUGETLB).
 #include "../../../ref/flat/flat.h"
@@ -286,14 +286,14 @@ int main(int argc, char **argv) {
         Stat s = timeRuns([&] { runSeg(); });
         printf("4 templates       " STAT_FMT "\n", STAT_ARGS(s));
         for (int v = 0; v < nLayouts; v++) {
-            if (mode != "all" && mode != layouts[v].name) continue;
+            if (mode != "all" && mode != "layout" && strncmp(layouts[v].name, mode.c_str(), mode.size())) continue;
             s = timeRuns([&] { runLayout(v); });
             printf("4 %-16s " STAT_FMT "   ", layouts[v].name, STAT_ARGS(s));
             bad += checkLayout();
         }
         runLayout(0);
         for (int v = 0; v < nEmits; v++) {
-            if (mode != "all" && mode != emits[v].name) continue;
+            if (mode != "all" && strncmp(emits[v].name, mode.c_str(), mode.size())) continue;
             memset(codep, 0, ncode + 64);
             s = timeRuns([&] { runEmit(v); });
             printf("4 %-16s " STAT_FMT "   ", emits[v].name, STAT_ARGS(s));
