@@ -1,0 +1,6 @@
+original 108833 relaxed 66046 nodes 1122309 node_bytes 43160255
+top 256 nodes 529367 47.167670% bytes 11404586 26.423815%
+top 1024 nodes 746824 66.543528% bytes 19385988 44.916296%
+top 4096 nodes 923117 82.251590% bytes 27906439 64.657725%
+decoded displacement fields in original templates {'non_sib': 1209921, 'sib': 34435}
+table_bytes 8400870 table_holes 1205539

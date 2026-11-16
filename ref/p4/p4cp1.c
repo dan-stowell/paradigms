@@ -1,0 +1,209 @@
+// p4cp1.c: width-relaxed template proof, based on p4.c; problem 4 (code generation by shape) from the flat files, plainly, on one core: every function body
+// fc's tree walker wrote, rebuilt from byte templates and operands. Checks itself against oracle/p4_code.bin
+// (byte for byte) and the relocations against oracle/p4_rel_* (as a sorted list).
+//   P4_CP1_TABLE=build/cp1 build/p4cp1 DATA [out.bin]
+// P4_REPS measured iterations after one warmup; buffers reused, sort/check untimed.
+#include "../flat/flat.h"
+
+enum { encInt = 1, encRel32 = 2, encReloc = 3 };
+
+typedef struct {
+	u64 off;
+	i64 add;
+	u32 sym;
+	u16 type;
+	u8 siz;
+} Rel;
+static int cmpRel(const void *a, const void *b) {
+	const Rel *x = a, *y = b;
+	if (x->off != y->off) return x->off < y->off ? -1 : 1;
+	if (x->type != y->type) return x->type < y->type ? -1 : 1;
+	if (x->sym != y->sym) return x->sym < y->sym ? -1 : 1;
+	if (x->add != y->add) return x->add < y->add ? -1 : 1;
+	return (int)x->siz - (int)y->siz;
+}
+
+static int fits(i64 v) { return v >= -128 && v <= 127; }
+static u32 firstHole(u32 t, u32 lo, const u32 *ho, const u32 *ha) {
+    u32 a = ho[t], b = ho[t+1];
+    while (a < b) { u32 m = (a+b)/2; if (ha[m] < lo) a=m+1; else b=m; }
+    return a;
+}
+int main(int argc, char **argv) {
+	flatDir = argc > 1 ? argv[1] : "data/minio-p4";
+	u32 nfn = (u32)metaGet("nfn"), nitem = (u32)metaGet("nitem"), nrel = (u32)metaGet("nrel");
+	u64 ncode = metaGet("code_bytes");
+	const u32 *fnItem = FMAP(u32, "fn_item.u32", NULL), *fnMarkOff = FMAP(u32, "fn_mark_off.u32", NULL);
+	const u32 *markOff = FMAP(u32, "mark_off.u32", NULL), *markSym = FMAP(u32, "mark_sym.u32", NULL);
+	const u16 *markType = FMAP(u16, "mark_type.u16", NULL);
+	const i64 *markAdd = FMAP(i64, "mark_add.i64", NULL);
+	const u8 *itemKind = FMAP(u8, "item_kind.u8", NULL);
+	const u32 *itemRef = FMAP(u32, "item_ref.u32", NULL), *itemSeg = FMAP(u32, "item_seg.u32", NULL);
+	const u64 *glueOff = FMAP(u64, "glue.off.u64", NULL);
+	const u8 *glueBin = FMAP(u8, "glue.bin", NULL);
+	const u32 *glueRelOff = FMAP(u32, "glue_rel_off.u32", NULL), *grelOff = FMAP(u32, "grel_off.u32", NULL);
+	const u8 *grelSiz = FMAP(u8, "grel_siz.u8", NULL);
+	const u16 *grelType = FMAP(u16, "grel_type.u16", NULL);
+	const u32 *grelSym = FMAP(u32, "grel_sym.u32", NULL);
+	const i64 *grelAdd = FMAP(i64, "grel_add.i64", NULL);
+	const u32 *nodeOp = FMAP(u32, "node_op.u32", NULL);
+	const i64 *opVal = FMAP(i64, "op_val.i64", NULL), *opAux = FMAP(i64, "op_aux.i64", NULL);
+	const char *dataDir = flatDir;
+    flatDir = getenv("P4_CP1_TABLE") ? getenv("P4_CP1_TABLE") : "build/cp1";
+    const u32 *nodeTmpl = FMAP(u32, "node_tmpl.u32", NULL);
+    const u32 *nodeSegTmpl = FMAP(u32, "node_seg_tmpl.u32", NULL);
+    const u32 *holeMod = FMAP(u32, "hole_mod.u32", NULL);
+    const u64 *tmplOff = FMAP(u64, "tmpl.off.u64", NULL);
+	const u8 *tmplBin = FMAP(u8, "tmpl.bin", NULL);
+	const u32 *tmplSegOff = FMAP(u32, "tmpl_seg_off.u32", NULL), *tsegEnd = FMAP(u32, "tseg_end.u32", NULL);
+	const u32 *tmplHoleOff = FMAP(u32, "tmpl_hole_off.u32", NULL), *holeAt = FMAP(u32, "hole_at.u32", NULL);
+	const u8 *holeW = FMAP(u8, "hole_w.u8", NULL), *holeEnc = FMAP(u8, "hole_enc.u8", NULL);
+	const u16 *holeRtype = FMAP(u16, "hole_rtype.u16", NULL);
+    flatDir = dataDir;
+
+	// ---- 1. the length of every item (a glue run, or one segment of a node's template), then where it goes
+	int reps = getenv("P4_REPS") ? atoi(getenv("P4_REPS")) : 1;
+	if (reps < 1) { fprintf(stderr, "P4_REPS must be positive\n"); return 2; }
+	u64 *at = malloc(8 * ((size_t)nitem + 1));
+	u8 *code = malloc(ncode ? ncode : 1);
+	Rel *rel = malloc(sizeof(Rel) * ((size_t)nrel + 1));
+	double layoutBest = 1e9, emitBest = 1e9, total = 0;
+	u64 pos = 0, nr = 0, nerr = 0;
+	for (int rep = 0; rep <= reps; rep++) { // first iteration warms buffers; excluded
+		double t0 = now();
+		pos = 0;
+		for (u32 i = 0; i < nitem; i++) {
+			at[i] = pos;
+			u32 r = itemRef[i];
+			if (itemKind[i] == 0) {
+				pos += glueOff[r + 1] - glueOff[r];
+			} else {
+				u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[nodeSegTmpl[r]];
+				u32 lo = s ? tsegEnd[b+s-1] : 0, hi = tsegEnd[b+s];
+                u32 shrink = 0;
+                for (u32 h = firstHole(t, lo, tmplHoleOff, holeAt);
+                     h < tmplHoleOff[t+1] && holeAt[h] < hi; h++)
+                    if (holeMod[h] != UINT32_MAX)
+                        shrink += 3 * fits(opVal[nodeOp[r] + h - tmplHoleOff[t]]);
+                pos += hi - lo - shrink;
+			}
+		}
+		at[nitem] = pos;
+		double t1 = now();
+
+		// ---- 2. emit: copy each item's bytes, patch the holes of node segments
+		nr = nerr = 0;
+		for (u32 f = 0; f < nfn; f++) {
+			u64 fstart = at[fnItem[f]];
+			for (u32 m = fnMarkOff[f]; m < fnMarkOff[f + 1]; m++)
+				rel[nr++] = (Rel){fstart + markOff[m], markAdd[m], markSym[m], markType[m], 0};
+			for (u32 i = fnItem[f]; i < fnItem[f + 1]; i++) {
+				u32 r = itemRef[i];
+				u8 *P = code + at[i];
+				if (itemKind[i] == 0) {
+					memcpy(P, glueBin + glueOff[r], glueOff[r + 1] - glueOff[r]);
+					for (u32 k = glueRelOff[r]; k < glueRelOff[r + 1]; k++)
+						rel[nr++] = (Rel){at[i] + grelOff[k], grelAdd[k], grelSym[k], grelType[k], grelSiz[k]};
+					continue;
+				}
+				u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[nodeSegTmpl[r]];
+				u32 lo = s ? tsegEnd[b + s - 1] : 0, hi = tsegEnd[b + s];
+                u32 h0 = firstHole(t, lo, tmplHoleOff, holeAt);
+                u32 cursor = lo, shrink = 0;
+				for (u32 h = h0; h < tmplHoleOff[t + 1] && holeAt[h] < hi; h++) {
+					u32 o = nodeOp[r] + (h - tmplHoleOff[t]);
+					u32 width = holeW[h];
+                    int small = holeMod[h] != UINT32_MAX && fits(opVal[o]);
+                    if (small) width = 1;
+                    memcpy(P + cursor - lo - shrink, tmplBin + tmplOff[t] + cursor,
+                           holeAt[h] - cursor + width);
+                    if (small) {
+                        // Decoded ModRM, including SIB: never the byte before a hole by guess.
+                        u32 m = holeMod[h] - lo - shrink;
+                        P[m] = (P[m] & 63) | 64;
+                    }
+                    u64 hp = at[i] + holeAt[h] - lo - shrink;
+                    cursor = holeAt[h] + holeW[h];
+                    if (small) shrink += 3;
+					i64 v = opVal[o];
+					switch (holeEnc[h]) {
+					case encInt:
+						switch (width) {
+						case 1: code[hp] = (u8)v; break;
+						case 2: { u16 x = (u16)v; memcpy(code + hp, &x, 2); break; }
+						case 4: { u32 x = (u32)v; memcpy(code + hp, &x, 4); break; }
+						case 8: memcpy(code + hp, &v, 8); break;
+						default: nerr++;
+						}
+						break;
+					case encRel32: { // a jump to (item, offset) of the same function
+						i32 x = (i32)((i64)(at[v] + opAux[o]) - (i64)(hp + 4));
+						memcpy(code + hp, &x, 4);
+						break;
+					}
+					case encReloc:
+						if (nr < nrel) rel[nr] = (Rel){hp, opAux[o], (u32)v, holeRtype[h], holeW[h]};
+						nr++;
+						break;
+					default: nerr++;
+					}
+				}
+                memcpy(P + cursor - lo - shrink, tmplBin + tmplOff[t] + cursor, hi - cursor);
+			}
+		}
+		double t2 = now();
+		if (rep) {
+			if (t1 - t0 < layoutBest) layoutBest = t1 - t0;
+			if (t2 - t1 < emitBest) emitBest = t2 - t1;
+			total += t2 - t0;
+		}
+	}
+	double ts = now();
+	qsort(rel, nr < nrel ? nr : nrel, sizeof(Rel), cmpRel);
+	printf("p4cp1 (1 core): lay out %.3f ms, emit %.3f ms (%llu bytes, %u items), sort relocations %.3f ms (%llu); %llu errors; reps %d total %.3f s\n",
+	       layoutBest * 1e3, emitBest * 1e3, (unsigned long long)pos, nitem, (now() - ts) * 1e3,
+	       (unsigned long long)nr, (unsigned long long)nerr, reps, total);
+
+	// ---- check
+	long bad = nerr != 0;
+	size_t m;
+	const u8 *want = FMAP(u8, "oracle/p4_code.bin", &m);
+	const u64 *wfn = FMAP(u64, "oracle/p4_fn_off.u64", NULL);
+    u32 fbad = 0;
+    for (u32 f = 0; f <= nfn; f++)
+        if (at[fnItem[f]] != wfn[f]) fbad++;
+    printf("function offsets: %u differ\n", fbad);
+    bad += fbad;
+	if (m != pos || pos != ncode) {
+		printf("code: %llu bytes, oracle %zu\n", (unsigned long long)pos, m);
+		bad++;
+	} else if (memcmp(code, want, pos) != 0) {
+		long nf = 0;
+		for (u32 f = 0; f < nfn; f++)
+			if (at[fnItem[f]] != wfn[f] || memcmp(code + wfn[f], want + wfn[f], wfn[f + 1] - wfn[f]) != 0)
+				if (nf++ < 5) printf("  function %u differs\n", f);
+		printf("code: %ld functions differ\n", nf);
+		bad++;
+	}
+	printf("code: %llu bytes in %u functions, %s oracle/p4_code.bin\n", (unsigned long long)pos, nfn, bad ? "NOT equal to" : "equal to");
+	const u64 *wo = FMAP(u64, "oracle/p4_rel_off.u64", NULL);
+	const u8 *wsiz = FMAP(u8, "oracle/p4_rel_siz.u8", NULL);
+	const u16 *wtype = FMAP(u16, "oracle/p4_rel_type.u16", NULL);
+	const u32 *wsym = FMAP(u32, "oracle/p4_rel_sym.u32", NULL);
+	const i64 *wadd = FMAP(i64, "oracle/p4_rel_add.i64", NULL);
+	Rel *w = malloc(sizeof(Rel) * ((size_t)nrel + 1));
+	for (u32 i = 0; i < nrel; i++) w[i] = (Rel){wo[i], wadd[i], wsym[i], wtype[i], wsiz[i]};
+	qsort(w, nrel, sizeof(Rel), cmpRel);
+	long rbad = nr != nrel;
+	for (u32 i = 0; i < nrel && i < nr; i++)
+		if (cmpRel(&rel[i], &w[i]) != 0 && rbad++ < 5) printf("  relocation %u differs (offset %llu)\n", i, (unsigned long long)rel[i].off);
+	printf("relocations: %llu, oracle %u, %ld differ\n", (unsigned long long)nr, nrel, rbad);
+	bad += rbad;
+	if (argc > 2) {
+		FILE *f = fopen(argv[2], "wb");
+		fwrite(code, 1, pos, f);
+		fclose(f);
+	}
+	printf(bad ? "P4 FAIL\n" : "P4 OK\n");
+	return bad != 0;
+}

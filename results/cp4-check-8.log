@@ -1,0 +1,6 @@
+output: MAP_HUGETLB 2 MB
+p4cp4 (8 threads): lay out 7.683 ms, emit 79.979 ms (60733909 bytes, 2381252 items), sort relocations 308.762 ms (1780281); 0 errors; reps 2 total 0.186 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+cp4 covered (8 threads, specialized): emit 19.567 ms; 1141371 items; reps 2 total 0.056 s
+P4 OK
