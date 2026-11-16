@@ -1,0 +1,24 @@
+# 2026-11-16T19:19:44Z  19:19:44 up  4:04,  0 user,  load average: 7.21, 7.45, 7.43
+# round 0 done 2026-11-16T19:20:27Z  19:20:27 up  4:04,  0 user,  load average: 9.44, 7.99, 7.61
+# round 1 done 2026-11-16T19:21:06Z  19:21:06 up  4:05,  0 user,  load average: 8.76, 7.98, 7.63
+# round 2 done 2026-11-16T19:21:46Z  19:21:46 up  4:06,  0 user,  load average: 9.83, 8.33, 7.76
+# round 3 done 2026-11-16T19:22:22Z  19:22:22 up  4:06,  0 user,  load average: 6.71, 7.72, 7.58
+# round 4 done 2026-11-16T19:23:05Z  19:23:05 up  4:07,  0 user,  load average: 7.76, 7.77, 7.59
+4        -j1 warm     min   8781.4  median   9507.1  max  10096.3 ms  (5 runs)
+4        -j1 e2e      min  11292.1  median  12253.7  max  12956.8 ms  (5 runs)
+4        -j1 assemble min     89.0  median    112.9  max    144.4 ms  (5 runs)
+4        -j8 warm     min   3328.1  median   3597.9  max   3858.4 ms  (5 runs)
+4        -j8 e2e      min   5368.9  median   6099.7  max   6538.5 ms  (5 runs)
+4        -j8 assemble min     44.5  median     57.2  max     72.1 ms  (5 runs)
+4-tuned  -j1 warm     min   7245.7  median   8315.6  max   9046.3 ms  (5 runs)
+4-tuned  -j1 e2e      min   9641.5  median  11096.7  max  12281.5 ms  (5 runs)
+4-tuned  -j1 assemble min     84.8  median    107.1  max    111.8 ms  (5 runs)
+4-tuned  -j8 warm     min   2721.7  median   3814.4  max   4741.1 ms  (5 runs)
+4-tuned  -j8 e2e      min   5056.0  median   6160.6  max   8001.7 ms  (5 runs)
+4-tuned  -j8 assemble min     43.2  median     57.6  max     65.9 ms  (5 runs)
+p4c-plain -j1 warm     min    106.9  median    110.5  max    155.2 ms  (5 runs)
+p4c-plain -j1 e2e      min   1062.1  median   1270.1  max   1491.3 ms  (5 runs)
+p4c-par  -j1 warm     min    105.6  median    112.3  max    133.5 ms  (5 runs)
+p4c-par  -j1 e2e      min   1015.1  median   1167.6  max   1248.2 ms  (5 runs)
+p4c-par  -j8 warm     min     21.6  median     27.0  max     46.9 ms  (5 runs)
+p4c-par  -j8 e2e      min    508.1  median    566.8  max    842.2 ms  (5 runs)

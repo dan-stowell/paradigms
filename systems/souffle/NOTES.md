@@ -1,4 +1,4 @@
-# Soufflé column: problems 1-3 on MinIO
+# Soufflé column: problems 1-4 on MinIO
 
 Soufflé 2.5, compiled mode (`souffle -g` + g++ -O3), every cell correct against its oracle. Inputs come in through
 `flatio.h` (C++, I/O only): build.sh rewrites the generated reader/writer calls so binary flat-file columns are
@@ -7,6 +7,24 @@ The rules are plain Datalog; nothing in C computes an answer, except the 3b imag
 has no bytes) and the untimed P2-lazy setup that p2lazy.c also does untimed.
 
 ## Surprises
+
+- **P4 (code generation by shape) is correct in Datalog, first run, but ~70x the plain C; the prefix sum is not
+  what costs.** emit.dl / emit2.dl compute every item's length and place, every hole's value (rel32s from where their
+  target landed), every relocation and function offset; a C writer only copies and stores what the `emit` relation
+  says (P4 section). The places of 2.38 M items, a scan Datalog does not have, are a radix-16 tree of block sums
+  walked top down: 0.8 s of 7.2 s on 1 thread (11%). The cost is the 8.65 M output tuples (copies + stores), each a
+  B-tree insert after 2-4 probes: the three hole rules are 3.6 s. bench 19:19Z, load 7-10, 5 interleaved rounds:
+  attempt 2 warm 7246/8316/9046 ms (1 thread), 2722/3814/4741 (8) vs p4.c 107/111/155, p4par 8 threads 21.6/27/47.
+- **The join's driving relation matters more than how many times the join runs (P4).** Driving the holes from the
+  operand list (one scan for all three encodings) or from each encoding's template holes made the probes random and
+  was 1.5x slower overall (rel32 rule 2.0 s vs 0.93 s, integer rule 5.4 s vs 1.7 s) than three scans of the node
+  items in output order, where every probe and insert is nearly sequential.
+- **Set semantics would silently drop 37,703 of the 95,195 marker relocations (P4)**: the oracle is a list, and those
+  markers repeat another one exactly. flatio's loader dedups too (57,492 tuples loaded). Fixed by carrying the
+  marker's id as a column (`index="true"`) into `reloc`, and not writing it out; check_p4 compares counts as well.
+- **Arity >= 7 is a different relation (P4)**: Soufflé stores such relations through an indirect (pointer) index;
+  flatio's bulk load (`btree_set::load`) does not compile for it, and a materialized 7-column `hole` relation was
+  equal on 1 thread but 2.5x slower on 8 (7.5-8.3 s vs 3.0-3.1 s, 19:10Z) than the inlined form.
 
 - **Datalog sorts the typelinks after all, with no pair counting and no C (3a attempt 3, `layout_rank.dl`).** A
   string's rank is a sum over its words of "members of my prefix group with a smaller word", where a prefix is a
@@ -62,9 +80,15 @@ generated main runs once); the warm times are >= 0.3 s, most >= 1 s.
 | 3a layout (layout), same window as layout_rank | 7647 / 8270 / 9097 | 7800 / 8427 / 9310 | 2860 / 3388 / 7055 | 3006 / 3604 / 7302 | |
 | 3b relocate (relocate; rules) | 1054 / 1079 / 1115 | 2086 / 2109 / 2139 | 320 / 366 / 451 | 1205 / 1302 / 1374 | 59-67 / 13.4-29 |
 | 3b image assembly (flatio, C, 4 KB pages) | 54.2 / 54.4 / 55.9 | | 18.0 / 26.1 / 28.5 | | |
+| 4 emit, attempt 1 (emit), 19:19Z load 7-10 | 8781 / 9507 / 10096 | 11292 / 12254 / 12957 | 3328 / 3598 / 3858 | 5369 / 6100 / 6539 | p4.c 107 / 111 / 155; p4par 1: 106 / 112 / 134, 8: 21.6 / 27.0 / 46.9 |
+| 4 emit, attempt 2 (emit2), same rounds | 7246 / 8316 / 9046 | 9642 / 11097 / 12282 | 2722 / 3814 / 4741 | 5056 / 6161 / 8002 | e2e p4.c 1062 / 1270 / 1491, p4par 8: 508 / 567 / 842 |
+| 4 code writer (flatio, C: copies + stores) | 85 / 107 / 112 | | 43 / 58 / 66 | | |
 
 Orders of magnitude: resolve 10-120x the plain C on 1 core (1b worst) and 70-200x the tuned C on 8; reach 30x / 30x; layout
-~500x / ~100x the plain C; relocate's rules ~17x / ~25x (only the C assembly is near C).
+~500x / ~100x the plain C; relocate's rules ~17x / ~25x (only the C assembly is near C); P4 emit ~70x p4.c on 1 thread, ~140x p4par on 8 (8-thread
+numbers at load 7-10 are upper bounds). P4 rows: `bench-p4-20261116T1919Z.txt` (`ONLY='4|4-tuned|p4c' ./bench.sh`);
+the C references' warm = their lay out + emit (best of P4_REPS=5 in the process), e2e = their process, which also
+sorts and checks the relocations (~0.6-0.9 s of it), so it overstates the C.
 
 ## Checks (each must print nothing / P3 OK)
 
@@ -79,6 +103,8 @@ build/reach_lazy -j8 -F build/lazyfacts -D out && cmp out/p2_live.u32 $D/oracle/
 build/layout -j8 -F $D -D out && build/check_p3 $D $D/oracle/p3_image.bin out/p3_addr.u32   # 3a
 build/layout_rank -j8 -F $D -D out && build/check_p3 $D $D/oracle/p3_image.bin out/p3_addr.u32   # 3a attempt 3 (P3 OK)
 build/relocate -j8 -F $D -D out && build/check_p3 $D out/p3_image.out                       # 3b
+P4=/home/exedev/paradigms/data/minio-p4; ./build.sh emit.dl; ./build.sh emit2.dl; gcc -O2 -o build/check_p4 check_p4.c
+build/emit2 -j8 -F $P4 -D out && build/check_p4 $P4 out                                       # 4 (P4 OK); also build/emit
 ```
 `bench.sh` runs all of these each round and complains on stderr if one fails.
 
@@ -145,7 +171,53 @@ C (`image=` directive): copy each symbol's bytes, write each patch's low bytes. 
 (rel x addr x target address): 5.2 s / 1.5 s; attempt 2 inlines it (`.decl site(...) inline`): 2.5 s / 0.74 s at
 load 11 (1.05 / 0.32 s at load 3).
 
+**4 code generation by shape** (emit.dl 60 [81], attempt 1; emit2.dl 74 [99], attempt 2, of which ~8 are the two
+variant switches; check_p4.c 59; the flatio code writer 42 lines of C++). Correct: P4 OK, every byte of
+oracle/p4_code.bin, all 136,635 function offsets, 1,780,281 relocations as a sorted list, at 1 and 8 threads, both
+attempts. What the rules compute: each item's length (glue: its offsets' difference; a node segment: its template's
+segment ends), each item's place (the prefix sum), each function's offset, each hole's value per encoding (integer:
+the operand; rel32: `at(v) + a - (P + 4)`), every relocation (holes of encoding 3, glue relocations placed, markers at
+the function's start), and the copy list. What C does (flatio `code=`, `writeCode`): reads the `emit(kind, at, a, b)`
+tuples into a vector, memcpy's b bytes from glue.bin (kind 0) or tmpl.bin (kind 1) at offset a to position at, then
+stores the low b bytes of a at at (kind 2), and writes the file; nothing else.
+Easy: lengths, hole-to-segment assignment (`h >= lo, h < hi` against the segment table), the rel32 as a join with
+`at` on the target item, relocations as three rules, fnoff a join. Forced: (1) the prefix sum: Datalog has no scan
+and an aggregate cannot recurse, so places are a radix-16 tree: block sums per level by a range aggregate over `len`
+(non-recursive, 5 levels), then `start(L, c) = start(L + 1, parent) + sum of the earlier siblings' block sums`
+(a recursion over 6 levels whose aggregate reads only the lower stratum; at most 15 siblings, a range of an index
+whose prefix is (level, parent)). Without the parent column the sibling join was a full scan per block (it did not
+finish in 100 s). (2) duplicates: markers carry their id (Surprises). (3) bytes: the C writer. Impossible: none.
+Attempt 1 (emit.dl) writes the hole join once, `inline`, so each of its three users re-runs it from the item scan.
+Attempt 2 (emit2.dl, tuned): each node item's template range joined once (`nseg`, then `npos` with its place), the
+holes of each encoding scanned from `npos` in output order with the encoding as an index key, `at` is the tree's level
+0 directly. Tried and dropped (all P4 OK): driving the holes from the operand list or the template holes (random
+probes, 1.5x slower; Surprises), a materialized `hole` (arity 7: Surprises), emit/reloc as bries (on the operand-driven
+version, 1 thread, same window at load 23: compute 14.9 s vs 10.1 s, writing the outputs 4.3 s vs 0.55 s). Profile of attempt 2 on 1 thread (souffleprof, 19:15Z): integer holes 1.74 s
+(5.63 M tuples), relocation holes 0.95 s (1.34 M), rel32 0.93 s (0.70 M), nseg 0.65, template copies 0.44, holeseg
+0.43, at 0.41, bsum 0.30, npos 0.25, glue copies 0.25, glue relocations 0.23, len 0.24, start 0.07. Loading the 14.7 M
+input tuples (7.68 M operands) is 1.2-1.6 s; the writer's tuples->vector 0.3-0.4 s, its copies+stores 85-112 ms
+(1 thread) / 43-58 ms (8). Interpreter (`souffle` without -c): not tried, flatio is a compiled-mode reader.
+
 ## Code excerpts
+
+4, the places (emit2.dl): a radix-16 tree of block sums, walked top down; and a rel32 hole:
+```
+bsum(0, i bshr 4, i, n) :- len(i, n).
+bsum(L, c bshr 4, c, n) :- meta("nitem", m), L = range(1, TOP), c = range(0, (m bshr (4 * L)) + 1),
+                           lo = c bshl (4 * L), hi = (c + 1) bshl (4 * L), n = sum x : { len(i, x), i >= lo, i < hi }.
+start(TOP, 0, 0).
+start(L, c, y + z) :- start(L + 1, p, y), L > 0, bsum(L, p, c, _), z = sum x : { bsum(L, p, c2, x), c2 < c }.
+at(i, y + z) :- start(1, p, y), bsum(0, p, i, _), z = sum x : { bsum(0, p, j, x), j < i }.
+
+holeseg(t, s, enc, k, h - lo, w, rt) :- thole(t, k, h, w, enc, rt), seg(t, s, lo, hi), h >= lo, h < hi.
+npos(i, r, t, s, x) :- nseg(i, r, s, t, _, _), at(i, x).
+#define HOLE(E) npos(_, r, t, s, x), holeseg(t, s, E, k, d, w, rt), op(r, k, v, a)
+emit(1, x, to_number(o + lo), hi - lo) :- nseg(i, _, _, t, lo, hi), at(i, x), toff(t, o).
+emit(2, x + d, v, w) :- HOLE(1).                                         // an integer
+emit(2, x + d, to_number(y) + a - to_number(x + d + 4), 4) :- HOLE(2), at(to_unsigned(v), y).   // rel32
+reloc(x + d, rt, to_unsigned(v), a, w, 0) :- HOLE(3).
+reloc(x + off, ty, sy, a, 0, k + 1) :- fmark(f, k, off, ty, sy, a), fnitem(f, i), at(i, x).
+```
 
 1c, the content-hash join straight over the slot columns (resolve_c2.dl):
 ```
@@ -184,8 +256,8 @@ addr(i, x + y) :- occ(b, c, u, i, _), cbase(b, c, u, x), y = sum o : { occ(b, c,
 ## Files
 
 `*.dl` the cells; `flatio.h` the binary column reader/writer (inputs `IO=flat cols=... [csr=] [index=|pos=]`,
-`.str`/`.key8` string-table columns, `meta=true`; outputs `cols=`, `image=`, `exitafter=`); `build.sh`;
-`bench.sh`; `check_p3.c`; `prep_lazy.c`; `best.sh` (older single-cell timer).
+`.str`/`.key8` string-table columns, `meta=true`; outputs `cols=`, `image=`, `code=`, `exitafter=`); `build.sh`;
+`bench.sh`; `check_p3.c`; `check_p4.c`; `P4-REPORT.md`; `prep_lazy.c`; `best.sh` (older single-cell timer).
 
 ## Install, hello-world, timings, gotchas (installer notes)
 
