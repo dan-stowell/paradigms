@@ -57,4 +57,4 @@ called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), sig(n, mt).
 called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), named(n).
 live(x) :- (called(x, _, _) ; called(_, x, _) ; called(_, _, x)), x != 0.
 
-.output live(IO=flat, cols="p2_live.u32", last="true")
+.output live(IO=flat, cols="p2_live.u32", exitafter="1")

@@ -2,9 +2,10 @@
 //
 // A .dl file names its inputs and outputs with IO=flat directives, for example
 //   .input  edge(IO=flat, csr="p2_edge_off.u32", cols="p2_edge_dst.u32,p2_edge_kind.u8")
-//   .input  flag(IO=flat, index=true, cols="p2_flags.u8")
-//   .output live(IO=flat, cols="live.u32")
-// Input tuples: [row (csr) | position (index=true)] then one value per column (a .u64x2 file gives two).
+//   .input  flag(IO=flat, index="true", cols="p2_flags.u8")
+//   .output live(IO=flat, cols="live.u32", exitafter="1")   // exitafter=N: _exit after the N-th flat output
+// Input tuples: [the CSR row (csr=)] [the element's position (index=true) | its position in its row (pos=true)],
+// then one value per column (a .u64x2 file gives two). File names are relative to -F (the fact dir).
 // Output: column j of the relation (in its first index's order) goes to the j-th file ("-" skips it).
 //
 // Soufflé's own reader interface is one virtual call and one heap tuple per row, then an unhinted insert;
@@ -132,14 +133,9 @@ using bare = std::remove_cv_t<std::remove_reference_t<T>>;
 
 // sort a copy of v in the index's order and bulk-load it
 template <class Ind, class V>
-void loadIndex(Ind& ind, const V& v, bool sorted) {
+void loadIndex(Ind& ind, const V& v) {
 	using C = typename btreeOf<Ind>::cmp;
 	C c;
-	if (sorted) {
-		Ind t = Ind::load(v.begin(), v.end());
-		ind.swap(t);
-		return;
-	}
 	if (std::is_sorted(v.begin(), v.end(), [&](const auto& a, const auto& b) { return c.less(a, b); })) {
 		Ind t = Ind::load(v.begin(), v.end());
 		ind.swap(t);
@@ -154,20 +150,16 @@ void loadIndex(Ind& ind, const V& v, bool sorted) {
 template <class R, class V>
 void bulkLoad(R& rel, V& v) {
 	if constexpr (has_ind_0<R>::value) {
-		static_assert(btreeOf<bare<decltype(rel.ind_0)>>::ok, "flatio: non-btree index");
-		using C0 = typename btreeOf<bare<decltype(rel.ind_0)>>::cmp;
-		C0 c0;
-		// set semantics: sort in the first index's order and drop duplicates; then every index from that
-		auto lt0 = [&](const auto& a, const auto& b) { return c0.less(a, b); };
-		if (!std::is_sorted(v.begin(), v.end(), lt0)) __gnu_parallel::sort(v.begin(), v.end(), lt0);
-		v.erase(std::unique(v.begin(), v.end(), [&](const auto& a, const auto& b) { return c0.equal(a, b); }), v.end());
-		loadIndex(rel.ind_0, v, true);
+		// set semantics: drop duplicate tuples (an index can be a partial order, a multiset, so use the whole
+		// tuple), then load every index in its own order
+		if (!std::is_sorted(v.begin(), v.end())) __gnu_parallel::sort(v.begin(), v.end());
+		v.erase(std::unique(v.begin(), v.end()), v.end());
 #define FLATIO_IND(k)                                                                                    \
 	if constexpr (has_ind_##k<R>::value) {                                                              \
 		static_assert(btreeOf<bare<decltype(rel.ind_##k)>>::ok, "flatio: non-btree index");               \
-		loadIndex(rel.ind_##k, v, false);                                                               \
+		loadIndex(rel.ind_##k, v);                                                                    \
 	}
-		FLATIO_IND(1) FLATIO_IND(2) FLATIO_IND(3) FLATIO_IND(4) FLATIO_IND(5) FLATIO_IND(6) FLATIO_IND(7)
+		FLATIO_IND(0) FLATIO_IND(1) FLATIO_IND(2) FLATIO_IND(3) FLATIO_IND(4) FLATIO_IND(5) FLATIO_IND(6) FLATIO_IND(7)
 		static_assert(!has_ind_8<R>::value, "flatio: more than 8 indexes");
 #undef FLATIO_IND
 	} else {
@@ -193,29 +185,33 @@ void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable&
 	std::vector<Col> cols;
 	size_t nv = 0;
 	for (auto& f : split(opt(d, "cols"))) cols.push_back(openCol(dir, f)), nv += cols.back().width;
+	// leading columns: the CSR row; then the element's position (index=true) or its position in its row (pos=true)
 	std::string csr = opt(d, "csr");
-	bool lead = !csr.empty() || opt(d, "index") == "true";
+	bool byRow = !csr.empty(), byIndex = opt(d, "index") == "true", byPos = opt(d, "pos") == "true";
+	size_t lead = byRow + byIndex + byPos;
 	if (nv + lead != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": columns do not match arity");
-	size_t n = cols.empty() ? 0 : cols[0].n;
+	Col off;
+	if (byRow) off = openCol(dir, csr);
+	size_t n = byRow ? (size_t)off.get(off.n - 1, 0) : cols.empty() ? 0 : cols[0].n;
 	for (auto& c : cols)
 		if (c.n != n) throw std::runtime_error("flatio: " + opt(d, "name") + ": columns differ in length");
 	std::vector<T> v(n);
-	auto fill = [&](size_t i, RamDomain row) {
+	auto fill = [&](size_t i, size_t row, size_t first) {
 		T& t = v[i];
 		size_t k = 0;
-		if (lead) t[k++] = row;
+		if (byRow) t[k++] = row;
+		if (byIndex) t[k++] = i;
+		if (byPos) t[k++] = i - first;
 		for (auto& c : cols)
 			for (int j = 0; j < c.width; j++) t[k++] = c.get(i, j);
 	};
-	if (!csr.empty()) {
-		Col off = openCol(dir, csr);
-		if (off.get(off.n - 1, 0) != (RamDomain)n) throw std::runtime_error("flatio: " + csr + " does not cover the columns");
+	if (byRow) {
 #pragma omp parallel for schedule(dynamic, 4096)
 		for (size_t r = 0; r < off.n - 1; r++)
-			for (size_t i = off.get(r, 0), e = off.get(r + 1, 0); i < e; i++) fill(i, r);
+			for (size_t i = off.get(r, 0), e = off.get(r + 1, 0); i < e; i++) fill(i, r, off.get(r, 0));
 	} else {
 #pragma omp parallel for schedule(static)
-		for (size_t i = 0; i < n; i++) fill(i, i);
+		for (size_t i = 0; i < n; i++) fill(i, 0, 0);
 	}
 	bulkLoad(rel, v);
 	stats.tuples += v.size();
@@ -252,7 +248,9 @@ void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable
 	}
 	stats.write += msSince(t0);
 	stats.lastWrite = msSince(stats.start);
-	if (opt(d, "last") == "true") { // the program's last output: exit without freeing every relation
+	static int written = 0;
+	written++;
+	if (!opt(d, "exitafter").empty() && written >= std::stoi(opt(d, "exitafter"))) { // the last output: exit, do not free every relation
 		stats.report();
 		fflush(stdout);
 		_exit(0);

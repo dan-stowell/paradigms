@@ -1,0 +1,51 @@
+// Problem 1a, resolve: the join by name (ref/flat/README.md). Every slot gets its canonical id: the winner of
+// its name's group, the highest rank and then the lowest id.
+
+.type id = unsigned
+
+.decl kind(g: id, k: unsigned)                         // 1 by package index, 2-3 hashed, 4 by name, 5 reference
+.input kind(IO=flat, index="true", cols="p1_kind.u8")
+.decl namekey(g: id, k1: unsigned, k2: unsigned)       // (0,0): takes no part in the join by name
+.input namekey(IO=flat, index="true", cols="p1_namekey.u64x2")
+.decl rank(g: id, r: unsigned)
+.input rank(IO=flat, index="true", cols="p1_rank.u32")
+.decl flags(g: id, f: unsigned)                        // bit 1: a reference only debug information makes
+.input flags(IO=flat, index="true", cols="p1_flags.u8")
+.decl want(k1: unsigned, k2: unsigned)                 // names the linker looks up itself
+.input want(IO=flat, cols="p1_want.u64x2")
+.decl builtinkey(i: unsigned, k1: unsigned, k2: unsigned)
+.input builtinkey(IO=flat, index="true", cols="p1_builtin.u64x2")
+
+// the groups: every name a definition or reference by name carries, and every name the linker wants
+.decl byname(k1: unsigned, k2: unsigned, g: id)
+byname(k1, k2, g) :- kind(g, k), (k = 4 ; k = 5), namekey(g, k1, k2), k1 != 0.
+.decl group(k1: unsigned, k2: unsigned)
+group(k1, k2) :- byname(k1, k2, _) ; want(k1, k2).
+
+// a definition by package index joins a group that is already there; it never makes one
+.decl member(k1: unsigned, k2: unsigned, g: id)
+member(k1, k2, g) :- byname(k1, k2, g).
+member(k1, k2, g) :- kind(g, 1), namekey(g, k1, k2), k1 != 0, group(k1, k2).
+
+// the winner: the highest rank, then the lowest id
+.decl best(k1: unsigned, k2: unsigned, r: unsigned)
+best(k1, k2, r) :- group(k1, k2), r = max rr : { member(k1, k2, g), rank(g, rr) }.
+.decl winner(k1: unsigned, k2: unsigned, w: id)
+winner(k1, k2, w) :- best(k1, k2, r), w = min g : { member(k1, k2, g), rank(g, r) }.
+
+.decl resolved(g: id, w: id)
+resolved(g, w) :- member(k1, k2, g), winner(k1, k2, w).
+.decl canon(g: id, c: id)
+canon(g, w) :- resolved(g, w).
+canon(g, 0) :- flags(g, f), f band 2 != 0, !resolved(g, _).
+canon(g, g) :- flags(g, f), f band 2 = 0, !resolved(g, _).
+
+// builtin i: its name's winner if that is a definition (rank bit 29)
+.decl builtin(i: unsigned, w: id)
+builtin(i, w) :- builtinkey(i, k1, k2), winner(k1, k2, w), rank(w, r), r band 0x20000000 != 0.
+builtin(i, 0) :- builtinkey(i, k1, k2), !winsdef(k1, k2).
+.decl winsdef(k1: unsigned, k2: unsigned)
+winsdef(k1, k2) :- winner(k1, k2, w), rank(w, r), r band 0x20000000 != 0.
+
+.output builtin(IO=flat, cols="-,p1_builtin.u32", exitafter="2")
+.output canon(IO=flat, cols="-,p1_canon.u32", exitafter="2")
