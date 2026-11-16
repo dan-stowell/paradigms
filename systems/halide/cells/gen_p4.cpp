@@ -73,8 +73,11 @@ public:
 
         segT.compute_root();
         holeRel.compute_root();
-        bs.compute_root().parallel(j, 4096).vectorize(j, 8);
-        bs.update().parallel(j, 4096).vectorize(j, 8);
+        // (split explicitly: parallel(j, 4096).vectorize(j, 8) vectorizes the OUTER loop, which kept the name j,
+        // and the pure and update steps then disagreed on the tail: lanes read uninitialized bs, a crash 1 run in N)
+        Var jo("jo"), ji("ji");
+        bs.compute_root().split(j, jo, ji, 4096, TailStrategy::GuardWithIf).parallel(jo).vectorize(ji, 8, TailStrategy::GuardWithIf);
+        bs.update().split(j, jo, ji, 4096, TailStrategy::GuardWithIf).parallel(jo).vectorize(ji, 8, TailStrategy::GuardWithIf);
         seg.parallel(j, 4096);
     }
 };
@@ -157,7 +160,8 @@ public:
             inb.compute_root().parallel(b);
             inb.update().parallel(b);
             off.compute_root();
-            lay.parallel(i, 1 << 16).vectorize(i, 8);
+            Var io("io"), ii("ii");
+            lay.split(i, io, ii, 1 << 16, TailStrategy::GuardWithIf).parallel(io).vectorize(ii, 8, TailStrategy::GuardWithIf);
         }
     }
 };

@@ -87,6 +87,117 @@ int main(int argc, char **argv) {
     auto src = mapSources(&srcTmpl);
     double tload = now();
 
+    // P4_TOPK=K: emit only the nodes of the K commonest templates (by node count); every other node's bytes become
+    // glue, taken (as all glue is) from fc's output, merged with the glue around it into one run per stretch. A
+    // host-side rewrite of the item arrays (untimed, reported), so the same pipelines run on the new problem.
+    std::vector<u8> kKind, kSrc;
+    std::vector<u32> kRef, kSeg, kFnItem, kGlueRelOff, kGrelOff, kGrelSym;
+    std::vector<u64> kGlueOff;
+    std::vector<u8> kGrelSiz;
+    std::vector<u16> kGrelType;
+    std::vector<i64> kGrelAdd, kOpVal, kOpAux;
+    if (getenv("P4_TOPK")) {
+        double tk0 = now();
+        long K = atol(getenv("P4_TOPK"));
+        u32 ntmpl = (u32)metaGet("ntmpl"), nnode = (u32)metaGet("nnode");
+        const u8 *code0 = FMAP(u8, "oracle/p4_code.bin", NULL);
+        std::vector<u32> cnt(ntmpl), order(ntmpl);
+        for (u32 r = 0; r < nnode; r++) cnt[nodeTmpl(r)]++;
+        for (u32 t = 0; t < ntmpl; t++) order[t] = t;
+        std::stable_sort(order.begin(), order.end(), [&](u32 a, u32 b) { return cnt[a] > cnt[b]; });
+        std::vector<u8> keep(ntmpl, 0);
+        for (long k = 0; k < K && k < (long)ntmpl; k++) keep[order[k]] = 1;
+        // item lengths and old positions (the output does not move: the new items cover the same bytes)
+        std::vector<u64> at0(nitem + 1);
+        auto segLoLen = [&](u32 t, u32 sg, u32 *lo) { u32 b = tsegOff(t); *lo = sg ? tsegEnd(b + sg - 1) : 0; return tsegEnd(b + sg) - *lo; };
+        for (u32 i = 0; i < nitem; i++) {
+            u32 r = itemRef(i), lo;
+            at0[i + 1] = at0[i] + (itemKind(i) == 0 ? glueOff(r + 1) - glueOff(r) : segLoLen(nodeTmpl(r), itemSeg(i), &lo));
+        }
+        std::vector<u32> newOf(nitem + 1);  // old item -> new item
+        std::vector<u64> runAt;              // new glue run -> its start
+        kGlueOff.push_back(0);
+        kGlueRelOff.push_back(0);
+        kFnItem.push_back(0);
+        long nodesKept = 0, holesKept = 0;
+        for (u32 f = 0; f < nfn; f++) {
+            long run = -1;  // the open glue run's new item index
+            for (u32 i = fnItem(f); i < fnItem(f + 1); i++) {
+                u32 r = itemRef(i);
+                bool kept = itemKind(i) == 1 && keep[nodeTmpl(r)];
+                if (kept) {
+                    run = -1;
+                    newOf[i] = kRef.size();
+                    kKind.push_back(1), kRef.push_back(r), kSeg.push_back(itemSeg(i));
+                    continue;
+                }
+                if (run < 0) {  // open a run
+                    run = kRef.size();
+                    kKind.push_back(0), kRef.push_back(runAt.size()), kSeg.push_back(0);
+                    runAt.push_back(at0[i]);
+                    kGlueOff.push_back(kGlueOff.back());
+                    kGlueRelOff.push_back(kGlueRelOff.back());
+                }
+                newOf[i] = run;
+                u64 base = runAt.back();
+                kGlueOff.back() += at0[i + 1] - at0[i];
+                if (itemKind(i) == 0) {
+                    for (u32 k = glueRelOff(r); k < glueRelOff(r + 1); k++)
+                        kGrelOff.push_back(at0[i] - base + grelOff(k)), kGrelSiz.push_back(grelSiz(k)), kGrelType.push_back(grelType(k)),
+                            kGrelSym.push_back(grelSym(k)), kGrelAdd.push_back(grelAdd(k)), kGlueRelOff.back()++;
+                } else {  // a demoted node segment: its relocation holes become the run's relocations
+                    u32 t = nodeTmpl(r), lo, len = segLoLen(t, itemSeg(i), &lo);
+                    for (u32 h = tholeOff(t); h < tholeOff(t + 1); h++) {
+                        if (holeAt(h) < lo || holeAt(h) >= lo + len || holeEnc(h) != 3) continue;
+                        u32 o = nodeOp(r) + (h - tholeOff(t));
+                        kGrelOff.push_back(at0[i] - base + holeAt(h) - lo), kGrelSiz.push_back(holeW(h)), kGrelType.push_back(holeRtype(h)),
+                            kGrelSym.push_back((u32)opVal(o)), kGrelAdd.push_back(opAux(o)), kGlueRelOff.back()++;
+                    }
+                }
+            }
+            kFnItem.push_back(kRef.size());
+        }
+        newOf[nitem] = kRef.size();
+        // the kept nodes' jumps: (old item v, offset a) -> (the new item holding it, a + its distance from that item's start)
+        std::vector<u64> newStart(kRef.size() + 1);
+        newStart[kRef.size()] = at0[nitem];
+        for (u32 i = nitem; i-- > 0;) newStart[newOf[i]] = at0[i];  // (the first old item of each new one wins)
+        kOpVal.assign(opVal.data(), opVal.data() + opVal.dim(0).extent());
+        kOpAux.assign(opAux.data(), opAux.data() + opAux.dim(0).extent());
+        std::vector<u8> seen(nnode, 0);
+        for (size_t ni = 0; ni < kRef.size(); ni++) {
+            if (kKind[ni] != 1 || seen[kRef[ni]]) continue;
+            u32 r = kRef[ni], t = nodeTmpl(r);
+            seen[r] = 1, nodesKept++;
+            for (u32 h = tholeOff(t); h < tholeOff(t + 1); h++) {
+                u32 o = nodeOp(r) + (h - tholeOff(t));
+                holesKept++;
+                if (holeEnc(h) != 2) continue;
+                u32 v = (u32)opVal(o), nv = newOf[v];
+                kOpVal[o] = nv;
+                kOpAux[o] = opAux(o) + (i64)(at0[v] - newStart[nv]);
+            }
+        }
+        // the source: the new glue (from fc's output), then tmpl.bin
+        size_t g = (kGlueOff.back() + 4095) & ~(size_t)4095, tsz = src.dim(0).extent() - 64 - srcTmpl;
+        kSrc.assign(g + tsz + 4096, 0);
+        for (size_t q = 0; q < runAt.size(); q++) memcpy(kSrc.data() + kGlueOff[q], code0 + runAt[q], kGlueOff[q + 1] - kGlueOff[q]);
+        memcpy(kSrc.data() + g, src.data() + srcTmpl, tsz);
+        srcTmpl = (int)g;
+        u32 nitem2 = kRef.size();
+        itemKind = Buffer<u8, 1>(kKind.data(), nitem2), itemRef = Buffer<u32, 1>(kRef.data(), nitem2), itemSeg = Buffer<u32, 1>(kSeg.data(), nitem2);
+        glueOff = Buffer<u64, 1>(kGlueOff.data(), kGlueOff.size()), glueRelOff = Buffer<u32, 1>(kGlueRelOff.data(), kGlueRelOff.size());
+        grelOff = Buffer<u32, 1>(kGrelOff.data(), kGrelOff.size()), grelSiz = Buffer<u8, 1>(kGrelSiz.data(), kGrelSiz.size());
+        grelType = Buffer<u16, 1>(kGrelType.data(), kGrelType.size()), grelSym = Buffer<u32, 1>(kGrelSym.data(), kGrelSym.size());
+        grelAdd = Buffer<i64, 1>(kGrelAdd.data(), kGrelAdd.size());
+        fnItem = Buffer<u32, 1>(kFnItem.data(), kFnItem.size());
+        opVal = Buffer<i64, 1>(kOpVal.data(), kOpVal.size()), opAux = Buffer<i64, 1>(kOpAux.data(), kOpAux.size());
+        src = Buffer<u8, 1>(kSrc.data(), (int)(g + tsz + 64));
+        printf("topk K=%ld: %u items (was %u), %zu glue runs, %llu glue bytes, %ld nodes kept with %ld holes; rewrite %.0f ms\n", K, nitem2, nitem,
+               runAt.size(), (unsigned long long)kGlueOff.back(), nodesKept, holesKept, (now() - tk0) * 1e3);
+        nitem = nitem2;
+    }
+
     Buffer<u32, 1> segLo(ntseg + 1), segSrc(ntseg + 1), segH0(ntseg + 1), segR0(ntseg + 1), relHole(nthole);
     Buffer<u32, 1> at(nitem + 1), rat(nitem + 1);
     size_t codeLen = (ncode + 64 + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
@@ -172,7 +283,6 @@ int main(int argc, char **argv) {
         bad += checkEmit();
     } else {
         printf("threads=%s huge=%d\n", th ? th : "default", huge);
-        // (a wrapping lambda: timeRuns(runSeg) itself crashed in this build; not understood, see NOTES.md)
         Stat s = timeRuns([&] { runSeg(); });
         printf("4 templates       " STAT_FMT "\n", STAT_ARGS(s));
         for (int v = 0; v < nLayouts; v++) {
