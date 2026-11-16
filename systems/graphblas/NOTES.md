@@ -19,11 +19,16 @@ diagnostics (method chosen, threads, time): every profile below comes from it.
 
 ## Surprises
 
-- **The flood does not parallelise at all, because GraphBLAS parallelises per call and each call is small.** p2gb
+- **The flood does not parallelise, because GraphBLAS parallelises per call and each call is small.** p2gb
   makes 382 vxm/mxv calls; the average BFS frontier is ~7k nodes (663k live / 97 levels), below SuiteSparse's work
-  grain (`GxB_CHUNK`, 64k), so every call runs on one thread (burble: 368 of 368 multiply calls `nthreads 1`). Process
-  CPU time of the flood is 220-280 ms at 1, 2, 4 and 8 threads. Forcing a finer grain (`GB_CHUNK=8192`) makes CPU time
-  2x and the 8-thread wall time 1.1-1.5 s instead of 0.5 s (load ~18). 8 threads is *slower* than 1 on this shared VM.
+  grain (`GxB_CHUNK`, 64k), so almost every call runs on one thread (burble, 8 threads: 379 of 382 vxm/mxv calls on 1 thread). The
+  wall time is flat in the thread count: best of 7 at load ~7 (18:10Z), 1/2/4/8 threads 192 / 188 / 187 / 173 ms, while
+  process CPU time grows 192 -> 256 ms (spinning up teams that have nothing to do). bench.sh: 1 thread 192-203 ms,
+  8 threads 179-213 ms (ranges overlap). A finer grain (`GB_CHUNK=8192`) doubles CPU time (400 ms) for 161-223 ms
+  wall, within noise; at load ~18 the same setting was 2-3x slower (1.1-1.5 s). The C level-synchronous flood
+  (p2par) gets 30-40 -> 15-26 ms from the same 8 cores, because a level there is one parallel loop over the frontier,
+  not ~6 library calls each deciding its own thread count. One solve is 1,166 GraphBLAS calls (382 of them
+  vxm/mxv), ~190 us each on average.
 - **Push/pull direction optimisation is a 40x loss here.** Pull (`mxv` over A0', unvisited rows) 11.5 s, push 0.26-0.89 s
   (1 thread, same window); storing A0 by column so SuiteSparse picks itself ("col": dot products) 14.3 s. Only 13% of
   the nodes are ever live, so the unvisited set is never small. SuiteSparse does not switch direction by itself for
@@ -148,8 +153,9 @@ OK(GrB_eWiseAdd(canon, NULL, NULL, GrB_SECOND_UINT32, canon, cid, NULL));
 ```
 
 **Where the time goes** (1 thread, burble, JIT): the builds (sorts of 0.8-2.6 M tuples, ~50-120 ms each), the
-join-back products (190 and 180 ms: SuiteSparse builds a hash of G's hypersparse rows first), and ~40 whole-vector
-passes over the 5.2 M slots (apply, select, eWiseMult, 15-30 ms each). Holding the per-key vectors sparse
+join-back products (190 and 180 ms: SuiteSparse builds a hash of G's hypersparse rows first), and whole-vector
+passes (at least 44 of the 141 calls of a P1 solve read a full 5.2 M- or 9.4 M-entry vector: apply, select,
+eWiseMult, extract, 15-30 ms each). Holding the per-key vectors sparse
 (`GxB_SPARSE`) instead of letting selects stay bitmaps changed nothing measurable. The C reference does one hash
 table and three passes. **Easy:** the winner rule (dup = MAX), "candidates join only existing groups" (a structural
 mask), the join back as a product, 1c's rules as compares on packed values. **Forced:** the 128-bit key into 60 bits
@@ -168,4 +174,30 @@ in the logic; the speed is 5-15x the plain C (below). **Lines:** p1gb.c 300 (1a 
 
 ## Timings
 
-TIMINGS
+`bench.sh` 2026-11-16T18:03:19Z-18:09:54Z, load 9.9 -> 7.1 (other builders), five interleaved rounds of 1 and 8
+threads, each warm number the best of 10 (P2) or 5 (P1) in-process solves, then min / median / max over the five
+processes; e2e = one whole process (start, mmap, building the GraphBLAS objects, one solve, writing out/, the
+oracle check). JIT build. Raw output: `results-bench-20261116T1809Z.txt`. C references in the same window: `p2par`,
+`p2lazy` and `p1par` (tuned C, OpenMP, passive wait) at the same thread counts. ms.
+
+| cell | GraphBLAS 1 thr warm | GraphBLAS 8 thr warm | tuned C 1 thr | tuned C 8 thr | GB / C (8 thr, medians) |
+|---|---|---|---|---|---|
+| P2 flood (+ S join) | 191.5 / 195.5 / 202.8 (193.5 / 197.4 / 204.7) | 178.6 / 186.3 / 212.6 (180.8 / 188.2 / 214.7) | p2par 29.6 / 33.8 / 39.5; p2lazy 67.9 / 74.9 / 80.1 | p2par 14.5 / 20.2 / 26.4; p2lazy 17.2 / 25.1 / 33.0 | 9.2x p2par |
+| P2 flood, JIT off | 201.5 / 209.5 / 212.7 | 189.1 / 192.7 / 228.8 | | | |
+| 1a (guard) | 841 / 918 / 938 | 268 / 306 / 339 | p1par 48.9 / 50.6 / 53.9 | 14.6 / 16.9 / 18.3 | 18x |
+| 1a (no guard) | 599 / 612 / 699 | 175 / 206 / 411 | | | 12x |
+| 1b | 503 / 537 / 697 | 162 / 194 / 203 | p1par 31.3 / 32.5 / 35.3 | 8.2 / 9.4 / 11.7 | 21x |
+| 1c (guard) | 1146 / 1198 / 1294 | 279 / 349 / 392 | p1par 41.9 / 44.0 / 50.9 | 12.4 / 14.7 / 15.4 | 24x |
+| 1c (no guard) | 682 / 705 / 820 | 176 / 204 / 325 | | | 14x |
+| P1 all (guard) | 2535 / 2686 / 2979 | 723 / 848 / 962 | | | |
+| P1 all (no guard, JIT off) | 2162 / 2198 / 3011 | 619 / 832 / 1002 | | | |
+
+| e2e | 1 thread | 8 threads |
+|---|---|---|
+| P2 (GraphBLAS) | 857 / 935 / 1205 | 563 / 658 / 696 |
+| P2 (C p2par, 1 rep) | 88 / 113 / 134 | 85 / 107 / 143 |
+| P1 all (GraphBLAS) | 2902 / 3097 / 3444 | 1055 / 1535 / 1925 |
+
+P2's e2e is mostly the matrix builds (GraphBLAS sorts 8.3 M edge tuples into four matrices: ~0.5 s); P1 loads the
+flat files zero-copy, so its e2e is the solve plus the 1-rep noise. Plain C references from the brief (1 core):
+P1a 195, 1b 44, P2 55 ms; on those, GraphBLAS 1 thread is 4.7x (1a), 12x (1b), 3.5x (P2).

@@ -12,8 +12,9 @@
 
 2. **Per-level work is below GraphBLAS's parallel grain.** The average frontier is ~7k nodes (663k live / 97
    levels); SuiteSparse picks threads per call from the work (`GxB_CHUNK`, default 64k), so almost every vxm runs
-   on 1 thread (burble: `nthreads 1 fine hash: 1`). Process CPU time for the flood is 220-280 ms at 1, 2, 4 and 8
-   threads alike; lowering the chunk to 8192 doubles CPU time and makes the 8-thread flood 2-3x slower (load ~18).
+   on 1 thread (burble, 8 threads: 379 of 382 vxm/mxv calls). Wall time 192 / 188 / 187 / 173 ms at 1 / 2 / 4 / 8
+   threads (load ~7), while CPU time grows 192 -> 256 ms; lowering the chunk to 8192 doubles CPU time (400 ms) for
+   no wall-time gain (161-223 ms; at load ~18 it was 2-3x slower).
    The flood is not data-parallel at the grain GraphBLAS can use; the parallelism that exists is across levels
    (ATTACKS 3's asynchronous worklist), which a bulk-synchronous library cannot express.
 
@@ -25,6 +26,9 @@
 
 4. **Resolve's join as a merge of sorted lists.** 1a's group-by is a vector *build* with dup=MAX (a sort), and the
    join back is either `extract` (a hash lookup per member into a hypersparse 2^60 vector) or `w any.first G` with G
-   the key x slot incidence matrix (a merge of two sorted lists). They tie (1a 1.0-1.3 s vs 1.1-1.3 s, 1 thread).
-   The cost is the sort in the build, not the lookup: a radix-partitioned build (what p1par does by hand) is the
-   lever, and GraphBLAS gives no handle on how build sorts.
+   the key x slot incidence matrix (a merge of two sorted lists). They tie (1a 1.0-1.3 s vs 1.1-1.3 s, 1 thread,
+   load ~13). Profile (1 thread, JIT): builds ~250 ms per 1a/1c, the join-back products ~180-190 ms each (SuiteSparse
+   hashes G's hypersparse rows first), and whole-vector passes (at least 44 of the 141 calls of a P1 solve read a full 5.2 M- or 9.4 M-entry vector, 15-30 ms each). The C does one
+   hash table and three passes (p1par 1a: 49-54 ms on 1 thread). Kill test for a better GraphBLAS 1a: densify the
+   key first (one build to get the sorted unique keys, their positions as dense group ids), so the join back is a
+   gather from a dense vector, not a product with a 2^60-row matrix; kill if 1a stays above 10x p1par.
