@@ -2,7 +2,9 @@
 //   ddflow p2   DATA_DIR [phased] [-w N]         full computation (or index, then flood), checked against oracle/p2_live.u32
 //   ddflow inc  DIR_A DIR_B [REPS] [-w N]        full on A, then apply the fact diff A->B (and back) REPS times;
 //                                                checks the updated live set against B's oracle (via the id map)
+//   ddflow p1inc DIR_A DIR_B [REPS] [-w N]       the same for problem 1a+1b (resolve), checked against both oracles
 mod facts;
+mod p1;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -200,6 +202,9 @@ fn main() {
     let mode = args[1].clone();
     let pos: Vec<String> = args[2..].iter().take_while(|a| !a.starts_with('-')).cloned().collect();
     let rest: Vec<String> = args[2 + pos.len()..].to_vec();
+    if mode == "p1inc" {
+        return p1::main(&pos, rest);
+    }
     let (fa, fb, reps, oracle_b, ub) = match mode.as_str() {
         "p2" => {
             let f = facts::load(&pos[0], None, None);
