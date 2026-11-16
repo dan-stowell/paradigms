@@ -140,3 +140,4 @@ do since the last milestone? If it stalled, what is the blocker, and what am I d
 stayed at 4 backed entries but 3 and 4 gained measured extensions. Not stalled. The grid's frame is filled, so the
 next gains are outside it: Differential Dataflow asks whether a relink after a small edit needs most of this work at
 all (builder running), and a Halide cell on the flattened P4 stream tests whether ATTACKS 4 transfers (builder running).
+- 2026-11-16T19:40Z full-grid skeptic triaged (5 accepted: Halide P3a poison check, Goose P3b disjoint-file write, ATTACKS 2 TLB counters -> Codex codex-review5; GRID Futhark P2 levels fixed).

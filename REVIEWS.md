@@ -18,3 +18,11 @@
 4. Futhark sequential worklist beats its parallel flood, ATTACKS said "no worklist" -> **accept, fixed** in ATTACKS 3 (the fastest Futhark flood is the one that drops data parallelism).
 5. ATTACKS 3 in Halide unmeasured -> **accept, measured** (results/halide-levelfree.md; lead reran 19:30Z): batching k levels per call is 1.0-1.2x slower; calls ~0.02 ms each, the per-level passes are the cost.
 6. None found.
+
+## Full-grid skeptic (reviews/done/20261116T1930-codex-skeptic-full.md, on 5e179fe), triaged 2026-11-16T19:40Z
+1. Halide P3a output initialised from the oracle (an omitted write passes) -> **accept**: Codex codex-review5 A (poisoned output + planted omission). Cell stays counted pending it.
+2. Goose P3b "falls down" broader than measured (distributed output 17-24 ms works; only the gathered array fails) -> **accept**: codex-review5 B measures disjoint file ranges incl. assembly; GRID wording after.
+3. STATUS called Goose P4 a tie -> already fixed in the STATUS written after 5e179fe (join cost stated); warm-page caveats already in GRID.
+4. GRID Futhark P2 still said 111 levels, omitted the faster sequential worklist -> **accept, fixed** (45 levels; 67/102/130 vs 156/201/258).
+5. ATTACKS 2's "TLB reach, not faults" for the join is asserted, not counted -> **accept**: codex-review5 C (perf dTLB + faults, page size verified).
+6. None found.
