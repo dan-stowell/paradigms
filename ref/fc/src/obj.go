@@ -1,0 +1,813 @@
+// obj.go: the compiler's context for one package, and how a finished function or data symbol becomes part of
+// the object file. Symbols are cmd/internal/obj's LSyms, filled in directly (bytes, relocations, pc tables);
+// obj.WriteObjFile serializes them. The assembler half of cmd/internal/obj (Progs) is not used.
+package main
+
+import (
+	"bufio"
+	"encoding/binary"
+	"fmt"
+	"go/ast"
+	"go/token"
+	"go/types"
+	"internal/abi"
+	"log"
+	"os"
+	"sort"
+	"strings"
+	"sync"
+	"sync/atomic"
+
+	"cmd/internal/bio"
+	"cmd/internal/obj"
+	"cmd/internal/obj/x86"
+	"cmd/internal/objabi"
+	"cmd/internal/src"
+)
+
+type compiler struct {
+	pr       *Program
+	pkg      *Pkg
+	info     *types.Info
+	tpkg     *types.Package
+	ctxt     *obj.Link
+	path     string // the package's path as the linker knows it (-p)
+	trimpath string
+
+	fileIdx      map[*token.File]int32
+	lineFileIdx  map[string]int32 // the files //line directives name (fileLine)
+	nOwnFiles    int              // the package's own files are the first of the file table (canonFiles)
+	mu           sync.Mutex
+	funcs        []*funcOut // finished functions, in the order they will be written
+	closures     map[string]int
+	strSyms      map[string]*obj.LSym
+	tmpN         map[string]int // per kind of static symbol: how many (staticSym)
+	runtime      map[string]*obj.LSym
+	initCode     []func(g *gen) // dynamic initialization of package-level variables, in order
+	strHdrs      map[string]*obj.LSym
+	noWB         bool // no write barriers (parts of the runtime)
+	bodylessOnce sync.Once
+	bodylessFns  map[string]bool   // functions of the package declared without a body
+	depInit      func(p *Pkg) bool // does a dependency have an init task?
+	forceInit    bool              // emit an init task even with nothing to run (the stock object has one)
+	errs         []string
+	hasInit      bool
+	abis         *symABIs
+	hdrMu        sync.Mutex
+	fnSem        *prioPool // slots for compiling functions in parallel (shared by all packages of a build)
+	fnHelpers    int       // how many of them this package may ask for besides its own
+	embedOnce    sync.Once
+	layout       layoutCache
+	mixed        bool      // one package among stock-compiled ones (tools/fc/test.sh)
+	settled      bool      // functions by demand: the package's count of Program.pending is given back
+	embed        *embedCfg // from -embedcfg (mixed mode)
+	zeroSyms     map[int64]*obj.LSym
+	globGen      *gen // names the function literals of package-level initializers
+	ninit        int
+	dynInits     []string // variables initialized by code
+	parity       func()   // mixed mode: define what stock importers expect of this object
+	instances    map[string]bool
+	instQueue    []*instance
+	shard        *shardState // a shard compiler (shard.go), nil for a package
+	fsFast       sync.Map    // *types.Func -> *obj.LSym: funcSym's answers
+	rtypeState               // rtype.go: descriptors written; needEq, needHash, needWrapper for the code generator
+}
+
+func newCompiler(pr *Program, p *Pkg, path, trimpath string) *compiler {
+	ctxt := obj.Linknew(&x86.Linkamd64)
+	ctxt.Pkgpath = path
+	ctxt.Flag_optimize = true
+	ctxt.DiagFunc = func(format string, args ...any) { log.Fatalf("fc: "+format, args...) }
+	ctxt.Std = p.Standard
+	c := &compiler{pr: pr, pkg: p, info: p.info, tpkg: p.tpkg, ctxt: ctxt, path: path, trimpath: trimpath,
+		fileIdx: map[*token.File]int32{}, closures: map[string]int{}, strSyms: map[string]*obj.LSym{}, tmpN: map[string]int{},
+		runtime: map[string]*obj.LSym{}, strHdrs: map[string]*obj.LSym{}, instances: map[string]bool{}}
+	return c
+}
+
+// Layout questions are asked over and over for the same types, and go/types answers each from scratch.
+// (Sizes, alignments, field offsets and pointer maps are on the type objects: facts.go.)
+type layoutCache struct {
+	mu       sync.Mutex
+	names    map[types.Type]string
+	abis     map[*types.Signature]*abiInfo
+	callABIs map[abiCallKey]*abiInfo
+	hasPtr   map[types.Type]bool
+}
+
+// wordLayout: size and alignment of the types whose layout does not depend on anything else (linux/amd64,
+// as types.SizesFor("gc", "amd64") has them), which is most of what is asked: no lock, no map.
+func wordLayout(t types.Type) (size, align int64, ok bool) {
+	switch u := t.Underlying().(type) {
+	case *types.Basic:
+		switch u.Kind() {
+		case types.Bool, types.Int8, types.Uint8:
+			return 1, 1, true
+		case types.Int16, types.Uint16:
+			return 2, 2, true
+		case types.Int32, types.Uint32, types.Float32:
+			return 4, 4, true
+		case types.Int, types.Uint, types.Int64, types.Uint64, types.Uintptr, types.Float64, types.UnsafePointer:
+			return 8, 8, true
+		case types.Complex64:
+			return 8, 4, true
+		case types.Complex128:
+			return 16, 8, true
+		case types.String:
+			return 16, 8, true
+		}
+	case *types.Pointer, *types.Map, *types.Chan, *types.Signature:
+		return 8, 8, true
+	case *types.Slice:
+		return 24, 8, true
+	case *types.Interface:
+		if _, tp := types.Unalias(t).(*types.TypeParam); !tp {
+			return 16, 8, true
+		}
+	}
+	return 0, 0, false
+}
+
+func (c *compiler) sizeof(t types.Type) int64 {
+	if s, _, ok := wordLayout(t); ok {
+		return s
+	}
+	// Arrays and structs: gc's rules (go/types gcsizes.go), with every answer kept on the type object, the
+	// answers for the elements and fields included; go/types' own Sizeof works a nested struct out again
+	// at every level, and a map per compiler kept only what that compiler had asked.
+	f := factsOf(t)
+	if f != nil {
+		if v := f.size.Load(); v != 0 {
+			return v - 2
+		}
+	}
+	var v int64
+	switch u := t.Underlying().(type) {
+	case *types.Array:
+		n := u.Len()
+		if n > 0 {
+			switch e := c.sizeof(u.Elem()); {
+			case e < 0:
+				v = -1 // element too large
+			case e > 0:
+				const maxInt64 = 1<<63 - 1
+				if e > maxInt64/n {
+					v = -1
+				} else {
+					v = e * n
+				}
+			}
+		}
+	case *types.Struct:
+		if n := u.NumFields(); n > 0 {
+			offs := c.fieldOffsets(u)[n-1]
+			size := c.sizeof(u.Field(n - 1).Type())
+			if offs < 0 || size < 0 {
+				v = -1
+			} else {
+				// gc: the last field of a struct that has a size is not allowed to have none
+				if offs > 0 && size == 0 {
+					size = 1
+				}
+				v = alignUp(offs+size, c.alignof(t))
+			}
+		}
+	default:
+		v = c.pr.sizes.Sizeof(t)
+	}
+	if f != nil {
+		f.size.Store(v + 2)
+	}
+	return v
+}
+
+func alignUp(x, a int64) int64 { return (x + a - 1) &^ (a - 1) }
+
+func (c *compiler) alignof(t types.Type) int64 {
+	if _, a, ok := wordLayout(t); ok {
+		return a
+	}
+	f := factsOf(t)
+	if f != nil {
+		if v := f.align.Load(); v != 0 {
+			return v
+		}
+	}
+	var v int64
+	switch u := t.Underlying().(type) {
+	case *types.Array:
+		v = c.alignof(u.Elem())
+	case *types.Struct:
+		if u.NumFields() == 0 && isAtomicAlign64(t) {
+			v = 8 // (the empty struct that asks for the struct around it to be 64-bit aligned)
+			break
+		}
+		v = 1
+		for i := 0; i < u.NumFields(); i++ {
+			if a := c.alignof(u.Field(i).Type()); a > v {
+				v = a
+			}
+		}
+	default:
+		v = c.pr.sizes.Alignof(t)
+	}
+	if f != nil {
+		f.align.Store(v)
+	}
+	return v
+}
+
+// isAtomicAlign64: go/types' _IsSyncAtomicAlign64.
+func isAtomicAlign64(t types.Type) bool {
+	n, _ := types.Unalias(t).(*types.Named)
+	if n == nil {
+		return false
+	}
+	o := n.Obj()
+	return o.Name() == "align64" && o.Pkg() != nil && (o.Pkg().Path() == "sync/atomic" || o.Pkg().Path() == "internal/runtime/atomic")
+}
+
+// fieldOffsets: the offsets of a struct's fields. The result is shared: do not modify it.
+func (c *compiler) fieldOffsets(s *types.Struct) []int64 {
+	f := factsOf(s)
+	if p := f.offs.Load(); p != nil {
+		return *p
+	}
+	v := make([]int64, s.NumFields())
+	var offs int64
+	for i := range v {
+		if offs < 0 {
+			v[i] = -1 // all remaining offsets are too large
+			continue
+		}
+		ft := s.Field(i).Type()
+		offs = alignUp(offs, c.alignof(ft))
+		v[i] = offs
+		if d := c.sizeof(ft); d >= 0 && offs >= 0 {
+			offs += d
+		} else {
+			offs = -1
+		}
+	}
+	f.offs.Store(&v)
+	return v
+}
+
+type bail string
+
+// giveUp abandons the package: something the compiler does not handle yet.
+func giveUp(format string, a ...any) { panic(bail(fmt.Sprintf(format, a...))) }
+
+// ---- symbols
+
+// pkgPrefix is a package's path as it appears in symbol names.
+func (c *compiler) pkgPrefix(p *types.Package) string {
+	if p == c.tpkg {
+		return objabi.PathToPrefix(c.path)
+	}
+	if p.Name() == "main" && p.Path() != "main" && (c.pr.mainPath == "" || c.pr.mainPath == p.Path()) {
+		// the program's main package is "main" to the linker; only the package itself references its
+		// symbols. (A Bazel build can import another main package, a go_library, by its path: pr.mainPath.)
+		return "main"
+	}
+	return objabi.PathToPrefix(p.Path())
+}
+
+func (c *compiler) lookup(name string, abi obj.ABI, pkg string) *obj.LSym {
+	// (a table of this compiler's own in front of the library's was tried, 2026-11-16: slower. Most lookups
+	// are a compiler's first sight of a name, the callers keep what they ask for twice, and hashing a
+	// 60-byte name costs the same in any table)
+	return c.ctxt.LookupABIInit(name, abi, func(s *obj.LSym) { s.Pkg = pkg })
+}
+
+// rt is a function or variable of package runtime, by name.
+func (c *compiler) rt(name string) *obj.LSym {
+	c.mu.Lock()
+	s := c.runtime[name]
+	if s == nil {
+		s = c.lookup("runtime."+name, obj.ABIInternal, "runtime")
+		c.runtime[name] = s
+	}
+	c.mu.Unlock()
+	return s
+}
+
+func (c *compiler) rtVar(name string) *obj.LSym {
+	return c.lookup("runtime."+name, obj.ABI0, "runtime")
+}
+
+// dataSym defines a data symbol of this package.
+func (c *compiler) defData(s *obj.LSym, kind objabi.SymKind, size int64) {
+	s.Type = kind
+	s.Size = size
+	if s.OnList() {
+		log.Fatalf("fc: symbol %s defined twice", s.Name)
+	}
+	s.Set(obj.AttrOnList, true)
+	c.mu.Lock()
+	c.ctxt.Data = append(c.ctxt.Data, s)
+	c.mu.Unlock()
+}
+
+// stringSym is the read-only symbol holding the bytes of a string constant (shared across the program).
+func (c *compiler) stringSym(v string) *obj.LSym {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if s := c.strSyms[v]; s != nil {
+		return s
+	}
+	// content-addressable: the linker merges equal ones
+	s := &obj.LSym{Name: fmt.Sprintf("go:string.fc%d", len(c.strSyms)), Type: objabi.SRODATA, P: []byte(v), Size: int64(len(v)), Align: 1}
+	s.Set(obj.AttrContentAddressable, true)
+	s.Set(obj.AttrDuplicateOK, true)
+	s.Set(obj.AttrLocal, true)
+	s.Set(obj.AttrOnList, true)
+	c.ctxt.Data = append(c.ctxt.Data, s)
+	c.strSyms[v] = s
+	return s
+}
+
+// ---- positions
+
+func (c *compiler) registerFiles() {
+	wd, _ := os.Getwd()
+	for _, f := range c.pkg.files {
+		tf := c.pr.fset.File(f.Pos())
+		name := tf.Name()
+		abs := objabi.AbsFile(wd, name, c.trimpath)
+		base := src.NewFileBase(name, abs)
+		xp := c.ctxt.PosTable.XPos(src.MakePos(base, 1, 1))
+		c.fileIdx[tf] = int32(c.ctxt.InnermostPos(xp).FileIndex())
+	}
+	c.nOwnFiles = len(c.ctxt.PosTable.FileTable())
+}
+
+// canonFiles gives the files of other packages (the bodies of generic functions instantiated here, the
+// names //line directives give) their numbers in the object's file table by name: they were numbered as
+// the threads compiling functions met them, and the numbers are in the pc-file tables and in the order
+// of the file table (the same sources must give the same bytes). Single-threaded, before installFunc.
+func (c *compiler) canonFiles() {
+	names := c.ctxt.PosTable.FileTable()
+	n := c.nOwnFiles
+	if len(names) < n+2 {
+		return
+	}
+	order := make([]int32, 0, len(names)-n)
+	for i := n; i < len(names); i++ {
+		order = append(order, int32(i))
+	}
+	sort.Slice(order, func(i, j int) bool { return names[order[i]] < names[order[j]] })
+	remap := make([]int32, len(names))
+	same := true
+	for i := 0; i < n; i++ {
+		remap[i] = int32(i)
+	}
+	for k, old := range order {
+		remap[old] = int32(n + k)
+		same = same && int(old) == n+k
+	}
+	if same {
+		return
+	}
+	var nt src.PosTable
+	reg := func(name string, want int) {
+		xp := nt.XPos(src.MakePos(src.NewFileBase(name, name), 1, 1))
+		if got := int(nt.Pos(xp).Base().FileIndex()); got != want {
+			log.Fatalf("fc: %s: file table: %s is file %d, not %d", c.path, name, got, want)
+		}
+	}
+	for i := 0; i < n; i++ {
+		reg(names[i], i)
+	}
+	for k, old := range order {
+		reg(names[old], n+k)
+	}
+	c.ctxt.PosTable = nt
+	for tf, i := range c.fileIdx {
+		c.fileIdx[tf] = remap[i]
+	}
+	for name, i := range c.lineFileIdx {
+		c.lineFileIdx[name] = remap[i]
+	}
+	for _, f := range c.funcs {
+		if !f.encoded {
+			continue
+		}
+		moved := false
+		for k, fi := range f.usedFiles {
+			moved = moved || remap[fi] != fi
+			f.usedFiles[k] = remap[fi]
+		}
+		if moved {
+			f.pcfile = remapPctab(f.pcfile, remap)
+		}
+	}
+}
+
+// remapPctab rewrites a pc-value table with every value v replaced by remap[v] (remap is one to one).
+func remapPctab(tab []byte, remap []int32) []byte {
+	dst := make([]byte, 0, len(tab)+8)
+	val, nval := int32(-1), int32(-1)
+	for first := true; len(tab) > 0; first = false {
+		dv, k := binary.Varint(tab)
+		if k <= 0 {
+			log.Fatalf("fc: remapPctab: bad table")
+		}
+		tab = tab[k:]
+		if dv == 0 && !first {
+			dst = append(dst, 0)
+			break
+		}
+		val += int32(dv)
+		m := val
+		if val >= 0 {
+			m = remap[val]
+		}
+		dst = binary.AppendVarint(dst, int64(m-nval))
+		nval = m
+		dpc, k := binary.Uvarint(tab)
+		if k <= 0 {
+			log.Fatalf("fc: remapPctab: bad table")
+		}
+		tab = tab[k:]
+		dst = binary.AppendUvarint(dst, dpc)
+	}
+	return dst
+}
+
+func (c *compiler) fileLine(p token.Pos) (int32, int32) {
+	if !p.IsValid() {
+		return 0, 1
+	}
+	tf := c.pr.fset.File(p)
+	if c.hasLineDirs(tf) {
+		// a //line directive may have moved p: the stock compiler's file and line are the adjusted ones
+		pos := tf.PositionFor(p, true)
+		if pos.Filename != tf.Name() {
+			c.mu.Lock()
+			idx, ok := c.lineFileIdx[pos.Filename]
+			if !ok {
+				// (go/scanner has made a relative name relative to the file's directory, as the stock
+				// compiler does since go.dev/issue/70478; no name at all is "??", as objabi.AbsFile makes it)
+				base := src.NewFileBase(pos.Filename, objabi.AbsFile("", pos.Filename, c.trimpath))
+				xp := c.ctxt.PosTable.XPos(src.MakePos(base, 1, 1))
+				idx = int32(c.ctxt.InnermostPos(xp).FileIndex())
+				if c.lineFileIdx == nil {
+					c.lineFileIdx = map[string]int32{}
+				}
+				c.lineFileIdx[pos.Filename] = idx
+			}
+			c.mu.Unlock()
+			return idx, int32(pos.Line)
+		}
+	}
+	c.mu.Lock()
+	idx, ok := c.fileIdx[tf]
+	if !ok {
+		// a file of another package (the body of a generic function instantiated here)
+		name := tf.Name()
+		base := src.NewFileBase(name, objabi.AbsFile("", name, c.trimpath))
+		xp := c.ctxt.PosTable.XPos(src.MakePos(base, 1, 1))
+		idx = int32(c.ctxt.InnermostPos(xp).FileIndex())
+		c.fileIdx[tf] = idx
+	}
+	c.mu.Unlock()
+	return idx, int32(tf.Line(p)) // (the line a //line directive gives: Line is the adjusted line)
+}
+
+// hasLineDirs: tf may have //line directives (Program.lineDirs).
+func (c *compiler) hasLineDirs(tf *token.File) bool {
+	_, ok := c.pr.lineDirs.Load(tf)
+	return ok
+}
+
+// ---- functions
+
+type pcval struct {
+	pc  int
+	val int32
+}
+
+// funcOut is a compiled function, ready to become a text symbol.
+type funcOut struct {
+	sym       *obj.LSym
+	code      []byte
+	relocs    []obj.Reloc
+	flags     int // obj.NOSPLIT, obj.DUPOK, obj.WRAPPER, ...
+	pos       token.Pos
+	args      int32
+	locals    int32
+	sp        []pcval
+	lines     []pcval // value: index into poss
+	poss      []token.Pos
+	unsafe    []pcval
+	stackmap  []pcval
+	argsMap   *obj.LSym
+	localsMap *obj.LSym
+	funcFlag  abi.FuncFlag
+	// encoded: finish already made the pc tables (gen.go: a function compiled with scratch buffers)
+	encoded                                 bool
+	pcsp, pcfile, pcline, pcunsafe, pcstack []byte
+	usedFiles                               []int32
+	// FC_WBCHECK (wbcheck.go): where write barriers were emitted; the declaration's //go:nowritebarrierrec (1)
+	// or //go:yeswritebarrierrec (2)
+	wbPos []token.Pos
+	wbRec int8
+}
+
+// pctab encodes a pc-value table (see cmd/internal/obj.funcpctab) from events sorted by pc.
+func pctab(evs []pcval, size int) []byte {
+	var dst []byte
+	val := int32(-1)
+	pc := 0
+	started := false
+	for i, e := range evs {
+		if i+1 < len(evs) && evs[i+1].pc == e.pc {
+			continue // the last value set at a pc wins
+		}
+		if e.pc >= size {
+			break
+		}
+		if started && e.val == val {
+			continue
+		}
+		if started {
+			dst = binary.AppendUvarint(dst, uint64(e.pc-pc))
+			pc = e.pc
+		} else if e.pc != 0 {
+			// the table starts at the function's first byte: the default until the first event
+			dst = binary.AppendVarint(dst, 0)
+			dst = binary.AppendUvarint(dst, uint64(e.pc))
+			pc = e.pc
+		}
+		dst = binary.AppendVarint(dst, int64(e.val-val))
+		val = e.val
+		started = true
+	}
+	if started {
+		dst = binary.AppendUvarint(dst, uint64(size-pc))
+		dst = append(dst, 0)
+	}
+	return dst
+}
+
+func pcSym(data []byte) *obj.LSym {
+	s := &obj.LSym{Type: objabi.SRODATA, Align: 1, P: data, Size: int64(len(data))}
+	s.Set(obj.AttrContentAddressable, true)
+	s.Set(obj.AttrPcdata, true)
+	return s
+}
+
+// stackMapSym builds a stack map symbol: n bitmaps of nbit bits each.
+func (c *compiler) stackMapSym(nbit int, maps ...[]bool) *obj.LSym {
+	data := binary.LittleEndian.AppendUint32(nil, uint32(len(maps)))
+	data = binary.LittleEndian.AppendUint32(data, uint32(nbit))
+	for _, m := range maps {
+		bs := make([]byte, (nbit+7)/8)
+		for i, b := range m {
+			if b {
+				bs[i/8] |= 1 << (i % 8)
+			}
+		}
+		data = append(data, bs...)
+	}
+	s := c.ctxt.GCLocalsSym(data)
+	c.mu.Lock()
+	if !s.OnList() {
+		s.Type = objabi.SRODATA
+		s.Size = int64(len(data))
+		s.Set(obj.AttrDuplicateOK, true)
+		s.Set(obj.AttrOnList, true)
+		c.ctxt.Data = append(c.ctxt.Data, s)
+	}
+	c.mu.Unlock()
+	return s
+}
+
+// placeholderFunc defines s as a function that traps: a symbol the stock object has and fc does not.
+func (c *compiler) placeholderFunc(s *obj.LSym) {
+	f := &funcOut{sym: s, code: []byte{0x0F, 0x0B}, flags: obj.NOSPLIT, sp: []pcval{{0, 0}}, pos: c.pkgPos()}
+	c.installFunc(f)
+}
+
+// installFuncs installs every finished function as a text symbol. Called once, single-threaded.
+func (c *compiler) installFuncs() {
+	// (by position, then by name: instances and wrappers share a position, and the threads that compiled
+	// them finished in any order; the same sources give the same bytes)
+	sort.SliceStable(c.funcs, func(i, j int) bool {
+		// (a shard's functions are of many packages, whose positions depend on the order the files were
+		// read in: by name alone)
+		if c.shard == nil && c.funcs[i].pos != c.funcs[j].pos {
+			return c.funcs[i].pos < c.funcs[j].pos
+		}
+		return c.funcs[i].sym.Name < c.funcs[j].sym.Name
+	})
+	if wbCheck {
+		c.wbCheck()
+	}
+	c.canonFiles()
+	for _, f := range c.funcs {
+		c.installFunc(f)
+	}
+}
+
+// statFuncs, statCode: functions compiled and their code bytes, over the whole build.
+var statFuncs, statCode int64
+
+func (c *compiler) installFunc(f *funcOut) {
+	{
+		s := f.sym
+		file, line := c.fileLine(f.pos)
+		_ = file
+		c.ctxt.InitTextSym(s, f.flags, src.NoXPos)
+		fn := s.Func()
+		fn.StartLine = line
+		fn.FuncFlag |= f.funcFlag
+		fn.Args = f.args
+		fn.Locals = f.locals
+		s.P = f.code
+		s.Size = int64(len(f.code))
+		atomic.AddInt64(&statFuncs, 1)
+		atomic.AddInt64(&statCode, int64(len(f.code)))
+		s.R = f.relocs
+		size := len(f.code)
+		pc := &fn.Pcln
+		if f.encoded {
+			pc.Pcsp = pcSym(f.pcsp)
+			pc.UsedFiles = make(map[goobjCUFileIndex]struct{}, len(f.usedFiles))
+			for _, fi := range f.usedFiles {
+				pc.UsedFiles[goobjCUFileIndex(fi)] = struct{}{}
+			}
+			pc.Pcfile, pc.Pcline, pc.Pcinline = pcSym(f.pcfile), pcSym(f.pcline), pcSym(nil)
+			pc.Pcdata = []*obj.LSym{pcSym(f.pcunsafe), pcSym(f.pcstack)}
+			if f.argsMap != nil {
+				pc.Funcdata = []*obj.LSym{f.argsMap, f.localsMap}
+			}
+			return
+		}
+		pc.Pcsp = pcSym(pctab(f.sp, size))
+		pc.UsedFiles = map[goobjCUFileIndex]struct{}{}
+		var files, lines []pcval
+		for _, l := range f.lines {
+			fi, ln := c.fileLine(f.poss[l.val])
+			files = append(files, pcval{l.pc, fi})
+			lines = append(lines, pcval{l.pc, ln})
+			pc.UsedFiles[goobjCUFileIndex(fi)] = struct{}{}
+		}
+		pc.Pcfile = pcSym(pctab(files, size))
+		pc.Pcline = pcSym(pctab(lines, size))
+		pc.Pcinline = pcSym(nil)
+		pc.Pcdata = []*obj.LSym{pcSym(pctab(f.unsafe, size)), pcSym(pctab(f.stackmap, size))}
+		if f.argsMap != nil {
+			pc.Funcdata = []*obj.LSym{f.argsMap, f.localsMap}
+		}
+	}
+}
+
+// ---- output
+
+func (c *compiler) writeObject(path string) {
+	c.ctxt.NumberSyms()
+	out, err := bio.Create(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// (bio's 4 kB buffer made 98,000 write calls of MinIO's 420 MB of objects)
+	out.Writer = bufio.NewWriterSize(out.File(), 128<<10)
+	out.WriteString(objabi.HeaderString())
+	if c.path == "main" {
+		fmt.Fprintf(out, "main\n") // the linker looks for this line
+	}
+	if b := cgoBlock(c.cgoPragmas()); b != nil {
+		// the //go:cgo_* directives, for the linker (cgo.go), after the blank line that ends the header
+		out.WriteString("\n")
+		out.Write(b)
+		out.WriteString("\n")
+	}
+	fmt.Fprintf(out, "!\n")
+	obj.WriteObjFile(c.ctxt, out)
+	// The stock reader takes the address of the first byte after the relocation block even when a symbol
+	// has no relocations; in an object with no data, no function and no referenced names that byte would
+	// be past the end.
+	out.Write(make([]byte, 8))
+	if err := out.Close(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// funcDecls lists the package's function declarations in source order.
+func (c *compiler) funcDecls() []*ast.FuncDecl {
+	var fds []*ast.FuncDecl
+	for _, f := range c.pkg.files {
+		for _, d := range f.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok {
+				fds = append(fds, fd)
+			}
+		}
+	}
+	return fds
+}
+
+// funcSymName is the linker's name for a declared function or method.
+func (c *compiler) funcSymName(fn *types.Func) string {
+	sig := fn.Type().(*types.Signature)
+	pp := c.pkgPrefix(fn.Pkg())
+	if r := sig.Recv(); r != nil {
+		t := types.Unalias(r.Type()) // (`type P = *T; func (P) M()` is a method of *T)
+		ptr := false
+		if p, ok := t.(*types.Pointer); ok {
+			t, ptr = p.Elem(), true
+		}
+		name := types.Unalias(t).(*types.Named).Obj().Name()
+		if ptr {
+			return pp + ".(*" + name + ")." + fn.Name()
+		}
+		return pp + "." + name + "." + fn.Name()
+	}
+	return pp + "." + fn.Name()
+}
+
+// funcSym is the symbol of a declared function or method, for a reference to it: the function is asked
+// for (demand.go). funcSymDecl is the symbol alone.
+func (c *compiler) funcSym(fn *types.Func) *obj.LSym {
+	// the same function again (most calls: one per call site): no name is built, hashed or compared
+	if s, ok := c.fsFast.Load(fn); ok {
+		return s.(*obj.LSym)
+	}
+	c.pr.demand(fn)
+	if c.pr.lazyFuncs && fn.Type().(*types.Signature).Recv() == nil {
+		if ln := c.linknameOf(fn.Pkg(), fn.Name()); ln != "" {
+			c.pr.demandName(ln)
+		}
+	}
+	s := c.funcSymDecl(fn)
+	c.fsFast.Store(fn, s)
+	return s
+}
+
+func (c *compiler) funcSymDecl(fn *types.Func) *obj.LSym {
+	if fn.Type().(*types.Signature).Recv() == nil {
+		if ln := c.linknameOf(fn.Pkg(), fn.Name()); ln != "" {
+			pkg := ""
+			if i := strings.LastIndex(ln, "."); i >= 0 {
+				pkg = ln[:i]
+			}
+			return c.lookup(ln, obj.ABIInternal, pkg)
+		}
+	}
+	return c.lookup(c.funcSymName(fn), obj.ABIInternal, c.pkgPrefixOf(fn.Pkg()))
+}
+
+// linknameOf: the symbol name a //go:linkname directive in the object's package gives it, or "".
+func (c *compiler) linknameOf(tp *types.Package, name string) string {
+	if tp == nil {
+		return ""
+	}
+	p := c.pr.byTypes(tp)
+	if p == nil {
+		return ""
+	}
+	return c.pr.linknames(p)[name]
+}
+
+func (c *compiler) pkgPrefixOf(p *types.Package) string {
+	if p == nil {
+		return ""
+	}
+	return c.pkgPrefix(p)
+}
+
+func (c *compiler) globalSym(v *types.Var) *obj.LSym {
+	if ln := c.linknameOf(v.Pkg(), v.Name()); ln != "" {
+		pkg := ""
+		if i := strings.LastIndex(ln, "."); i >= 0 {
+			pkg = ln[:i]
+		}
+		pkg = "_" // (see below)
+		return c.lookup(ln, obj.ABI0, pkg)
+	}
+	if v.Pkg() != nil {
+		// A variable with a //go:linkname directive may be defined by another package under this name
+		// (internal/runtime/maps.errNilAssign has its value from package runtime): it is a symbol found
+		// by name, even from its own package, so that the linker makes one of the two.
+		if p := c.pr.byTypes(v.Pkg()); p != nil {
+			c.pr.linknames(p)
+			if p.linknamed[v.Name()] || p.linknamedStd[v.Name()] {
+				return c.lookup(c.pkgPrefix(v.Pkg())+"."+v.Name(), obj.ABI0, "_")
+			}
+		}
+	}
+	return c.lookup(c.pkgPrefix(v.Pkg())+"."+v.Name(), obj.ABI0, c.pkgPrefix(v.Pkg()))
+}
+
+func hasDirective(doc *ast.CommentGroup, d string) bool {
+	if doc == nil {
+		return false
+	}
+	for _, cm := range doc.List {
+		if cm.Text == d || strings.HasPrefix(cm.Text, d+" ") {
+			return true
+		}
+	}
+	return false
+}
