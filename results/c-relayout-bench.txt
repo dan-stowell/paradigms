@@ -1,0 +1,370 @@
+ROUND 1 UTC 2026-11-16T20:30:47Z CPU 0
+ 20:30:47 up  5:15,  0 user,  load average: 3.35, 1.73, 1.59
+RUN edit inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=1128.745
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=2301266 forward_ms=0.000462 reverse_ms=0.000435 timed=1.062/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 9 seconds 1.133779 mean_ms 125.975398 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.032490 mean_ms 103.249001 OK
+RUN edit2 inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=991.036
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=10 forward_ms=113.535876 reverse_ms=124.126693 timed=1.135/1.241
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.088131 mean_ms 98.920974 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.028964 mean_ms 93.542166 OK
+ROUND 2 UTC 2026-11-16T20:30:59Z CPU 0
+ 20:30:59 up  5:15,  0 user,  load average: 3.78, 1.91, 1.65
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.018866 mean_ms 92.624138 OK
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.144868 mean_ms 114.486777 OK
+RUN edit2 inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=951.582
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=11 forward_ms=96.001220 reverse_ms=102.582879 timed=1.056/1.128
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.088992 mean_ms 98.999308 OK
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 9 seconds 1.043870 mean_ms 115.985579 OK
+RUN edit inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=894.242
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=2253868 forward_ms=0.000464 reverse_ms=0.000444 timed=1.045/1.000
+ROUND 3 UTC 2026-11-16T20:31:11Z CPU 0
+ 20:31:11 up  5:15,  0 user,  load average: 4.04, 2.03, 1.69
+RUN edit inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=983.730
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=2324946 forward_ms=0.000443 reverse_ms=0.000430 timed=1.031/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 9 seconds 1.015110 mean_ms 112.789999 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.056351 mean_ms 105.635082 OK
+RUN edit2 inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=795.694
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=11 forward_ms=93.072520 reverse_ms=96.820991 timed=1.024/1.065
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.056617 mean_ms 88.051441 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.042030 mean_ms 80.156119 OK
+ROUND 4 UTC 2026-11-16T20:31:22Z CPU 0
+ 20:31:22 up  5:15,  0 user,  load average: 4.18, 2.13, 1.72
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.046854 mean_ms 80.527226 OK
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.101555 mean_ms 100.141348 OK
+RUN edit2 inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=955.620
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=11 forward_ms=95.076081 reverse_ms=97.032156 timed=1.046/1.067
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.055751 mean_ms 95.977338 OK
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.076991 mean_ms 107.699051 OK
+RUN edit inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=830.512
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=2406217 forward_ms=0.000442 reverse_ms=0.000416 timed=1.063/1.000
+ROUND 5 UTC 2026-11-16T20:31:33Z CPU 0
+ 20:31:33 up  5:16,  0 user,  load average: 3.69, 2.12, 1.73
+RUN edit inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=852.780
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=2375326 forward_ms=0.000434 reverse_ms=0.000421 timed=1.030/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.021553 mean_ms 102.155325 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.063136 mean_ms 96.648714 OK
+RUN edit2 inc
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=820.660
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=11 forward_ms=94.975048 reverse_ms=104.466446 timed=1.045/1.149
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.078884 mean_ms 89.906976 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.056508 mean_ms 81.269821 OK
+ 20:31:45 up  5:16,  0 user,  load average: 4.17, 2.28, 1.79
+SUMMARY milliseconds min median max (per-process means)
+edit inc forward 0.000434 0.000443 0.000464
+edit inc reverse 0.000416 0.000430 0.000444
+edit par full 95.977338 98.999308 105.635082
+edit ref full 102.155325 112.789999 125.975398
+edit2 inc forward 93.072520 95.076081 113.535876
+edit2 inc reverse 96.820991 102.582879 124.126693
+edit2 par full 80.156119 81.269821 93.542166
+edit2 ref full 88.051441 98.920974 114.486777
