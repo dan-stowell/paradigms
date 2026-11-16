@@ -101,3 +101,17 @@ GraphIt's `to(filter)` is a per-vertex predicate that sees state, so it can expr
 ## Not found
 - No work found on parallel scans in Halide (searched web; hello shows a scan update cannot be parallelized at schedule time).
 - No Halide-for-sparse work in the Halide project itself: TACO's schedule API is explicitly modeled on Halide's but Halide is dense-only.
+
+## From the cells (2026-11-16, measured)
+
+### C1. A join as rounds of scatter-min + gather, after compacting the participants
+- Evidence: Halide 1a 81-93 ms on 1 core vs the plain C hash join 231-249 (same window): compact the 789 K keyed
+  slots of 5.2 M first, then 8 rounds over tables of 2^20 -> 2^13 buckets (`cells/join.h`). Each round is two
+  data-parallel passes (an associative scatter, a gather), so it is the shape every data-parallel system can run.
+- Kill test: the same rounds in C (or Futhark) at 1 and 8 threads vs p1par; kill if not within 1.5x of p1par.
+
+### C2. A flood whose every write is a constant store
+- Evidence: one byte per fact (LIVE, IFACE, EXP, DONE, block-in-next-list) makes racing writers harmless without
+  atomics; the frontier is implicit ("live and not expanded"). Correct 30/30 parallel runs; Halide's atomic()
+  version was a mutex array per call (3.5 s). In Halide it costs 3 iterations per edge (79-90 ms at 8 threads).
+- Kill test: the same layout in C/OpenMP (plain byte stores, no CAS) vs p2par's test-and-set; kill if slower.
