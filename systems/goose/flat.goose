@@ -15,6 +15,12 @@ extern fn flat_read(path: const u8[:], out: i64[>..]&, elem: i64) -> bool = "fla
 // a .u64x2 file: 128-bit keys, k1 then k2
 struct Key { k1: u64, k2: u64 }
 extern fn flat_read(path: const u8[:], out: Key[>..]&, elem: i64) -> bool = "flat_read";
+// elements [first, first + count) of a file
+extern fn flat_read_range(path: const u8[:], out: u8[>..]&, elem: i64, first: i64, count: i64) -> bool;
+extern fn flat_read_range(path: const u8[:], out: u32[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: u64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: i64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: Key[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 
 // the data directory: the first argument
 fn dir_arg() -> u8[>..] {
@@ -33,6 +39,11 @@ fn load(name: const u8[:], out: i32[>..]&) { guard flat_read(flat_path(name), ou
 fn load(name: const u8[:], out: u64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: i64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: Key[>..]&) { guard flat_read(flat_path(name), out, 16) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u8[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 1, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u32[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 4, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: i64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: Key[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 16, first, count) else { abort(str("cannot read ", name)); } }
 
 // the file framed as a Goose image (ULEB128 byte count, then the bytes), for from_bytes
 fn load_image(name: const u8[:]) -> u8[>..] {
