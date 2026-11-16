@@ -21,6 +21,7 @@ template <typename T> static Buffer<T, 1> wrap(const char *name, size_t *cnt = n
     return Buffer<T, 1>((T *)p, (int)(n / sizeof(T)));
 }
 // glue.bin and tmpl.bin back to back in one mapping (tmpl.bin at a page boundary): one source buffer for the copy
+// (loading only: the two files' pages mapped side by side, nothing copied)
 static Buffer<u8, 1> mapSources(int *tmplAt) {
     char p[2][4096];
     snprintf(p[0], 4096, "%s/glue.bin", flatDir);
@@ -33,13 +34,14 @@ static Buffer<u8, 1> mapSources(int *tmplAt) {
         if (fd[k] < 0 || fstat(fd[k], &st)) { perror(p[k]); exit(2); }
         sz[k] = st.st_size;
     }
-    size_t g = (sz[0] + 4095) & ~(size_t)4095, total = g + ((sz[1] + 4095) & ~(size_t)4095);
-    u8 *base = (u8 *)mmap(NULL, total, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    size_t g = (sz[0] + 4095) & ~(size_t)4095, total = g + ((sz[1] + 4095) & ~(size_t)4095) + 4096;
+    u8 *base = (u8 *)mmap(NULL, total, PROT_READ,  // (zero pages past the end: the vector copy reads up to 63 bytes past an item)
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (mmap(base, sz[0], PROT_READ, MAP_PRIVATE | MAP_FIXED | MAP_POPULATE, fd[0], 0) == MAP_FAILED ||
         mmap(base + g, sz[1], PROT_READ, MAP_PRIVATE | MAP_FIXED | MAP_POPULATE, fd[1], 0) == MAP_FAILED) { perror("map"); exit(2); }
     close(fd[0]), close(fd[1]);
     *tmplAt = (int)g;
-    return Buffer<u8, 1>(base, (int)(g + sz[1]));
+    return Buffer<u8, 1>(base, (int)(g + sz[1] + 64));
 }
 
 struct Rel { u64 off; i64 add; u32 sym; u16 type; u8 siz; };
@@ -60,7 +62,7 @@ int main(int argc, char **argv) {
     u32 nfn = (u32)metaGet("nfn"), nitem = (u32)metaGet("nitem"), nrel = (u32)metaGet("nrel"), nmark = (u32)metaGet("nmark");
     u32 ntseg = (u32)metaGet("ntseg"), nthole = (u32)metaGet("nthole");
     size_t ncode = metaGet("code_bytes");
-    if (ncode + 8 >= (1ull << 31)) { fprintf(stderr, "code_bytes %zu: Halide indices are int32\n", ncode); return 2; }
+    if (ncode + 64 >= (1ull << 31)) { fprintf(stderr, "code_bytes %zu: Halide indices are int32\n", ncode); return 2; }
     auto itemKind = wrap<u8>("item_kind.u8");
     auto itemRef = wrap<u32>("item_ref.u32"), itemSeg = wrap<u32>("item_seg.u32");
     auto glueOff = wrap<u64>("glue.off.u64");
@@ -85,26 +87,27 @@ int main(int argc, char **argv) {
     auto src = mapSources(&srcTmpl);
     double tload = now();
 
-    Buffer<u32, 1> segHole0(ntseg + 1), holeRel(nthole + 1), at(nitem + 1), rat(nitem + 1);
-    size_t codeLen = (ncode + 8 + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
+    Buffer<u32, 1> segLo(ntseg + 1), segSrc(ntseg + 1), segH0(ntseg + 1), segR0(ntseg + 1), relHole(nthole);
+    Buffer<u32, 1> at(nitem + 1), rat(nitem + 1);
+    size_t codeLen = (ncode + 64 + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
     bool huge = getenv("P4_HUGE") && atoi(getenv("P4_HUGE"));
     u8 *codep = (u8 *)mmap(NULL, codeLen, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (huge ? MAP_HUGETLB : 0), -1, 0);
     if (codep == MAP_FAILED) { perror("code mmap (P4_HUGE: vm.nr_hugepages?)"); return 2; }
-    Buffer<u8, 1> code(codep, (int)ncode + 8);
-    Buffer<u64, 1> rOff(nrel + 1);
-    Buffer<u16, 1> rType(nrel + 1);
-    Buffer<u32, 1> rSym(nrel + 1);
-    Buffer<i64, 1> rAdd(nrel + 1);
-    Buffer<u8, 1> rSiz(nrel + 1);
+    Buffer<u8, 1> code(codep, (int)ncode + 64);  // + 64 scratch bytes (gen_p4.cpp)
+    Buffer<u64, 1> rOff(nrel);
+    Buffer<u16, 1> rType(nrel);
+    Buffer<u32, 1> rSym(nrel);
+    Buffer<i64, 1> rAdd(nrel);
+    Buffer<u8, 1> rSiz(nrel);
 
-    auto runSeg = [&]() { segholes(tsegOff, tsegEnd, tholeOff, holeAt, holeEnc, segHole0, holeRel); };
+    auto runSeg = [&]() { templates(tmplOff, tsegOff, tsegEnd, tholeOff, holeAt, holeEnc, srcTmpl, segLo, segSrc, segH0, segR0, relHole); };
     auto runLayout = [&](int v) {
-        layouts[v].fn(itemKind, itemRef, itemSeg, glueOff, glueRelOff, nodeTmpl, nodeOp, tmplOff, tsegOff, tsegEnd, tholeOff,
-                      segHole0, holeRel, srcTmpl, (int)nmark, at, rat);
+        layouts[v].fn(itemKind, itemRef, itemSeg, glueOff, glueRelOff, nodeTmpl, nodeOp, tsegOff, tsegEnd, tholeOff,
+                      segLo, segSrc, segH0, segR0, (int)nmark, at, rat);
     };
     auto runEmit = [&](int v) {
-        emits[v].fn(itemKind, itemRef, itemSeg, glueOff, glueRelOff, nodeTmpl, nodeOp, tmplOff, tsegOff, tsegEnd, tholeOff,
-                    segHole0, holeRel, srcTmpl, src, holeAt, holeW, holeEnc, holeRtype, opVal, opAux, grelOff, grelSiz,
+        emits[v].fn(itemKind, itemRef, itemSeg, glueOff, glueRelOff, nodeTmpl, nodeOp, tsegOff, tsegEnd, tholeOff,
+                    segLo, segSrc, segH0, segR0, relHole, src, holeAt, holeW, holeEnc, holeRtype, opVal, opAux, grelOff, grelSiz,
                     grelType, grelSym, grelAdd, fnItem, fnMarkOff, markOff, markType, markSym, markAdd, at, rat, code,
                     rOff, rType, rSym, rAdd, rSiz);
     };
@@ -162,7 +165,7 @@ int main(int argc, char **argv) {
         double t3 = now();
         if (argc > 5) { FILE *f = fopen(argv[5], "wb"); fwrite(codep, 1, ncode, f); fclose(f); }
         double t4 = now();
-        printf("e2e threads=%s layout=%s emit=%s huge=%d: load %.1f ms, segholes %.1f, layout %.1f, emit %.1f, write %.1f, total %.1f ms\n",
+        printf("e2e threads=%s layout=%s emit=%s huge=%d: load %.1f ms, templates %.1f, layout %.1f, emit %.1f, write %.1f, total %.1f ms\n",
                th ? th : "default", layouts[lv].name, emits[ev].name, huge, (tload - tstart) * 1e3, (t1 - t0) * 1e3, (t2 - t1) * 1e3,
                (t3 - t2) * 1e3, (t4 - t3) * 1e3, (t4 - tstart) * 1e3);
         bad += checkLayout();
@@ -170,7 +173,7 @@ int main(int argc, char **argv) {
     } else {
         printf("threads=%s huge=%d\n", th ? th : "default", huge);
         Stat s = timeRuns(runSeg);
-        printf("4 segholes        " STAT_FMT "\n", STAT_ARGS(s));
+        printf("4 templates       " STAT_FMT "\n", STAT_ARGS(s));
         for (int v = 0; v < nLayouts; v++) {
             if (mode != "all" && mode != layouts[v].name) continue;
             s = timeRuns([&] { runLayout(v); });
@@ -180,7 +183,7 @@ int main(int argc, char **argv) {
         runLayout(0);
         for (int v = 0; v < nEmits; v++) {
             if (mode != "all" && mode != emits[v].name) continue;
-            memset(codep, 0, ncode + 8);
+            memset(codep, 0, ncode + 64);
             s = timeRuns([&] { runEmit(v); });
             printf("4 %-16s " STAT_FMT "   ", emits[v].name, STAT_ARGS(s));
             bad += checkEmit();
