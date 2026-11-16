@@ -50,7 +50,7 @@ for p in $probs; do
         ;;
     p3)
         for c in 0 1 2 3; do for w in 0 1; do gen p3 layout layout_c${c}_w$w csched=$c wsched=$w; done; done
-        for rf in 0 1; do for par in false true; do for vec in 0 32; do
+        for rf in 0; do for par in false true; do for vec in 0 32; do
             gen p3 relocate reloc_f${rf}_p${par:0:1}_v$vec rform=$rf par=$par vec=$vec; done; done; done
         { cat p3_variants.inc; table p3 layout layouts; table p3 relocate relocs; } > p3_variants.h
         ;;

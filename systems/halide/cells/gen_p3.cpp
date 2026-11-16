@@ -247,10 +247,11 @@ public:
         image(x) = undef<uint8_t>();
         // copy: RDom over (byte, symbol); the where clause makes the byte loop ragged
         RDom rc(0, 1 << 24, 0, L, "rc");  // the data of one symbol is < 16 MB
-        Expr dlen = i32(doff(rc.y + 1) - doff(rc.y));
+        Expr ys = min(rc.y, L - 1);  // (min: the parallel split runs past the end; the last symbol is copied again)
+        Expr dlen = i32(doff(ys + 1) - doff(ys));
         rc.where(rc.x < dlen);
-        rc.where(hasBytes(rc.y));
-        image(inside(i32(addr(rc.y) - imageBase) + rc.x, 0, NI - 1)) = dbin(inside(i32(doff(rc.y)) + rc.x, 0, dbin.dim(0).extent() - 1));
+        rc.where(hasBytes(ys));
+        image(inside(i32(addr(ys) - imageBase) + rc.x, 0, NI - 1)) = dbin(inside(i32(doff(ys)) + rc.x, 0, dbin.dim(0).extent() - 1));
 
         // the value relocation rel writes, for a symbol at address a: 8 kinds as one select chain
         struct Patch { Expr v, nbytes, write, err; };
@@ -289,7 +290,7 @@ public:
         Expr rel, sym;
         if (rform == 0) {  // (byte, relocation within the symbol, symbol)
             rr = RDom(0, 8, 0, 1 << 24, 0, L, "rr");
-            sym = rr.z;
+            sym = min(rr.z, L - 1);  // (as ys)
             rel = inside(i32(rstart(sym)) + rr.y, 0, R - 1);
             // (bss symbols have no bytes: an empty range, so Halide can still make the where a loop bound)
             rr.where(rr.y < select(hasBytes(sym), i32(rstart(sym + 1) - rstart(sym)), 0));
@@ -333,8 +334,11 @@ public:
         if (par) {
             errs.parallel(i, 1024, TailStrategy::GuardWithIf);
             // symbols write disjoint byte ranges: Halide cannot prove it (data-dependent stores), we can
-            image.update(0).allow_race_conditions().parallel(rc.y);
-            image.update(1).allow_race_conditions().parallel(rr.z);
+            // parallel over chunks of symbols (parallel(rc.y) alone is one task per symbol)
+            RVar yo("yo"), yi("yi"), zo("zo"), zi("zi");
+            image.update(0).allow_race_conditions().split(rc.y, yo, yi, 512, TailStrategy::GuardWithIf).parallel(yo);
+            if (rform == 0) image.update(1).allow_race_conditions().split(rr.z, zo, zi, 512, TailStrategy::GuardWithIf).parallel(zo);
+            else image.update(1).allow_race_conditions().parallel(rr.z);
         }
     }
 };
