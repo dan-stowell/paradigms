@@ -191,7 +191,7 @@ build.sh 60. Drivers are loading, wrapping, the level loop (P2), the untimed edg
 # Problem 4: code generation by shape (2026-11-16, branch `worktree-agent-a3315ac9f2aa9aba3`)
 
 Code: `cells/gen_p4.cpp` (three generators: `Templates`, `Layout`, `Emit`), `cells/p4.cpp` (driver: mmap, wrap,
-run, check; the top-K rewrite), built by `cells/build.sh p4` (one `.a` per schedule variant: 4 layouts, 31 emits).
+run, check; the top-K rewrite), built by `cells/build.sh p4` (one `.a` per schedule variant: 4 layouts, 38 emits + 4 diagnostics).
 Data contract: `ref/p4/README.md`. Check (each run checks itself; ends with `P4 OK`):
 
     systems/halide/cells/build.sh p4
