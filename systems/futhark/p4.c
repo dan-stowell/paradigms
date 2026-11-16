@@ -29,6 +29,8 @@ int main(int argc, char **argv) {
 	const char *cell = argc > 4 ? argv[4] : "4";
 	int check = !(argc > 5 && strcmp(argv[5], "nocheck") == 0);
 	int64_t chunk = strcmp(cell, "4g") == 0 ? 0 : getenv("CHUNK") ? atol(getenv("CHUNK")) : 32;
+	int64_t parts = getenv("PARTS") ? atol(getenv("PARTS")) : 7;
+	if (parts != 7) check = 0;
 	u32 nfn = (u32)metaGet("nfn"), nrel = (u32)metaGet("nrel");
 	u64 ncode = metaGet("code_bytes");
 	double tl0 = now();
@@ -68,7 +70,7 @@ int main(int argc, char **argv) {
 	struct TUP *out = NULL;
 	TIMEIT(cell, {
 		if (out) futhark_free_opaque_tup8_arr1d_u8_arr1d_i64_arr1d_i64_arr1d_u8_arr1d_u16_arr1d_u32_arr1d_i64_i64(ctx, out);
-		fut_check(futhark_entry_emit(ctx, &out, chunk, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,
+		fut_check(futhark_entry_emit(ctx, &out, parts, chunk, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,
 		                             item_ref, item_seg, glue_off, glue_bin, glue_rel_off, grel_off, grel_siz, grel_type, grel_sym,
 		                             grel_add, node_tmpl, node_op, op_val, op_aux, tmpl_off, tmpl_bin, tmpl_seg_off, tseg_end,
 		                             tmpl_hole_off, hole_at, hole_w, hole_enc, hole_rtype),

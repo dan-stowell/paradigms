@@ -37,22 +37,29 @@ def copy_gather [n] (total: i64) (at: [n]i64) (src: [n](bool, i64, i64)) (glue_b
                    let q = o + p - at[i]
                    in if fromt then tmpl_bin[q] else glue_bin[q]) (iota total) owner
 
--- Per template segment g: the first of its template's holes that lies in it, and how many. Holes and segments
--- are both sorted (template, offset), so the starts are an exclusive scan of the per-segment counts.
-def seg_holes [T] [G] [H] (tmpl_seg_off: [T]u32) (tseg_end: [G]u32) (tmpl_hole_off: [T]u32) (hole_at: [H]u32) =
-  let ntmpl = T - 1
-  let first = map (\t -> if t < ntmpl && tmpl_hole_off[t] < tmpl_hole_off[t + 1] then i64.u32 tmpl_hole_off[t] else -1) (iota T)
+-- Where each template hole lies: its segment (as a number within its template) and that segment's start.
+def hole_segs [T] [G] [H] (tmpl_seg_off: [T]u32) (tseg_end: [G]u32) (tmpl_hole_off: [T]u32) (hole_at: [H]u32) =
+  let first = map (\t -> if t < T - 1 && tmpl_hole_off[t] < tmpl_hole_off[t + 1] then i64.u32 tmpl_hole_off[t] else -1) (iota T)
   let owner = scatter (replicate H 0i64) first (iota T) |> scan i64.max 0
-  let seg_of h = let t = owner[h]
-                 in loop g = i64.u32 tmpl_seg_off[t] while tseg_end[g] <= hole_at[h] do g + 1
-  let cnt = hist (+) 0 G (map seg_of (iota H)) (replicate H 1i64)
-  in (exscan cnt, cnt)
+  in map (\h -> let b = i64.u32 tmpl_seg_off[owner[h]]
+                let g = loop g = b while tseg_end[g] <= hole_at[h] do g + 1
+                in (g - b, if g == b then 0 else i64.u32 tseg_end[g - 1])) (iota H)
+
+-- The holes of one class, per template, as a list of (hole, part) entries in (template, offset) order: `n h`
+-- entries for hole h (ns[h]: 0 if not in the class; 2 for an 8-byte integer, written as two 4-byte parts). The
+-- entries of template t are idx[start[t] : start[t + 1]], start being an exclusive scan at the template starts.
+def class_holes [T] [H] (tmpl_hole_off: [T]u32) (ns: [H]i64) : ([](i64, i64), [T]i64) =
+  let before = exscan ns
+  let total = reduce (+) 0 ns
+  let start = map (\h -> let h = i64.u32 h in if h == H then total else before[h]) tmpl_hole_off
+  in (expand (\h -> ns[h]) (\h k -> (h, k)) (iota H), start)
 
 type rel = (i64, u8, u16, u32, i64)   -- (offset, width, type, symbol, addend)
 
 -- The entry: the image, each function's offset, the relocations (unsorted), and the count of bad holes.
+-- `parts` (normally 7) switches pieces off to time them apart: 1 copy, 2 patch, 4 relocations.
 entry emit [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
-    (chunk: i64)
+    (parts: i64) (chunk: i64)
     (fn_item: [F]u32) (fn_mark_off: [F]u32) (mark_off: [M]u32) (mark_type: [M]u16) (mark_sym: [M]u32) (mark_add: [M]i64)
     (item_kind: [N]u8) (item_ref: [N]u32) (item_seg: [N]u32)
     (glue_off: [GL]u64) (glue_bin: []u8) (glue_rel_off: [GL]u32)
@@ -67,39 +74,44 @@ entry emit [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
   let total = if N == 0 then 0 else at[N - 1] + lens[N - 1]
   let at_of i = if i == N then total else at[i]
   -- 2. copy every item's bytes (chunk 0: as a gather, else as a scatter of chunk-byte rows)
-  let code = if chunk == 0 then copy_gather total at src glue_bin tmpl_bin
+  let code = if parts & 1 == 0 then replicate total 0
+             else if chunk == 0 then copy_gather total at src glue_bin tmpl_bin
              else copy_chunks chunk total at src glue_bin tmpl_bin
-  -- 3. the holes: one (item, hole) pair per hole of a node segment
-  let (hstart, hcnt) = seg_holes tmpl_seg_off tseg_end tmpl_hole_off hole_at
-  let seg i = let r = i64.u32 item_ref[i] in i64.u32 tmpl_seg_off[i64.u32 node_tmpl[r]] + i64.u32 item_seg[i]
-  let pairs = expand (\i -> if item_kind[i] == 0 then 0 else hcnt[seg i]) (\i j -> (i, hstart[seg i] + j)) (iota N)
-  -- per pair: where it goes, which operand, the value to write
-  let hole (i, h) =
-    let r = i64.u32 item_ref[i]
-    let t = i64.u32 node_tmpl[r]
-    let g = seg i
-    let lo = if item_seg[i] == 0 then 0 else i64.u32 tseg_end[g - 1]
-    let o = i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[t]
-    let p = at[i] + i64.u32 hole_at[h] - lo
-    let v = op_val[o]
-    let w = i64.u8 hole_w[h]
-    in match hole_enc[h]
-       case 1 -> (p, w, v, w == 1 || w == 2 || w == 4 || w == 8)
-       case 2 -> (p, 4, at_of v + op_aux[o] - (p + 4), true)   -- rel32 to (item v, offset a)
-       case 3 -> (p, 0, 0, true)                                -- a relocation: the bytes stay
-       case _ -> (p, 0, 0, false)
-  let hs = map hole pairs
-  let writes = map (\(p, n, v, _) -> #[sequential] map (\j -> if j < n then (p + j, u8.i64 (v >> (8 * j))) else (-1, 0u8)) (iota 8)) hs
-  let (wi, wv) = unzip (flatten writes)
-  let code = scatter code wi wv
-  let nerr = map (\(_, _, _, ok) -> i64.bool (!ok)) hs |> reduce (+) 0
-  -- 4. relocations: the holes that are relocations, the glue's own, and each function's markers
-  let rh = filter (\((_, h), _) -> hole_enc[h] == 3) (zip pairs hs)
-  let from_hole ((i, h), (p, _, _, _)) : rel =
-    let r = i64.u32 item_ref[i]
-    let o = i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[i64.u32 node_tmpl[r]]
-    in (p, hole_w[h], hole_rtype[h], u32.i64 op_val[o], op_aux[o])
-  let rel_holes = map from_hole rh
+  -- 3. the holes. A node's segments are items: seg_item[nseg_off[r] + s] is the item of node r's segment s.
+  let nseg r = let t = i64.u32 node_tmpl[r] in i64.u32 tmpl_seg_off[t + 1] - i64.u32 tmpl_seg_off[t]
+  let nseg_off = exscan (map nseg (iota NN))
+  let seg_item = scatter (replicate (N - GL + 1) 0i64)
+                         (map (\i -> if item_kind[i] == 0 then -1 else nseg_off[i64.u32 item_ref[i]] + i64.u32 item_seg[i]) (iota N))
+                         (iota N)
+  let hseg = hole_segs tmpl_seg_off tseg_end tmpl_hole_off hole_at
+  -- one (node, hole, part) triple per entry of the class in the node's template: a flattened map over nodes
+  let holes_of (idx, start) =
+    expand (\r -> let t = i64.u32 node_tmpl[r] in start[t + 1] - start[t])
+           (\r j -> let (h, k) = idx[start[i64.u32 node_tmpl[r]] + j] in (r, h, k)) (iota NN)
+  -- where a hole goes, and its operand
+  let place r h =
+    let (s, lo) = hseg[h]
+    in (at[seg_item[nseg_off[r] + s]] + i64.u32 hole_at[h] - lo, i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[i64.u32 node_tmpl[r]])
+  -- an integer's w bytes of v; a jump's rel32 to (item v, offset a)
+  let patch (r, h, k) =
+    let (p, o) = place r h
+    in if hole_enc[h] == 2 then (p, 4, at_of op_val[o] + op_aux[o] - (p + 4))
+       else (p + 4 * k, i64.u8 hole_w[h] - 4 * k, op_val[o] >> (32 * k))
+  let patched = class_holes tmpl_hole_off (map2 (\e w -> if e == 3 then 0 else if w == 8 then 2 else 1) hole_enc hole_w)
+  -- each (part of a) hole as a row of 4 (index, byte) writes, -1 past its width
+  let bytes (p, n, v) = #[sequential] map (\k -> (if k < n then p + k else -1, u8.i64 (v >> (8 * k)))) (iota 4)
+  let (wi, wv) = holes_of patched |> map patch |> map bytes |> flatten |> unzip
+  let code = if parts & 2 == 0 then code else scatter code wi wv
+  -- holes the encoder cannot have written (checked on the template table)
+  let nerr = map (\h -> let w = hole_w[h] in match hole_enc[h]
+                                            case 1 -> i64.bool (w != 1 && w != 2 && w != 4 && w != 8)
+                                            case 2 -> i64.bool (w != 4)
+                                            case 3 -> 0
+                                            case _ -> 1) (iota H) |> reduce (+) 0
+  -- 4. relocations: the holes that are relocations (their bytes stay), the glue's own, each function's markers
+  let rel_holes = holes_of (class_holes tmpl_hole_off (map (\e -> i64.bool (e == 3)) hole_enc))
+                  |> map (\(r, h, _) -> let (p, o) = place r h
+                                        in (p, hole_w[h], hole_rtype[h], u32.i64 op_val[o], op_aux[o]))
   let rel_glue = expand (\i -> if item_kind[i] != 0 then 0
                                else let r = i64.u32 item_ref[i] in i64.u32 glue_rel_off[r + 1] - i64.u32 glue_rel_off[r])
                         (\i j -> let k = i64.u32 glue_rel_off[i64.u32 item_ref[i]] + j
@@ -110,7 +122,8 @@ entry emit [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
                         (\f j -> let m = i64.u32 fn_mark_off[f] + j
                                  in (at_of (i64.u32 fn_item[f]) + i64.u32 mark_off[m], 0u8, mark_type[m], mark_sym[m], mark_add[m]))
                         (iota F)
-  let (ro, rs, rt, ry, ra) = unzip5 (rel_mark ++ rel_glue ++ rel_holes)
+  let rels = if parts & 4 == 0 then [] else rel_mark ++ rel_glue ++ rel_holes
+  let (ro, rs, rt, ry, ra) = unzip5 rels
   let fn_off = map (\f -> at_of (i64.u32 fn_item[f])) (iota F)
   in (code, fn_off, ro, rs, rt, ry, ra, nerr)
 

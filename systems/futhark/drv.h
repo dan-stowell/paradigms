@@ -71,6 +71,8 @@ static int cmpd(const void *a, const void *b) { double x = *(const double *)a, y
 		}                                                                                                    \
 		getrusage(RUSAGE_SELF, &ru1_);                                                                       \
 		qsort(ts_, n_, sizeof(double), cmpd);                                                                \
-		printf("  | min %.2f med %.2f max %.2f ms (threads %d) minflt/rep %ld\n", ts_[0], ts_[n_ / 2], ts_[n_ - 1], threads, \
-		       (ru1_.ru_minflt - ru0_.ru_minflt) / n_); \
+		printf("  | min %.2f med %.2f max %.2f ms (threads %d) minflt/rep %ld cpu/rep %.1f ms\n", ts_[0], ts_[n_ / 2],       \
+		       ts_[n_ - 1], threads, (ru1_.ru_minflt - ru0_.ru_minflt) / n_,                                          \
+		       ((ru1_.ru_utime.tv_sec - ru0_.ru_utime.tv_sec + ru1_.ru_stime.tv_sec - ru0_.ru_stime.tv_sec) * 1e3 +     \
+		        (ru1_.ru_utime.tv_usec - ru0_.ru_utime.tv_usec + ru1_.ru_stime.tv_usec - ru0_.ru_stime.tv_usec) * 1e-3) / n_); \
 	} while (0)
