@@ -257,6 +257,7 @@ static void makeView(char **w, int nw) {
 			c->lchild = sa, c->lchildp[0] = sa, c->fmt = "+l";
 			s->n_children = 1, s->children = ssp;
 		} else if (!strcmp(file, "#")) {
+			if (t->rows < 0) die("# needs a row count", w[0]);
 			uint32_t *iota = malloc(4 * t->rows);
 			for (int64_t r = 0; r < t->rows; r++) iota[r] = (uint32_t)r;
 			c->data = iota, c->fmt = "I";
@@ -288,7 +289,8 @@ static double cellMs[64], cellRep[64][256];
 static long cellFlt[64];
 static char cellName[64][64];
 static int ncell = -1, cellCount; // ncell: the current cell (-1: none)
-static double loadMs;
+static double loadMs, stmtMs[4096];
+static int curStmt = -1;
 static int quiet;
 static duckdb_result run(const char *sql, int keep) {
 	duckdb_result r;
@@ -302,6 +304,7 @@ static duckdb_result run(const char *sql, int keep) {
 	double ms = (now() - t0) * 1e3;
 	getrusage(RUSAGE_SELF, &ru1);
 	if (ncell >= 0) cellMs[ncell] += ms, cellFlt[ncell] += ru1.ru_minflt - ru0.ru_minflt;
+	if (curStmt >= 0) stmtMs[curStmt] += ms;
 	if (!quiet) {
 		const char *p = sql;
 		while (*p == ' ' || *p == '\n' || *p == '\t') p++;
@@ -465,6 +468,7 @@ static int split(char *s, char **w) {
 static void exec(int from, int to) {
 	for (int i = from; i < to; i++) {
 		stmt *st = &prog[i];
+		curStmt = i;
 		if (!st->dir) { run(st->arg, 0); continue; }
 		char *d = st->dir, *a = strdup(st->arg), *w[40];
 		if (!strcmp(d, "table") || !strcmp(d, "view")) {
@@ -608,6 +612,13 @@ int main(int argc, char **argv) {
 			       x[nrep - 1], nrep, flt0[c], (cellFlt[c] - flt0[c]) / (nrep - 1));
 		} else printf("cell %s: %.1f ms; %ld minor faults\n", cellName[c], cellMs[c], cellFlt[c]);
 	}
+	if (getenv("DK_STMTS")) // every statement's total time over all rounds and reps
+		for (int i = 0; i < nprog; i++)
+			if (stmtMs[i] >= 1) {
+				const char *p = prog[i].arg;
+				while (*p == ' ' || *p == '\n') p++;
+				printf("  stmt %9.1f ms  %s%.*s\n", stmtMs[i], prog[i].dir ? "." : "", (int)(strcspn(p, "\n") > 80 ? 80 : strcspn(p, "\n")), p);
+			}
 	printf("total process: %.1f ms\n", (now() - t0) * 1e3);
 	return 0;
 }
