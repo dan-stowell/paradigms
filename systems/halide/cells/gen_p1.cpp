@@ -242,8 +242,17 @@ public:
         Expr N = kind.dim(0).extent() - 1;
         RDom r(1, N, "r");
         Expr k = kind(r);
-        nkeyed() = sum(select((k == 1 || k == 4 || k == 5) && key(0, r) != 0, 1, 0));
-        ncopies() = sum(select((k == 2 || k == 3) && mark(r) != 0, 1, 0));
+        nkeyed() = 0;
+        nkeyed() += select((k == 1 || k == 4 || k == 5) && key(0, r) != 0, 1, 0);
+        ncopies() = 0;
+        ncopies() += select((k == 2 || k == 3) && mark(r) != 0, 1, 0);
+        // parallel: rfactor splits each sum into per-chunk partial sums (a sum is associative, so Halide can)
+        for (Func f : {Func(nkeyed), Func(ncopies)}) {
+            RVar ro("ro"), ri("ri");
+            Var u("u");
+            f.update().split(r, ro, ri, 1 << 16, TailStrategy::GuardWithIf);
+            f.update().rfactor(ro, u).compute_root().update().parallel(u);
+        }
     }
 };
 
