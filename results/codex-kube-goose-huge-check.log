@@ -1,0 +1,6 @@
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 133.0 ms  3a layout 39.9 ms  3b inputs 42.6 ms  3b (fresh image, 2 MB pages, x5) 51.9 / 52.6 / 76.5 ms min/median/max, 431 minor faults/rep (121634816 bytes on huge pages); 72579169 bytes, 2823088 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3par goose (8 workers): spawn+load 374.4 ms  3a 50.1 ms  3b distributed (2 MB pages, x5) 29.7 / 36.2 / 62.2 ms min/median/max (slowest worker 25.9 ms, 829 minor faults/rep in workers, 127926272 bytes on huge pages)  gather: image alloc 13.9 ms  segments into it 283.6 ms  (63232 faults in the process, 121634816 image bytes on huge pages)  warm 3a + best 3b distributed 79.7 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
