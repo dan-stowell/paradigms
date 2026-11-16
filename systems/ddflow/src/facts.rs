@@ -127,37 +127,41 @@ pub fn fact_diff(a: &Facts, b: &Facts) -> FactDiff {
 }
 
 // ---------------------------------------------------------------- id unification
-// A slot is identified across dumps by (its object's index, kind, name bytes, 128-bit name key, 128-bit content
-// hash key, ordinal among equal keys in that object). The two dumps' objects are in importcfg order (sorted by
-// package path); `unify` checks that the object counts agree and reports how many objects' slot lists differ.
-// Linker-made ids (above nslots) are matched by position. Method-name strings are matched by content.
+// A slot is identified across dumps by (its object, kind, name bytes, 128-bit name key, 128-bit content hash
+// key, ordinal among equal keys in that object). Both dumps list objects in importcfg order (sorted by package
+// path) and the object counts must agree. An object whose slot list is identical maps by position; only the
+// objects that differ are matched key by key. Linker-made ids (above nslots) map by position. Method-name
+// strings map by content.
 
-fn slot_keys(dir: &str) -> (Vec<u32>, Vec<u8>, Vec<u64>, Vec<u8>, Vec<u64>, Vec<u64>) {
-    (
-        rd_u32(&format!("{dir}/slot_obj.u32")),
-        rd(&format!("{dir}/p1_kind.u8")),
-        rd_u64(&format!("{dir}/name.off.u64")),
-        rd(&format!("{dir}/name.bin")),
-        rd_u64(&format!("{dir}/p1_namekey.u64x2")),
-        rd_u64(&format!("{dir}/p1_hashkey.u64x2")),
-    )
+pub struct Slots {
+    kind: Vec<u8>,
+    noff: Vec<u64>,
+    nbin: Vec<u8>,
+    nk: Vec<u64>,
+    hk: Vec<u64>,
+    base: Vec<u32>, // per object, plus nslots+1 at the end
 }
-
-type SlotKey<'a> = (u32, u8, &'a [u8], u64, u64, u64, u64, u32);
-
-fn keys_of<'a>(n: usize, k: &'a (Vec<u32>, Vec<u8>, Vec<u64>, Vec<u8>, Vec<u64>, Vec<u64>)) -> Vec<SlotKey<'a>> {
-    let (obj, kind, noff, nbin, nk, hk) = k;
-    let mut ord: HashMap<(u32, u8, &[u8], u64, u64, u64, u64), u32> = HashMap::new();
-    let mut out = Vec::with_capacity(n + 1);
-    out.push((u32::MAX, 0, &nbin[0..0], 0, 0, 0, 0, 0)); // slot 0
-    for g in 1..=n {
-        let name = &nbin[noff[g - 1] as usize..noff[g] as usize];
-        let base = (obj[g], kind[g], name, nk[2 * g], nk[2 * g + 1], hk[2 * g], hk[2 * g + 1]);
-        let c = ord.entry(base).or_insert(0);
-        out.push((base.0, base.1, base.2, base.3, base.4, base.5, base.6, *c));
-        *c += 1;
+impl Slots {
+    pub fn load(dir: &str) -> Slots {
+        let mut base = rd_u32(&format!("{dir}/obj_base.u32"));
+        base.push(meta(dir, "nslots") as u32 + 1);
+        Slots {
+            kind: rd(&format!("{dir}/p1_kind.u8")),
+            noff: rd_u64(&format!("{dir}/name.off.u64")),
+            nbin: rd(&format!("{dir}/name.bin")),
+            nk: rd_u64(&format!("{dir}/p1_namekey.u64x2")),
+            hk: rd_u64(&format!("{dir}/p1_hashkey.u64x2")),
+            base,
+        }
     }
-    out
+    pub fn name(&self, g: u32) -> &[u8] {
+        let g = g as usize;
+        &self.nbin[self.noff[g - 1] as usize..self.noff[g] as usize]
+    }
+    fn key(&self, g: u32) -> (u8, &[u8], u64, u64, u64, u64) {
+        let i = g as usize;
+        (self.kind[i], self.name(g), self.nk[2 * i], self.nk[2 * i + 1], self.hk[2 * i], self.hk[2 * i + 1])
+    }
 }
 
 fn strings(dir: &str) -> Vec<Vec<u8>> {
@@ -166,57 +170,65 @@ fn strings(dir: &str) -> Vec<Vec<u8>> {
     (0..off.len() - 1).map(|i| bin[off[i] as usize..off[i + 1] as usize].to_vec()).collect()
 }
 
-fn per_obj<'a, 'b>(s: &'b [SlotKey<'a>], nobj: usize) -> Vec<Vec<&'b SlotKey<'a>>> {
-    let mut v: Vec<Vec<&SlotKey>> = vec![vec![]; nobj];
-    for k in &s[1..] {
-        v[k.0 as usize].push(k);
-    }
-    v
-}
-
 pub struct Unified {
-    pub idm_b: Vec<u32>,  // B id -> unified id (A ids are unified ids; B-only slots get ids >= nids_a)
+    pub idm_b: Vec<u32>,  // B id -> unified id (A ids are unified ids; B-only slots get ids from nids_a up)
     pub strm_b: Vec<u32>, // B string -> unified string
-    pub n_unified: u32,
-    pub a_only: usize,
-    pub b_only: usize,
-    pub objs_differ: usize,
+    pub a_only: Vec<u32>, // A slots with no B counterpart
+    pub b_only: Vec<u32>, // B slots (B ids) with no A counterpart
+    pub objs_differ: Vec<usize>,
+    pub sa: Slots,
+    pub sb: Slots,
 }
 
 pub fn unify(da: &str, db: &str) -> Unified {
     let (na, nb) = (meta(da, "nslots") as usize, meta(db, "nslots") as usize);
     let (ida, idb) = (meta(da, "nids") as usize, meta(db, "nids") as usize);
-    assert_eq!(meta(da, "nobjs"), meta(db, "nobjs"), "object counts differ: key by object index is unsound");
-    assert_eq!(ida - na, idb - nb, "linker-made id counts differ");
-    let (ka, kb) = (slot_keys(da), slot_keys(db));
-    let (sa, sb) = (keys_of(na, &ka), keys_of(nb, &kb));
-    // objects whose slot key lists differ
     let nobj = meta(da, "nobjs") as usize;
-    let (oa, ob) = (per_obj(&sa, nobj), per_obj(&sb, nobj));
-    let objs_differ = (0..nobj).filter(|&o| oa[o] != ob[o]).count();
-    let index: HashMap<&SlotKey, u32> = sa.iter().enumerate().skip(1).map(|(g, k)| (k, g as u32)).collect();
+    assert_eq!(nobj as u64, meta(db, "nobjs"), "object counts differ: matching by object index is unsound");
+    assert_eq!(ida - na, idb - nb, "linker-made id counts differ");
+    let (sa, sb) = (Slots::load(da), Slots::load(db));
     let mut idm_b = vec![0u32; idb];
-    let mut next = ida as u32;
-    let mut b_only = 0;
-    let mut matched = vec![false; ida];
-    for g in 1..=nb {
-        idm_b[g] = match index.get(&sb[g]) {
-            Some(&a) => {
-                matched[a as usize] = true;
-                a
+    let (mut next, mut a_only, mut b_only, mut objs_differ) = (ida as u32, vec![], vec![], vec![]);
+    for o in 0..nobj {
+        let (a0, a1, b0, b1) = (sa.base[o], sa.base[o + 1], sb.base[o], sb.base[o + 1]);
+        if a1 - a0 == b1 - b0 && (0..a1 - a0).all(|j| sa.key(a0 + j) == sb.key(b0 + j)) {
+            for j in 0..a1 - a0 {
+                idm_b[(b0 + j) as usize] = a0 + j;
             }
-            None => {
-                b_only += 1;
-                next += 1;
-                next - 1
-            }
-        };
+            continue;
+        }
+        objs_differ.push(o);
+        let mut ord: HashMap<_, u32> = HashMap::new();
+        let mut index = HashMap::new();
+        for g in a0..a1 {
+            let k = sa.key(g);
+            let c = ord.entry(k).or_insert(0);
+            index.insert((k, *c), g);
+            *c += 1;
+        }
+        let mut ord: HashMap<_, u32> = HashMap::new();
+        let mut matched = std::collections::HashSet::new();
+        for g in b0..b1 {
+            let k = sb.key(g);
+            let c = ord.entry(k).or_insert(0);
+            idm_b[g as usize] = match index.get(&(k, *c)) {
+                Some(&a) => {
+                    matched.insert(a);
+                    a
+                }
+                None => {
+                    b_only.push(g);
+                    next += 1;
+                    next - 1
+                }
+            };
+            *c += 1;
+        }
+        a_only.extend((a0..a1).filter(|g| !matched.contains(g)));
     }
     for k in 0..(idb - nb - 1) {
         idm_b[nb + 1 + k] = (na + 1 + k) as u32;
-        matched[na + 1 + k] = true;
     }
-    let a_only = (1..=na).filter(|&g| !matched[g]).count();
     // strings
     let (stra, strb) = (strings(da), strings(db));
     let sidx: HashMap<&[u8], u32> = stra.iter().enumerate().map(|(i, s)| (s.as_slice(), i as u32)).collect();
@@ -230,5 +242,23 @@ pub fn unify(da: &str, db: &str) -> Unified {
             })
         })
         .collect();
-    Unified { idm_b, strm_b, n_unified: next, a_only, b_only, objs_differ }
+    Unified { idm_b, strm_b, a_only, b_only, objs_differ, sa, sb }
+}
+
+impl Unified {
+    /// a readable name for a unified id
+    pub fn name(&self, u: u32) -> String {
+        let na = self.sa.base[self.sa.base.len() - 1];
+        let show = |sl: &Slots, g: u32, pre: &str| {
+            let n = String::from_utf8_lossy(sl.name(g)).to_string();
+            if n.is_empty() { format!("{pre}(unnamed, kind {}, id {u})", sl.kind[g as usize]) } else { format!("{pre}{n}") }
+        };
+        if u < na {
+            show(&self.sa, u, "")
+        } else if let Some(g) = self.b_only.iter().find(|&&g| self.idm_b[g as usize] == u) {
+            show(&self.sb, *g, "(B) ")
+        } else {
+            format!("(linker-made {u})")
+        }
+    }
 }
