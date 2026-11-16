@@ -1,0 +1,1671 @@
+// gen.go: the code generator's frame and value model.
+//
+// One walk over the typed syntax tree of a function writes its machine code. The model is the simplest one
+// that is safe under Go's runtime (the same one driver/baseline proved on MinIO):
+//
+//   - Every variable lives in memory. Parameters that arrive in registers are stored to their ABI spill
+//     slots on entry; locals and temporaries have slots below BP. A scalar value is in AX (a float in X0)
+//     only between two steps of an expression; nothing is in a register across a call.
+//   - Locals are addressed from BP and outgoing arguments from SP, so no offset depends on the final frame
+//     size; the prologue, which does, is assembled after the body and put in front of it.
+//   - The locals are zeroed on entry and the function has one stack map: every pointer word of every slot,
+//     live for the whole function. A slot is only reused for a value with the same pointer layout, so it
+//     always holds nil or a valid pointer.
+//   - A variable whose address is taken, or that a closure captures, lives on the heap; its slot holds the
+//     pointer. (No escape analysis yet.)
+//   - Pointer stores to memory outside this frame go through the write barrier.
+package main
+
+import (
+	"encoding/binary"
+	"fmt"
+	"go/ast"
+	"go/token"
+	"go/types"
+	"os"
+	"slices"
+	"strings"
+	"sync"
+
+	"cmd/internal/obj"
+)
+
+type locKind uint8
+
+const (
+	lNone   locKind = iota
+	lFrame          // off(BP): a local (negative) or a parameter (16 and up)
+	lOut            // off(SP): outgoing arguments
+	lSym            // sym+off
+	lInd            // off(p) where the pointer p is in the frame slot at slot(BP)
+	lRegInd         // off(reg): valid until reg is clobbered
+	lReg            // in a register: AX for words, X0 for floats
+	lImm            // an integer constant (also booleans and nil pointers)
+	lZero           // the zero value of any type
+)
+
+type loc struct {
+	kind locKind
+	stk  bool // memory reached through a pointer or an index that is known to lie in this function's frame (noBarrier)
+	chk  bool // memory reached through a pointer of the program's that may be nil: taking its address must fault then (&*p, &p.f)
+	off  int64
+	slot int64
+	sym  *obj.LSym
+	reg  int
+	imm  int64
+}
+
+func (l loc) plus(off int64) loc {
+	switch l.kind {
+	case lFrame, lOut, lSym, lInd, lRegInd:
+		l.off += off
+	case lZero:
+	default:
+		panic("plus on a value that is not in memory")
+	}
+	return l
+}
+
+func (l loc) isMem() bool {
+	return l.kind == lFrame || l.kind == lOut || l.kind == lSym || l.kind == lInd || l.kind == lRegInd
+}
+
+// inFrame: a store here needs no write barrier
+func (l loc) inFrame() bool { return l.kind == lFrame || l.kind == lOut }
+
+// noBarrier: a pointer stored here needs no write barrier: the frame, addressed directly or (stk) through a
+// pointer or an index the generator knows stays in it. The stock compiler proves the same from its SSA form
+// (a store to an address derived from SP), and the runtime depends on it where write barriers are forbidden:
+// recordspan and bytes write through (*slice)(unsafe.Pointer(&local)), runqputslow fills a local array.
+func (l loc) noBarrier() bool { return l.inFrame() || l.stk }
+
+type slotInfo struct {
+	off  int64 // the slot is [BP-off, BP-off+size)
+	size int64
+	ptrs []bool
+}
+
+type label struct {
+	pc    int   // -1 until placed
+	jumps []int // rel32 offsets waiting for it
+}
+
+type scope struct {
+	brk, cont *label
+	name      string // label of the statement, if any
+}
+
+type gen struct {
+	c          *compiler
+	info       *types.Info                     // of the package the body is in
+	env        map[*types.TypeParam]types.Type // type arguments of the instance being compiled
+	substCache map[types.Type]types.Type
+	a          asm
+	out        *funcOut
+	name       string // symbol name, for naming closures
+	sig        *types.Signature
+	abi        *abiInfo
+
+	vars     map[*types.Var]loc
+	heapVars map[*types.Var]bool
+	slots    []slotInfo
+	free     map[shape][]int // free slots by shape
+	temps    []int           // slots handed out since the function began, released by mark
+	locals   int64
+	maxarg   int64
+
+	resHome       []loc
+	resVars       []*types.Var
+	ret           *label
+	scopes        []scope
+	labels        map[*types.Label]*label
+	lblScope      map[*types.Label]*scope
+	hasDefer      bool
+	ngen          [4]int // closures named so far: function literals, range-over-func bodies, go/defer wrappers, others
+	isLit         bool   // a function literal or range-over-func body (its literals are named outer.N)
+	lastPos       token.Pos
+	ctxSlot       loc // the closure object, in a closure
+	nosplit       bool
+	pragmaNosplit bool // declared //go:nosplit
+	noAsync       bool // no instruction is a safe point for asynchronous preemption: declared //go:nosplit (the stock compiler's rule), or without a stack check because the stock compiler inlines it
+	fallthru      *label
+	entry         func()
+	bpFix         []int               // offsets in the body of frame sizes to fill in (LEAQ n(SP), BP)
+	lastPlace     int                 // the address of the label placed last (another label may already name the current address)
+	declSlots     []int               // the slots of the variables declared in the blocks being compiled
+	tidy          bool                // tidy frames (see slotBorn)
+	noWBDecl      bool                // the declaration says //go:nowritebarrier[rec]
+	fnBody        ast.Node            // the function's body (stackPtr's scan)
+	stkPtr        map[*types.Var]bool // pointer variables that only ever point into this frame (stackptr.go)
+	reassigned    map[*types.Var]bool // variables assigned after their declaration or whose address is taken
+	curPos        token.Pos           // the position of the statement being compiled
+	liveSlot      []bool              // by slot: allocated now
+	dirty         []int               // slots released in the statement being compiled: still live until it ends
+	liveSets      []string            // the distinct sets of live slots at calls (bit sets by slot index)
+	liveIdx       map[string]int
+	nDecl         int
+	esc           escResult // escape analysis of the package the body is in; nil: everything escapes
+	// uintptr(unsafe.Pointer(x)) as an argument of a function without a body here (assembly: the syscall
+	// functions) or marked //go:uintptrescapes or //go:uintptrkeepalive keeps x's object alive until the
+	// call returns (package unsafe's rule 4; the stock compiler's rule, callee for callee): the pointer
+	// also goes to a slot of its own that is cleared after the call. keepOperand holds the operands x of
+	// the calls being prepared; keepPtrs the slots filled and not yet cleared.
+	keepOperand map[ast.Expr]bool
+	keepPtrs    []loc
+	bindKeep    []loc               // for the next bind: pointers a go or defer statement's wrapper must hold
+	addrVars    map[*types.Var]bool // variables whose address is taken or that are captured, heap or not
+	capByVal    map[*types.Var]bool // variables function literals hold copies of (byValCapture), and such copies in a literal
+	outerRef    map[*types.Var]bool // in a literal: the variables it captured by reference
+	assigned    map[*types.Var]bool // byValCapture's scan: variables assigned after their declaration
+	convSite    ast.Node            // the expression being converted to an interface (for the analysis's verdict)
+	convCall    *ast.CallExpr       // the conversion being compiled (a string conversion's site for the analysis)
+	rf          *rfCtx              // set in the body of a range-over-func loop
+	deferTok    *types.Var          // the runtime's token for defers made in range-over-func loop bodies
+	sc          *genScratch         // this function's scratch buffers, if it has them (compileFunc)
+	root        *gen                // the function whose results a return there sets
+	abi0        bool                // the function itself is called with ABI0 (a wrapper for assembly callers)
+	pinArgs     bool                // parameters and results stay in the argument frame (//go:cgo_unsafe_args)
+	p4          *p4state            // problem 4's dump (p4dump.go)
+}
+
+const fullFrame = -1 << 30 // placeholder SP delta in the body's pcsp events: the whole frame
+
+// ---- types
+
+func (g *gen) typeOf(e ast.Expr) types.Type {
+	tv, ok := types.SBTypeOf(e)
+	if !ok {
+		if id, ok := e.(*ast.Ident); ok {
+			if o := useOf(id); o != nil {
+				return g.subst(o.Type())
+			}
+			if o := defOf(id); o != nil {
+				return g.subst(o.Type())
+			}
+		}
+		giveUp("no type for expression %T", e)
+	}
+	if b, ok := tv.Type.(*types.Basic); ok && tv.Value == nil && b.Info()&types.IsUntyped != 0 && b.Info()&types.IsNumeric != 0 {
+		// A value that is not a constant and has an untyped numeric type: x << (1 << y), the count of a
+		// shift built from untyped constants shifted by variables, which the checker leaves untyped. As a
+		// count the constant is a uint ($GOROOT/test/shift3.go, fixedbugs/issue12133.go).
+		return types.Typ[types.Uint]
+	}
+	if tv.Type == types.Typ[types.UntypedString] {
+		return types.Typ[types.String] // ""[i], for range "abc": a constant used where it is
+	}
+	return g.subst(tv.Type)
+}
+
+// vt: the type of a variable of the function being compiled (its type arguments applied).
+func (g *gen) vt(v *types.Var) types.Type { return g.subst(v.Type()) }
+
+func isFloat(t types.Type) bool {
+	b, ok := t.Underlying().(*types.Basic)
+	return ok && b.Info()&types.IsFloat != 0
+}
+
+func isComplex(t types.Type) bool {
+	b, ok := t.Underlying().(*types.Basic)
+	return ok && b.Info()&types.IsComplex != 0
+}
+
+func isString(t types.Type) bool {
+	b, ok := t.Underlying().(*types.Basic)
+	return ok && b.Info()&types.IsString != 0
+}
+
+func isSigned(t types.Type) bool {
+	b, ok := t.Underlying().(*types.Basic)
+	return ok && b.Info()&types.IsInteger != 0 && b.Info()&types.IsUnsigned == 0
+}
+
+func isInterface(t types.Type) bool {
+	_, ok := t.Underlying().(*types.Interface)
+	return ok
+}
+
+// isWord: the value is one machine word or less and travels in an integer register.
+func isWord(t types.Type) bool {
+	switch u := t.Underlying().(type) {
+	case *types.Basic:
+		return u.Info()&(types.IsInteger|types.IsBoolean) != 0 || u.Kind() == types.UnsafePointer || u.Kind() == types.UntypedNil
+	case *types.Pointer, *types.Chan, *types.Map, *types.Signature:
+		return true
+	}
+	return false
+}
+
+func isPtrWord(t types.Type) bool {
+	switch u := t.Underlying().(type) {
+	case *types.Basic:
+		return u.Kind() == types.UnsafePointer
+	case *types.Pointer:
+		return !nihElem(u.Elem())
+	case *types.Chan, *types.Map, *types.Signature:
+		return true
+	}
+	return false
+}
+
+var nihCache sync.Map // *types.Named -> bool
+
+// nihElem: is elem a type the runtime keeps outside the collected heap (it embeds
+// internal/runtime/sys.NotInHeap)? A pointer to one is not a pointer to the collector: no write barrier,
+// no bit in a pointer map. Such types exist only in the runtime's own packages.
+func nihElem(elem types.Type) bool {
+	elem = types.Unalias(elem)
+	if n, ok := elem.(*types.Named); ok {
+		p := n.Obj().Pkg()
+		if p == nil || (p.Path() != "runtime" && !strings.HasPrefix(p.Path(), "internal/runtime/")) {
+			return false
+		}
+		if v, ok := nihCache.Load(n); ok {
+			return v.(bool)
+		}
+		v := notInHeap(n)
+		nihCache.Store(n, v)
+		return v
+	}
+	switch elem.Underlying().(type) {
+	case *types.Struct, *types.Array:
+		return notInHeap(elem)
+	}
+	return false
+}
+
+// ptrBits appends, for each word of t, whether it holds a pointer.
+func (c *compiler) ptrBits(t types.Type, bits []bool) []bool {
+	if bits == nil {
+		// the usual question: the whole map of one type (shared: do not modify), kept on the type object
+		f := factsOf(t)
+		if f != nil {
+			if p := f.ptrs.Load(); p != nil {
+				return *p
+			}
+		}
+		v := c.ptrBitsUncached(t, make([]bool, 0, (c.sizeof(t)+7)/8))
+		if f != nil {
+			f.ptrs.Store(&v)
+		}
+		return v
+	}
+	return c.ptrBitsUncached(t, bits)
+}
+
+func (c *compiler) ptrBitsUncached(t types.Type, bits []bool) []bool {
+	size := c.sizeof(t)
+	n := int((size + 7) / 8)
+	base := len(bits)
+	for i := 0; i < n; i++ {
+		bits = append(bits, false)
+	}
+	c.setPtrBits(t, 0, bits[base:])
+	return bits
+}
+
+func (c *compiler) setPtrBits(t types.Type, off int64, bits []bool) {
+	switch u := t.Underlying().(type) {
+	case *types.Basic:
+		if u.Kind() == types.UnsafePointer || u.Info()&types.IsString != 0 {
+			bits[off/8] = true
+		}
+	case *types.Pointer:
+		bits[off/8] = !nihElem(u.Elem())
+	case *types.Slice:
+		bits[off/8] = !nihElem(u.Elem())
+	case *types.Chan, *types.Map, *types.Signature:
+		bits[off/8] = true
+	case *types.Interface:
+		bits[off/8] = true
+		bits[off/8+1] = true
+	case *types.Struct:
+		offs := c.fieldOffsets(u)
+		for i := 0; i < u.NumFields(); i++ {
+			if c.sizeof(u.Field(i).Type()) != 0 {
+				c.setPtrBits(u.Field(i).Type(), off+offs[i], bits)
+			}
+		}
+	case *types.Array:
+		es := c.sizeof(u.Elem())
+		if es == 0 || !c.hasPointers(u.Elem()) {
+			return
+		}
+		for i := int64(0); i < u.Len(); i++ {
+			c.setPtrBits(u.Elem(), off+i*es, bits)
+		}
+	default:
+		panic("ptrBits: " + t.String())
+	}
+}
+
+func (c *compiler) hasPointers(t types.Type) bool {
+	switch u := t.Underlying().(type) {
+	case *types.Basic:
+		return u.Kind() == types.UnsafePointer || u.Info()&types.IsString != 0
+	case *types.Pointer:
+		return !nihElem(u.Elem())
+	case *types.Slice:
+		return !nihElem(u.Elem())
+	case *types.Chan, *types.Map, *types.Signature, *types.Interface:
+		return true
+	case *types.Struct:
+		for i := 0; i < u.NumFields(); i++ {
+			if c.hasPointers(u.Field(i).Type()) {
+				return true
+			}
+		}
+		return false
+	case *types.Array:
+		return u.Len() > 0 && c.hasPointers(u.Elem())
+	}
+	panic("hasPointers: " + t.String())
+}
+
+// ---- frame slots
+
+// shapeKey identifies slots that may stand in for each other: the same size and pointer words.
+type shape struct {
+	size int64
+	mask uint64 // pointer words, for slots of up to 64 words
+	big  string // beyond that
+}
+
+func shapeKey(size int64, ptrs []bool) shape {
+	k := shape{size: size}
+	if len(ptrs) <= 64 {
+		for i, p := range ptrs {
+			if p {
+				k.mask |= 1 << i
+			}
+		}
+		return k
+	}
+	b := make([]byte, len(ptrs))
+	any := false
+	for i, p := range ptrs {
+		b[i] = '0'
+		if p {
+			b[i] = '1'
+			any = true
+		}
+	}
+	if any {
+		k.big = string(b)
+	}
+	return k
+}
+
+func (g *gen) newSlotBits(size int64, ptrs []bool) int {
+	size = align(size, 8)
+	if size == 0 {
+		size = 8
+	}
+	key := shapeKey(size, ptrs)
+	if fl := g.free[key]; len(fl) > 0 {
+		i := fl[len(fl)-1]
+		g.free[key] = fl[:len(fl)-1]
+		g.slotBorn(i)
+		return i
+	}
+	g.locals += size
+	g.slots = append(g.slots, slotInfo{off: g.locals, size: size, ptrs: ptrs})
+	g.slotBorn(len(g.slots) - 1)
+	return len(g.slots) - 1
+}
+
+// Tidy frames (the runtime's own packages). Elsewhere a frame has one stack map in which every slot is
+// always live: a slot that is free still holds what was last stored there, the collector follows it, and
+// that is sound as long as every such value points to an object (the object just lives longer). The
+// runtime also holds pointers into heap memory that is not an object (a span's inline mark bits, its heap
+// bitmap); the stock compiler never shows the collector one, because they are dead at every safepoint.
+// So in the runtime's packages a slot is live only while it is allocated (a temporary until the end of the
+// statement it was released in, a variable until the end of its block), each call has the stack map of the
+// slots live there, and a slot's pointer words are cleared when it is allocated.
+func (g *gen) slotBorn(i int) {
+	if !g.tidy {
+		return
+	}
+	for len(g.liveSlot) <= i {
+		g.liveSlot = append(g.liveSlot, false)
+	}
+	g.liveSlot[i] = true
+	s := g.slots[i]
+	for w, p := range s.ptrs {
+		if p {
+			g.a.storeImm(mb(BP, -s.off+int64(8*w)), 0, 8) // (no flags, no registers)
+		}
+	}
+}
+
+func (g *gen) slotDead(i int) {
+	if g.tidy && i < len(g.liveSlot) && g.liveSlot[i] {
+		g.liveSlot[i] = false
+		g.dirty = append(g.dirty, i)
+	}
+}
+
+// safepoint records the stack map for the call about to be emitted.
+func (g *gen) safepoint() {
+	n := (len(g.slots) + 7) / 8
+	key := make([]byte, n)
+	for i, l := range g.liveSlot {
+		if l {
+			key[i/8] |= 1 << (i % 8)
+		}
+	}
+	for _, i := range g.dirty {
+		key[i/8] |= 1 << (i % 8)
+	}
+	for n > 0 && key[n-1] == 0 {
+		n--
+	}
+	k := string(key[:n])
+	idx, ok := g.liveIdx[k]
+	if !ok {
+		if g.liveIdx == nil {
+			g.liveIdx = map[string]int{}
+		}
+		idx = len(g.liveSets)
+		g.liveIdx[k] = idx
+		g.liveSets = append(g.liveSets, k)
+	}
+	if ev := g.out.stackmap; len(ev) > 0 && ev[len(ev)-1].val == int32(idx) {
+		return
+	}
+	g.out.stackmap = append(g.out.stackmap, pcval{g.a.pc(), int32(idx)})
+}
+
+// temp returns a frame slot for a value of type t, released by the enclosing mark.
+func (g *gen) temp(t types.Type) loc {
+	i := g.newSlotBits(g.c.sizeof(t), g.c.ptrBits(t, nil))
+	g.temps = append(g.temps, i)
+	return loc{kind: lFrame, off: -g.slots[i].off}
+}
+
+var ptrShape = []bool{true}
+
+func (g *gen) ptrTemp() loc {
+	i := g.newSlotBits(8, ptrShape)
+	g.temps = append(g.temps, i)
+	return loc{kind: lFrame, off: -g.slots[i].off}
+}
+
+func (g *gen) wordTemp() loc {
+	i := g.newSlotBits(8, []bool{false})
+	g.temps = append(g.temps, i)
+	return loc{kind: lFrame, off: -g.slots[i].off}
+}
+
+func (g *gen) mark() int { return len(g.temps) }
+
+func (g *gen) release(mark int) {
+	for _, i := range g.temps[mark:] {
+		s := g.slots[i]
+		key := shapeKey(s.size, s.ptrs)
+		g.free[key] = append(g.free[key], i)
+		if tidyKnob != "vars" {
+			g.slotDead(i)
+		}
+	}
+	g.temps = g.temps[:mark]
+}
+
+// ---- labels and positions
+
+func (g *gen) newLabel() *label { return &label{pc: -1} }
+
+func (g *gen) place(l *label) {
+	// a jump to the very next instruction is not emitted: take it back, if nothing refers to the address
+	// after it yet
+	for n := len(l.jumps); n > 0; n = len(l.jumps) {
+		j := l.jumps[n-1]
+		at := j - 1
+		if j+4 != g.a.pc() || at < 0 || g.a.b[at] != 0xE9 || g.a.maxTarget > at || g.lastPlace > at || !g.nothingAfter(at) {
+			break
+		}
+		g.a.b = g.a.b[:at]
+		g.p4trunc(at)
+		l.jumps = l.jumps[:n-1]
+		for i := len(g.out.lines) - 1; i >= 0 && g.out.lines[i].pc > at; i-- {
+			g.out.lines[i].pc = at // a line that began after the jump begins here now
+		}
+	}
+	l.pc = g.a.pc()
+	g.lastPlace = l.pc
+	for _, j := range l.jumps {
+		g.a.patch(j, l.pc)
+	}
+	l.jumps = nil
+}
+
+func (g *gen) jmp(l *label) {
+	j := g.a.jmp()
+	if l.pc >= 0 {
+		g.a.patch(j, l.pc)
+	} else {
+		l.jumps = append(l.jumps, j)
+	}
+}
+
+func (g *gen) jcc(cc int, l *label) {
+	j := g.a.jcc(cc)
+	if l.pc >= 0 {
+		g.a.patch(j, l.pc)
+	} else {
+		l.jumps = append(l.jumps, j)
+	}
+}
+
+func (g *gen) pos(p token.Pos) {
+	if !p.IsValid() || p == g.lastPos {
+		return
+	}
+	g.lastPos = p
+	g.out.poss = append(g.out.poss, p)
+	g.out.lines = append(g.out.lines, pcval{g.a.pc(), int32(len(g.out.poss) - 1)})
+}
+
+func (g *gen) unsafeBegin() { g.out.unsafe = append(g.out.unsafe, pcval{g.a.pc(), -2}) }
+func (g *gen) unsafeEnd()   { g.out.unsafe = append(g.out.unsafe, pcval{g.a.pc(), -1}) }
+
+// ---- memory operands, loads and stores
+
+// m is the operand for a value in memory; scratch receives the base pointer of an indirect location.
+func (g *gen) m(l loc, scratch int) mem {
+	switch l.kind {
+	case lFrame:
+		return mb(BP, l.off)
+	case lOut:
+		return mb(SP, l.off)
+	case lSym:
+		return msym(l.sym, l.off)
+	case lInd:
+		g.a.load(scratch, mb(BP, l.slot), 8, false)
+		return mb(scratch, l.off)
+	case lRegInd:
+		return mb(l.reg, l.off)
+	}
+	panic(fmt.Sprintf("m: value of kind %d is not in memory", l.kind))
+}
+
+// loadTo: reg = the word or float at l, of type t. A general register is extended to 64 bits as t says.
+func (g *gen) loadTo(reg int, l loc, t types.Type) {
+	size := int(g.c.sizeof(t))
+	if isX(reg) {
+		switch l.kind {
+		case lReg:
+			if l.reg != reg {
+				g.a.fmov(reg, l.reg)
+			}
+		case lZero:
+			g.a.xorps(reg, reg)
+		default:
+			g.a.fload(reg, g.m(l, R13), size)
+		}
+		return
+	}
+	switch l.kind {
+	case lImm:
+		g.a.movImm(reg, l.imm)
+	case lZero:
+		g.a.movImm(reg, 0)
+	case lReg:
+		g.a.movRR(reg, l.reg)
+	default:
+		g.a.load(reg, g.m(l, reg), size, isSigned(t))
+	}
+}
+
+// storeReg: *l = reg, a word or float of type t; through the write barrier if it is a pointer leaving the frame.
+// reg is not R10, R11 or R13.
+func (g *gen) storeReg(l loc, reg int, t types.Type) {
+	size := int(g.c.sizeof(t))
+	if size == 0 {
+		return
+	}
+	if isX(reg) {
+		g.a.fstore(g.m(l, R13), reg, size)
+		return
+	}
+	m := g.m(l, R13)
+	if isPtrWord(t) && !l.noBarrier() {
+		g.storePtr(m, reg)
+		return
+	}
+	g.a.store(m, reg, size)
+}
+
+// storePtr: *m = reg, a pointer, with the write barrier. Uses R10 and R11.
+func (g *gen) storePtr(m mem, reg int) {
+	if g.c.noWB {
+		g.a.store(m, reg, 8)
+		return
+	}
+	if g.noWBDecl && wbWarn {
+		fmt.Fprintf(os.Stderr, "wb: %s (marked nowritebarrier) at %v\n", g.name, g.c.pr.fset.Position(g.curPos))
+	}
+	g.noteWB()
+	g.unsafeBegin()
+	g.a.aluMI(aCMP, 4, msym(g.c.rtVar("writeBarrier"), 0), 0)
+	skip := g.a.jcc(ccE)
+	g.a.call(g.c.rt("gcWriteBarrier2")) // room for two pointers at R11; every other register is preserved
+	g.a.store(mb(R11, 0), reg, 8)
+	g.a.load(R10, m, 8, false)
+	g.a.store(mb(R11, 8), R10, 8)
+	g.a.patch(skip, g.a.pc())
+	g.a.store(m, reg, 8)
+	g.unsafeEnd()
+}
+
+// stash makes a value survive the evaluation of something else: a register goes to a temporary.
+func (g *gen) stash(l loc, t types.Type) loc {
+	switch l.kind {
+	case lReg:
+		var tmp loc
+		if isPtrWord(t) {
+			tmp = g.ptrTemp()
+		} else {
+			tmp = g.wordTemp()
+		}
+		if isX(l.reg) {
+			g.a.fstore(g.m(tmp, R13), l.reg, int(g.c.sizeof(t)))
+		} else {
+			g.a.store(g.m(tmp, R13), l.reg, 8)
+		}
+		return tmp
+	case lRegInd:
+		// the address survives in a pointer temporary
+		tmp := g.ptrTemp()
+		g.a.store(g.m(tmp, R13), l.reg, 8)
+		return loc{kind: lInd, slot: tmp.off, off: l.off, stk: l.stk}
+	}
+	return l
+}
+
+// stashValue is stash for a value that later code may overwrite: anything not in this frame is copied.
+func (g *gen) stashValue(l loc, t types.Type) loc {
+	if l.kind == lSym || l.kind == lInd || l.kind == lRegInd {
+		tmp := g.temp(t)
+		g.move(tmp, l, t)
+		return tmp
+	}
+	return g.stash(l, t)
+}
+
+// regFor: the register a value of type t is computed in.
+func regFor(t types.Type) int {
+	if isFloat(t) {
+		return X0
+	}
+	return AX
+}
+
+// move: *dst = src, a value of type t.
+func (g *gen) move(dst, src loc, t types.Type) {
+	size := g.c.sizeof(t)
+	if size == 0 {
+		return
+	}
+	if src.kind == lZero {
+		g.zero(dst, t)
+		return
+	}
+	if isWord(t) || isFloat(t) {
+		r := R8
+		if isFloat(t) {
+			r = X14
+		}
+		if src.kind == lReg {
+			r = src.reg
+		} else {
+			g.loadTo(r, src, t)
+		}
+		g.storeReg(dst, r, t)
+		return
+	}
+	if !src.isMem() {
+		panic(fmt.Sprintf("move: %v from a value of kind %d", t, src.kind))
+	}
+	barrier := !dst.noBarrier() && g.c.hasPointers(t) && !g.c.noWB
+	if barrier {
+		g.noteWB()
+	}
+	// Two views of one array may overlap: *(*[32]byte)(y[4:36]) = *(*[32]byte)(y[2:34]). An assignment
+	// is a memmove then, not a copy from the low end ($GOROOT/test/fixedbugs/issue54467.go). Only arrays
+	// reached through pointers on both sides can do that.
+	overlap := false
+	if arr, ok := t.Underlying().(*types.Array); ok && arr.Len() > 1 {
+		ind := func(l loc) bool { return l.kind == lInd || l.kind == lRegInd }
+		overlap = ind(src) && ind(dst)
+	}
+	if overlap && size <= 128 {
+		tmp := g.temp(t)
+		if dst.kind == lRegInd {
+			dst = g.pin(dst) // (the copy to the temporary uses registers)
+		}
+		g.move(tmp, src, t)
+		g.move(dst, tmp, t)
+		return
+	}
+	if size > 128 {
+		g.addrTo(SI, src)
+		g.addrTo(DI, dst)
+		if barrier {
+			g.a.movRR(BX, DI)
+			g.a.movRR(CX, SI)
+			g.a.lea(AX, msym(g.c.typeSym(t), 0))
+			g.callRT("typedmemmove")
+			return
+		}
+		if overlap {
+			// from the high end when the destination is above the source (the direction flag is set
+			// for those instructions only: no stop in between, the runtime counts on it being clear)
+			g.a.aluRR(aCMP, 8, DI, SI)
+			fwd := g.a.jcc(ccBE)
+			g.unsafeBegin()
+			r, o := size%8, size
+			for _, n := range []int64{4, 2, 1} {
+				if r&n != 0 {
+					o -= n
+					g.a.load(R8, mb(SI, o), int(n), false)
+					g.a.store(mb(DI, o), R8, int(n))
+				}
+			}
+			g.a.lea(SI, mb(SI, size-r-8))
+			g.a.lea(DI, mb(DI, size-r-8))
+			g.a.movImm(CX, size/8)
+			g.a.byte(0xFD) // STD
+			g.a.repMovsq()
+			g.a.byte(0xFC) // CLD
+			g.unsafeEnd()
+			done := g.a.jmp()
+			g.a.patch(fwd, g.a.pc())
+			g.a.movImm(CX, size/8)
+			g.a.repMovsq()
+			if r != 0 {
+				g.a.movImm(CX, r)
+				g.a.repMovsb()
+			}
+			g.a.patch(done, g.a.pc())
+			return
+		}
+		g.a.movImm(CX, size/8)
+		g.a.repMovsq()
+		if r := size % 8; r != 0 {
+			g.a.movImm(CX, r)
+			g.a.repMovsb()
+		}
+		return
+	}
+	sm := g.m(src, R12)
+	dm := g.m(dst, R13)
+	var words []bool
+	if barrier {
+		words = g.c.ptrBits(t, nil)
+	}
+	off := int64(0)
+	for off+8 <= size {
+		w := int(off / 8)
+		if off+16 <= size && !(barrier && (words[w] || words[w+1])) {
+			g.a.movupsLoad(X14, sm.plus(off))
+			g.a.movupsStore(dm.plus(off), X14)
+			off += 16
+			continue
+		}
+		g.a.load(R8, sm.plus(off), 8, false)
+		if barrier && words[w] {
+			g.storePtr(dm.plus(off), R8)
+		} else {
+			g.a.store(dm.plus(off), R8, 8)
+		}
+		off += 8
+	}
+	for _, n := range []int64{4, 2, 1} {
+		for off+n <= size {
+			g.a.load(R8, sm.plus(off), int(n), false)
+			g.a.store(dm.plus(off), R8, int(n))
+			off += n
+		}
+	}
+}
+
+// zero: *dst = the zero value of t.
+func (g *gen) zero(dst loc, t types.Type) {
+	size := g.c.sizeof(t)
+	if size == 0 {
+		return
+	}
+	barrier := !dst.noBarrier() && g.c.hasPointers(t) && !g.c.noWB
+	if barrier {
+		g.noteWB()
+	}
+	if isWord(t) || isFloat(t) {
+		if barrier {
+			g.a.movImm(R8, 0)
+			g.storePtr(g.m(dst, R13), R8)
+			return
+		}
+		if isFloat(t) {
+			g.a.fstore(g.m(dst, R13), X15, int(size))
+			return
+		}
+		g.a.storeImm(g.m(dst, R13), 0, int(size))
+		return
+	}
+	if size > 128 {
+		g.a.lea(DI, g.m(dst, R13))
+		if barrier {
+			g.a.movRR(BX, DI)
+			g.a.lea(AX, msym(g.c.typeSym(t), 0))
+			g.callRT("typedmemclr")
+			return
+		}
+		g.a.movImm(CX, size/8)
+		g.a.movImm(AX, 0)
+		g.a.repStosq()
+		if r := size % 8; r != 0 {
+			g.a.movImm(CX, r)
+			g.a.repStosb()
+		}
+		return
+	}
+	dm := g.m(dst, R13)
+	var words []bool
+	if barrier {
+		words = g.c.ptrBits(t, nil)
+	}
+	off := int64(0)
+	for off+8 <= size {
+		w := int(off / 8)
+		if off+16 <= size && !(barrier && (words[w] || words[w+1])) {
+			g.a.movupsStore(dm.plus(off), X15)
+			off += 16
+			continue
+		}
+		if barrier && words[w] {
+			g.a.movImm(R8, 0)
+			g.storePtr(dm.plus(off), R8)
+		} else {
+			g.a.storeImm(dm.plus(off), 0, 8)
+		}
+		off += 8
+	}
+	for _, n := range []int64{4, 2, 1} {
+		for off+n <= size {
+			g.a.storeImm(dm.plus(off), 0, int(n))
+			off += n
+		}
+	}
+}
+
+// addrTo: reg = the address of the memory location l.
+func (g *gen) addrTo(reg int, l loc) {
+	// (the address may go to the runtime, where a fault is fatal: a nil base must fault here)
+	if l.kind == lInd {
+		g.a.load(reg, mb(BP, l.slot), 8, false)
+		g.a.nilcheck(reg)
+		if l.off != 0 {
+			g.a.lea(reg, mb(reg, l.off))
+		}
+		return
+	}
+	if l.kind == lRegInd {
+		g.a.nilcheck(l.reg)
+	}
+	g.a.lea(reg, g.m(l, R13))
+}
+
+// ---- calls to the runtime
+
+// callRT calls a runtime function whose arguments are already in their registers.
+func (g *gen) callRT(name string) {
+	fn := g.c.rtFunc(name)
+	ai := g.c.abiOf(fn.Type().(*types.Signature))
+	if ai.argWidth > g.maxarg {
+		g.maxarg = ai.argWidth
+	}
+	// The compiler's list declares some of these with stand-in types (convTslice(val any) takes a slice:
+	// three words, not two). The callee spills its register arguments into this frame by its real
+	// signature (a runtime compiled by fc always does), so the room is the real one's.
+	if w := g.c.rtRealWidth(name); w > g.maxarg {
+		g.maxarg = w
+	}
+	g.a.call(g.c.rt(name))
+}
+
+// ---- the function
+
+// newGen starts a function. sig is its declared signature; info is the type information of the package its
+// body is in; env gives the type arguments when the function is an instance of a generic one.
+func (c *compiler) newGen(name string, sig *types.Signature, info *types.Info, env map[*types.TypeParam]types.Type) *gen {
+	g := &gen{c: c, name: name, sig: sig, info: info, env: env, vars: map[*types.Var]loc{}, heapVars: map[*types.Var]bool{},
+		free: map[shape][]int{}, labels: map[*types.Label]*label{}, lblScope: map[*types.Label]*scope{}}
+	g.out = &funcOut{}
+	g.p4 = p4new()
+	g.a.p4 = g.p4
+	if env != nil {
+		g.substCache = map[types.Type]types.Type{}
+	}
+	if p, ok := c.pr.byInfo.Load(info); tidyKnob == "all" || ok && c.pr.inRuntime(p.(*Pkg)) && tidyKnob != "0" {
+		g.tidy = true
+		g.a.pre = g.safepoint
+		// The runtime resumes its own functions with whatever BP its context switches leave: mcall with
+		// the caller's saved BP, the gogo that "returns" from mstart1 with g0's. The stock compiler's code
+		// only pops BP; here locals are BP-relative. So in the runtime's packages BP is recomputed from SP
+		// after every call.
+		g.a.post = g.fixBP
+	}
+	if escWhere != "0" {
+		if p, ok := c.pr.byInfo.Load(info); ok && (escWhere == "1" || c.pr.inRuntime(p.(*Pkg))) {
+			g.esc = escAdapter{c.pr.escape(p.(*Pkg))}
+		}
+	}
+	var in, out []types.Type
+	if r := sig.Recv(); r != nil {
+		in = append(in, g.subst(r.Type()))
+	}
+	for i := 0; i < sig.Params().Len(); i++ {
+		in = append(in, g.subst(sig.Params().At(i).Type()))
+	}
+	for i := 0; i < sig.Results().Len(); i++ {
+		out = append(out, g.subst(sig.Results().At(i).Type()))
+	}
+	g.abi = c.abiOfTypes(in, out)
+	g.ret = g.newLabel()
+	return g
+}
+
+// paramLoc: where parameter i (receiver first) lives after the prologue.
+func (g *gen) paramLoc(p abiParam) loc { return loc{kind: lFrame, off: 16 + p.off} }
+
+// declare gives a variable its home: a frame slot, or for a variable on the heap a slot for its pointer
+// (the object itself is allocated by newHeapVar where the declaration executes).
+func (g *gen) declare(v *types.Var) loc {
+	if g.heapVars[v] {
+		i := g.newSlotBits(8, ptrShape)
+		g.declSlots = append(g.declSlots, i)
+		g.nDecl++
+		l := loc{kind: lInd, slot: -g.slots[i].off}
+		g.vars[v] = l
+		return l
+	}
+	i := g.newSlotBits(g.c.sizeof(g.vt(v)), g.c.ptrBits(g.vt(v), nil))
+	if !g.addrVars[v] { // (a pointer to a variable may outlive its block)
+		g.declSlots = append(g.declSlots, i)
+	}
+	g.nDecl++
+	l := loc{kind: lFrame, off: -g.slots[i].off}
+	g.vars[v] = l
+	return l
+}
+
+// newHeapVar allocates the object of a heap variable (zeroed) and stores its pointer in the variable's slot.
+func (g *gen) newHeapVar(v *types.Var) {
+	l := g.vars[v]
+	g.a.lea(AX, msym(g.c.typeSym(g.vt(v)), 0))
+	g.callRT("newobject")
+	g.a.store(mb(BP, l.slot), AX, 8)
+}
+
+// compileFunc generates the code of a function: the parameters' homes, the body (a callback), the return.
+// scan is the syntax to search for variables that must live on the heap.
+// genScratch: the buffers a function's code and tables grow in while its body is generated. finish copies
+// what the function keeps at its final size, so the buffers serve the next function this thread compiles:
+// memory that is in the cache, where a fresh buffer per function (the allocator only moves forward) is not.
+type genScratch struct {
+	b                           []byte
+	relocs                      []obj.Reloc
+	unsafe, lines, stackmap, sp []pcval
+	slots                       []slotInfo
+	// finish's own: the tables at their final pcs, before they are encoded
+	fUnsafe, fLines, fStackmap, fSP, fFiles, fLn []pcval
+}
+
+var scratchPool = sync.Pool{New: func() any { return new(genScratch) }}
+
+func (g *gen) takeScratch() *genScratch {
+	if g.a.b != nil || g.a.relocs != nil || g.slots != nil || g.out.unsafe != nil || g.out.lines != nil || g.out.stackmap != nil || g.out.sp != nil {
+		return nil // (something was generated before compileFunc: leave it where it is)
+	}
+	sc := scratchPool.Get().(*genScratch)
+	g.a.b, g.a.relocs, g.slots = sc.b[:0], sc.relocs[:0], sc.slots[:0]
+	g.out.unsafe, g.out.lines, g.out.stackmap, g.out.sp = sc.unsafe[:0], sc.lines[:0], sc.stackmap[:0], sc.sp[:0]
+	return sc
+}
+
+// giveScratch: after finish, with the buffers as the body left them (body, slots) and the tables' as bodyOut.
+func (sc *genScratch) give(a *asm, slots []slotInfo, unsafe, lines, stackmap, sp []pcval) {
+	clear(slots) // (what the function pointed to is not kept alive by the pool)
+	clear(a.relocs)
+	sc.b, sc.relocs, sc.slots = a.b[:0], a.relocs[:0], slots[:0]
+	sc.unsafe, sc.lines, sc.stackmap, sc.sp = unsafe[:0], lines[:0], stackmap[:0], sp[:0]
+	scratchPool.Put(sc)
+}
+
+// endsInReturn: the function body scan (a block or a function literal) ends in a return statement.
+func endsInReturn(scan ast.Node) bool {
+	var b *ast.BlockStmt
+	switch s := scan.(type) {
+	case *ast.BlockStmt:
+		b = s
+	case *ast.FuncLit:
+		b = s.Body
+	}
+	if b == nil || len(b.List) == 0 {
+		return false
+	}
+	_, ok := b.List[len(b.List)-1].(*ast.ReturnStmt)
+	return ok
+}
+
+func (g *gen) compileFunc(recv *types.Var, pos, end token.Pos, scan ast.Node, body func()) {
+	var sc *genScratch
+	if scratchOn {
+		sc = g.takeScratch()
+		g.sc = sc
+	}
+	if scan != nil {
+		g.findHeapVars(scan)
+	}
+	g.fnBody = scan
+	sig := g.sig
+	if g.pinArgs {
+		// (//go:cgo_unsafe_args: the address of a parameter is the address of the argument frame; without
+		// the escape analysis every variable whose address is taken would move to the heap)
+		for _, t := range []*types.Tuple{sig.Params(), sig.Results()} {
+			for i := 0; i < t.Len(); i++ {
+				delete(g.heapVars, t.At(i))
+			}
+		}
+	}
+	var params []*types.Var
+	if recv != nil {
+		params = append(params, recv)
+	}
+	for i := 0; i < sig.Params().Len(); i++ {
+		params = append(params, sig.Params().At(i))
+	}
+	g.pos(pos)
+	if g.entry != nil {
+		g.entry() // a closure saves its context register first
+	}
+	// parameters: at home in the caller's frame, unless they moved to the heap
+	for i, p := range g.abi.in {
+		v := params[i]
+		home := g.paramLoc(p)
+		if v.Name() == "" || v.Name() == "_" {
+			continue
+		}
+		if g.heapVars[v] {
+			g.declare(v)
+			g.newHeapVar(v)
+			g.move(g.vars[v], home, g.vt(v))
+		} else {
+			g.vars[v] = home
+		}
+	}
+	// results: stack results live where the caller looks; register results in a local slot
+	for i, p := range g.abi.out {
+		v := sig.Results().At(i)
+		var home loc
+		if p.parts == nil && g.c.sizeof(p.typ) != 0 {
+			home = loc{kind: lFrame, off: 16 + p.off}
+		} else {
+			j := g.newSlotBits(g.c.sizeof(p.typ), g.c.ptrBits(p.typ, nil))
+			home = loc{kind: lFrame, off: -g.slots[j].off}
+		}
+		g.resHome = append(g.resHome, home)
+		g.resVars = append(g.resVars, v)
+		if g.heapVars[v] {
+			g.declare(v)
+			g.newHeapVar(v)
+		} else if v.Name() != "" && v.Name() != "_" {
+			g.vars[v] = home
+		}
+	}
+	if g.deferTok != nil && g.rf == nil {
+		g.declareVar(g.deferTok) // filled in where the loop starts (rangeFunc)
+		g.hasDefer = true
+	}
+	body()
+	if !endsInReturn(scan) {
+		// The end of the body is reached: the epilogue is at the closing brace. After a final return it is
+		// reached only from returns, and stays at the last one's line, as the stock compiler's is (whose
+		// function has no code at its '}' then: $GOROOT/test/inline_literal.go).
+		g.pos(end)
+	}
+	g.epilogue()
+	if sc == nil {
+		g.finish(pos)
+		return
+	}
+	a, o := &g.a, g.out
+	bu, bl, bs, bsp := o.unsafe, o.lines, o.stackmap, o.sp
+	g.finish(pos)
+	slots := g.slots
+	g.slots = nil
+	sc.give(a, slots, bu, bl, bs, bsp)
+	g.a.b, g.a.relocs = nil, nil
+}
+
+// scratchOn (FC_SCRATCH=0: off): see genScratch.
+var scratchOn = os.Getenv("FC_SCRATCH") != "0"
+
+// epilogue: the deferred calls, the results into their registers, and the return. Every return statement
+// jumps here.
+func (g *gen) epilogue() {
+	g.place(g.ret)
+	if g.hasDefer {
+		// After a recovered panic the runtime resumes at the instruction before this call.
+		g.a.byte(0x90)
+		g.callRT("deferreturn")
+	}
+	for i, p := range g.abi.out {
+		v := g.resVars[i]
+		if l, ok := g.vars[v]; ok && g.heapVars[v] {
+			g.move(g.resHome[i], l, p.typ) // a result that moved to the heap comes back
+		}
+	}
+	for i, p := range g.abi.out {
+		for _, q := range p.parts {
+			m := g.m(g.resHome[i].plus(q.off), R13)
+			if q.float {
+				g.a.fload(q.reg, m, q.size)
+			} else {
+				g.a.load(q.reg, m, q.size, false)
+			}
+		}
+	}
+	g.unsafeBegin()
+	g.a.rr(0, 8, []byte{0x89}, BP, SP) // MOVQ BP, SP
+	g.out.sp = append(g.out.sp, pcval{g.a.pc(), 8})
+	g.a.pop(BP)
+	g.out.sp = append(g.out.sp, pcval{g.a.pc(), 0})
+	g.a.ret()
+	g.out.sp = append(g.out.sp, pcval{g.a.pc(), fullFrame})
+	g.unsafeEnd()
+}
+
+// finish assembles prologue + body + the call to morestack, and hands the function to the compiler.
+func (g *gen) finish(pos token.Pos) {
+	L := align(g.locals, 8)
+	n := L + align(g.maxarg, 8)
+	if !g.nosplit && n+8 < 128 && !g.a.indirect {
+		// A leaf with a small frame needs no stack check (the stock assembler's rule): it runs in the
+		// space every function is guaranteed below the guard. Code that must not grow the stack calls
+		// such helpers (syscall's code between fork and exec calls capToIndex).
+		leaf := true
+		for _, r := range g.a.relocs {
+			if r.Type == objabiRCall {
+				leaf = false
+				break
+			}
+		}
+		g.nosplit = leaf
+	}
+	if f := os.Getenv("FC_FRAME"); f != "" && strings.Contains(g.out.sym.Name, f) {
+		hist := map[int64]int{}
+		for _, sl := range g.slots {
+			hist[sl.size]++
+		}
+		fmt.Fprintf(os.Stderr, "frame %s: locals %d, outgoing %d, %d slots (%d declared), by size %v\n", g.out.sym.Name, L, g.maxarg, len(g.slots), g.nDecl, hist)
+	}
+	var p asm
+	var moreJumps []int
+	if !g.nosplit {
+		const stackSmall = 128
+		const stackBig = 4096
+		switch {
+		case n+8 <= stackSmall:
+			p.rm(0, 8, []byte{0x3B}, SP, mb(R14, 16), 0) // CMPQ SP, 16(R14)
+			moreJumps = append(moreJumps, p.jcc(ccBE))
+		case n+8 <= stackBig:
+			p.lea(R12, mb(SP, -(n+8-stackSmall)))
+			p.rm(0, 8, []byte{0x3B}, R12, mb(R14, 16), 0)
+			moreJumps = append(moreJumps, p.jcc(ccBE))
+		default:
+			p.movRR(R12, SP)
+			p.aluImm(aSUB, 8, R12, n+8-stackSmall)
+			moreJumps = append(moreJumps, p.jcc(ccB))
+			p.rm(0, 8, []byte{0x3B}, R12, mb(R14, 16), 0)
+			moreJumps = append(moreJumps, p.jcc(ccBE))
+		}
+	}
+	if g.abi0 {
+		// called by assembly: the fixed registers of ABIInternal are not set up
+		p.xorps(X15, X15)
+		p.loadG()
+	}
+	var sp []pcval
+	if g.sc == nil {
+		sp = make([]pcval, 0, len(g.out.sp)+5)
+	} else {
+		sp = g.sc.fSP[:0]
+	}
+	sp = append(sp, pcval{0, 0})
+	spAt := p.pc()
+	p.push(BP)
+	_ = spAt
+	sp = append(sp, pcval{p.pc(), 8})
+	p.movRR(BP, SP)
+	if n != 0 {
+		p.aluImm(aSUB, 8, SP, n)
+	}
+	sp = append(sp, pcval{p.pc(), int32(n + 8)})
+	for _, in := range g.abi.in {
+		for _, q := range in.parts {
+			m := mb(BP, 16+in.off+q.off)
+			if q.float {
+				p.fstore(m, q.reg, q.size)
+			} else {
+				p.store(m, q.reg, q.size)
+			}
+		}
+	}
+	switch {
+	case L == 0:
+	case L <= 96:
+		off := -L
+		for ; off+16 <= 0; off += 16 {
+			p.movupsStore(mb(BP, off), X15)
+		}
+		if off < 0 {
+			p.storeImm(mb(BP, off), 0, 8)
+		}
+	default:
+		p.lea(DI, mb(BP, -L))
+		p.movImm(CX, L/8)
+		p.movImm(AX, 0)
+		p.repStosq()
+	}
+	for _, o := range g.abi.out {
+		if o.parts == nil && g.c.sizeof(o.typ) != 0 {
+			// a result on the stack: zero it (a named result starts at zero, and the collector reads it)
+			size := align(g.c.sizeof(o.typ), 8)
+			off := 16 + o.off
+			if size <= 96 {
+				for i := int64(0); i < size; i += 8 {
+					p.storeImm(mb(BP, off+i), 0, 8)
+				}
+			} else {
+				p.lea(DI, mb(BP, off))
+				p.movImm(CX, size/8)
+				p.movImm(AX, 0)
+				p.repStosq()
+			}
+		}
+	}
+	plen := p.pc()
+	body := g.a
+	for _, at := range g.bpFix {
+		binary.LittleEndian.PutUint32(body.b[at:], uint32(n))
+	}
+	g.p4dump(g.out.sym.Name, &body)
+	code := make([]byte, 0, len(p.b)+len(body.b)+96)
+	code = append(append(code, p.b...), body.b...)
+	out := g.out
+	// tables: the prologue is one unsafe region at the function's first line
+	var unsafe, stackmap, lines []pcval
+	if sc := g.sc; sc != nil {
+		// (encoded below, so these too are scratch)
+		unsafe, stackmap, lines = sc.fUnsafe[:0], sc.fStackmap[:0], sc.fLines[:0]
+	} else {
+		unsafe = make([]pcval, 0, len(out.unsafe)+3)
+		stackmap = make([]pcval, 0, len(out.stackmap)+3)
+		lines = make([]pcval, 0, len(out.lines)+2)
+	}
+	unsafe = append(unsafe, pcval{0, -2})
+	stackmap = append(stackmap, pcval{0, -1}, pcval{plen, 1})
+	out.poss = append(out.poss, pos)
+	lines = append(lines, pcval{0, int32(len(out.poss) - 1)})
+	if !g.noAsync {
+		unsafe = append(unsafe, pcval{plen, -1})
+		for _, e := range out.unsafe {
+			unsafe = append(unsafe, pcval{e.pc + plen, e.val})
+		}
+	}
+	for _, e := range out.lines {
+		lines = append(lines, pcval{e.pc + plen, e.val})
+	}
+	for _, e := range out.stackmap {
+		stackmap = append(stackmap, pcval{e.pc + plen, e.val + 2}) // (maps 0 and 1 are the entry's and the whole frame's)
+	}
+	for _, e := range out.sp {
+		v := e.val
+		if v == fullFrame {
+			v = int32(n + 8)
+		}
+		sp = append(sp, pcval{e.pc + plen, v})
+	}
+	relocs := body.relocs
+	for i := range relocs {
+		relocs[i].Off += int32(plen)
+	}
+	relocs = append(append(make([]obj.Reloc, 0, len(p.relocs)+len(relocs)+1), p.relocs...), relocs...)
+	if !g.nosplit {
+		// the stack is too small: store the register arguments where the prologue would, grow, start over
+		var t asm
+		for _, in := range g.abi.in {
+			for _, q := range in.parts {
+				m := mb(SP, 8+in.off+q.off)
+				if q.float {
+					t.fstore(m, q.reg, q.size)
+				} else {
+					t.store(m, q.reg, q.size)
+				}
+			}
+		}
+		t.byte(0xE8)
+		more := "morestack_noctxt"
+		if g.ctxSlot.kind != lNone {
+			more = "morestack"
+		}
+		callOff := len(t.b)
+		t.u32(0)
+		for _, in := range g.abi.in {
+			for _, q := range in.parts {
+				m := mb(SP, 8+in.off+q.off)
+				if q.float {
+					t.fload(q.reg, m, q.size)
+				} else {
+					t.load(q.reg, m, q.size, false)
+				}
+			}
+		}
+		tpc := len(code)
+		j := t.jmp()
+		code = append(code, t.b...)
+		binaryPatch(code, tpc+j, 0)
+		for _, mj := range moreJumps {
+			binaryPatch(code, mj, tpc)
+		}
+		relocs = append(relocs, obj.Reloc{Off: int32(tpc + callOff), Siz: 4, Type: objabiRCall, Sym: g.c.rtABI0(more)})
+		unsafe = append(unsafe, pcval{tpc, -2})
+		stackmap = append(stackmap, pcval{tpc, -1})
+		sp = append(sp, pcval{tpc, 0})
+		lines = append(lines, pcval{tpc, int32(len(out.poss) - 1)})
+	}
+	if callGraph != nil {
+		var b strings.Builder
+		// name, no stack check, declared //go:nosplit, no safe point for a signal, callees
+		fmt.Fprintf(&b, "%s\t%v\t%v\t%v\t%d", g.out.sym.Name, g.nosplit, g.pragmaNosplit, g.noAsync, n)
+		seen := map[string]bool{}
+		for _, r := range relocs {
+			if r.Type == objabiRCall && r.Sym != nil && !seen[r.Sym.Name] {
+				seen[r.Sym.Name] = true
+				fmt.Fprintf(&b, "\t%s", r.Sym.Name)
+			}
+		}
+		b.WriteByte('\n')
+		callGraphMu.Lock()
+		callGraph.WriteString(b.String())
+		callGraphMu.Unlock()
+	}
+	out.code = code
+	out.relocs = relocs
+	if sc := g.sc; sc != nil {
+		// The pc tables in their final form now, on this thread, with the events still in the cache:
+		// installFuncs, which is one thread per package, only makes the symbols.
+		size := len(code)
+		out.pcsp, out.pcunsafe, out.pcstack = pctab(sp, size), pctab(unsafe, size), pctab(stackmap, size)
+		files, lns := sc.fFiles[:0], sc.fLn[:0]
+		var tf *token.File // the file of the last position, when it has no //line directive
+		var fidx int32
+		var ln int32
+		for _, l := range lines {
+			p := out.poss[l.val]
+			if tf == nil || !p.IsValid() || int(p) < tf.Base() || int(p) > tf.Base()+tf.Size() {
+				fidx, ln = g.c.fileLine(p)
+				tf = nil
+				if p.IsValid() {
+					if f := g.c.pr.fset.File(p); !g.c.hasLineDirs(f) {
+						tf = f // (most of a function's lines are in one file: no lock for those)
+					}
+				}
+				if !slices.Contains(out.usedFiles, fidx) {
+					out.usedFiles = append(out.usedFiles, fidx)
+				}
+			} else {
+				ln = int32(tf.Line(p))
+			}
+			files, lns = append(files, pcval{l.pc, fidx}), append(lns, pcval{l.pc, ln})
+		}
+		out.pcfile, out.pcline = pctab(files, size), pctab(lns, size)
+		out.encoded = true
+		sc.fUnsafe, sc.fStackmap, sc.fLines, sc.fSP, sc.fFiles, sc.fLn = unsafe[:0], stackmap[:0], lines[:0], sp[:0], files[:0], lns[:0]
+		out.poss = nil
+		sp, unsafe, stackmap, lines = nil, nil, nil, nil
+	}
+	out.sp = sp
+	out.unsafe = unsafe
+	out.stackmap = stackmap
+	out.lines = lines
+	out.pos = pos
+	out.args = int32(g.abi.argWidth)
+	out.locals = int32(n)
+	if g.nosplit {
+		out.flags |= obj.NOSPLIT
+	}
+	if out.sym != nil {
+		switch out.sym.Name {
+		case "runtime.reflectcall", "reflect.callReflect", "reflect.callMethod":
+			// stock ir.setupTextLSym ("clumsy but important"): frames on the way to a deferred function
+			// called through reflect do not count when recover looks for its caller ($GOROOT/test/recover.go)
+			out.flags |= obj.WRAPPER
+		}
+	}
+	// stack maps. Arguments: index 0 (entry) has the parameters, index 1 (the body) also the stack results.
+	nargs := int(g.abi.argWidth / 8)
+	entry := make([]bool, nargs)
+	bodyMap := make([]bool, nargs)
+	for _, in := range g.abi.in {
+		if g.c.sizeof(in.typ) != 0 && g.c.hasPointers(in.typ) {
+			g.c.setPtrBits(in.typ, in.off, entry)
+			g.c.setPtrBits(in.typ, in.off, bodyMap)
+		}
+	}
+	for _, o := range g.abi.out {
+		if o.parts == nil && g.c.sizeof(o.typ) != 0 && g.c.hasPointers(o.typ) {
+			g.c.setPtrBits(o.typ, o.off, bodyMap)
+		}
+	}
+	lm := make([]bool, n/8)
+	for _, s := range g.slots {
+		base := int((n - s.off) / 8)
+		for i, b := range s.ptrs {
+			if b {
+				lm[base+i] = true
+			}
+		}
+	}
+	argMaps, localMaps := [][]bool{entry, bodyMap}, [][]bool{lm, lm}
+	for _, set := range g.liveSets {
+		// the slots live at one or more calls
+		m := make([]bool, n/8)
+		for si, s := range g.slots {
+			if si/8 < len(set) && set[si/8]&(1<<(si%8)) != 0 {
+				base := int((n - s.off) / 8)
+				for i, b := range s.ptrs {
+					if b {
+						m[base+i] = true
+					}
+				}
+			}
+		}
+		argMaps, localMaps = append(argMaps, bodyMap), append(localMaps, m)
+	}
+	out.argsMap = g.c.stackMapSym(nargs, argMaps...)
+	out.localsMap = g.c.stackMapSym(int(n/8), localMaps...)
+	g.c.mu.Lock()
+	g.c.funcs = append(g.c.funcs, out)
+	g.c.mu.Unlock()
+}
+
+func binaryPatch(code []byte, at int, target int) {
+	v := uint32(int32(target - (at + 4)))
+	code[at] = byte(v)
+	code[at+1] = byte(v >> 8)
+	code[at+2] = byte(v >> 16)
+	code[at+3] = byte(v >> 24)
+}
+
+// escResult is what the code generator asks the escape analysis.
+type escResult interface {
+	varOnHeap(v *types.Var) bool // must this address-taken or captured variable live on the heap?
+	siteOnHeap(n ast.Node) bool  // must this allocation (literal, new, make, closure, boxed value) use the heap?
+}
+
+// escWhere (FC_ESC): which packages are compiled with the escape analysis (escape.go). By default only the
+// runtime and what it imports: their code must not allocate where the source says it does not (the
+// allocator itself, code that runs before the heap exists, nosplit chains), and the analysis costs a tenth
+// to a fifth of a build's CPU, which the other packages do not need to be correct. 1: every package;
+// 0: none. Without the analysis everything whose address is taken lives on the heap.
+var escWhere = os.Getenv("FC_ESC")
+
+// inRuntime: is p the runtime or one of the packages it imports?
+func (pr *Program) inRuntime(p *Pkg) bool {
+	pr.rtcOnce.Do(func() {
+		pr.rtClosure = map[string]bool{}
+		var walk func(p *Pkg)
+		walk = func(p *Pkg) {
+			if p == nil || pr.rtClosure[plainPath(p.ImportPath)] {
+				return
+			}
+			pr.rtClosure[plainPath(p.ImportPath)] = true // (by path: a test binary has variants of these packages)
+			if pr.plan != nil && !p.listed {
+				pr.scan(p)
+			} else {
+				pr.parse(p)
+			}
+			for _, ip := range p.imps {
+				if m, ok := p.ImportMap[ip]; ok {
+					ip = m
+				}
+				walk(pr.byPath[ip])
+			}
+		}
+		walk(pr.byPath["runtime"])
+	})
+	return pr.rtClosure[plainPath(p.ImportPath)]
+}
+
+type escAdapter struct{ e *escInfo }
+
+func (a escAdapter) varOnHeap(v *types.Var) bool { return a.e.varOnHeap(v) }
+func (a escAdapter) siteOnHeap(n ast.Node) bool  { return a.e.siteOnHeap(n) }
+
+// siteHeap: must the allocation at n use the heap?
+func (g *gen) siteHeap(n ast.Node) bool {
+	return g.esc == nil || n == nil || g.esc.siteOnHeap(n)
+}
+
+// frameObject reserves a slot for an object of type t that lives as long as the function (an allocation
+// that does not escape) and returns it zeroed.
+func (g *gen) frameObject(t types.Type) loc {
+	i := g.newSlotBits(g.c.sizeof(t), g.c.ptrBits(t, nil))
+	l := loc{kind: lFrame, off: -g.slots[i].off}
+	g.zero(l, t)
+	return l
+}
+
+// frameAddr: a pointer temporary holding the address of a frame location.
+func (g *gen) frameAddr(l loc) loc {
+	p := g.ptrTemp()
+	g.a.lea(R8, mb(BP, l.off))
+	g.a.store(mb(BP, p.off), R8, 8)
+	return p
+}
+
+// nothingAfter: no relocation and no table entry is at an address beyond pc.
+func (g *gen) nothingAfter(pc int) bool {
+	last := func(evs []pcval) bool { return len(evs) == 0 || evs[len(evs)-1].pc <= pc }
+	if n := len(g.a.relocs); n > 0 && int(g.a.relocs[n-1].Off) >= pc {
+		return false
+	}
+	for _, at := range g.bpFix {
+		if at >= pc {
+			return false
+		}
+	}
+	return last(g.out.sp) && last(g.out.unsafe) && last(g.out.stackmap)
+}
+
+// smallConst: e is an integer constant that fits a sign-extended 32-bit immediate, for an operation on
+// values of type t.
+func (g *gen) smallConst(e ast.Expr, t types.Type) (int64, bool) {
+	if e == nil {
+		return 0, false
+	}
+	tv := tvOf(e)
+	if tv.Value == nil || !isWord(t) {
+		return 0, false
+	}
+	b, ok := t.Underlying().(*types.Basic)
+	if !ok || b.Info()&types.IsInteger == 0 {
+		return 0, false
+	}
+	l := g.constLoc(tv.Value, t)
+	if l.kind != lImm || int64(int32(l.imm)) != l.imm {
+		return 0, false
+	}
+	return l.imm, true
+}
+
+// tidyKnob (FC_TIDY): 0 turns tidy frames off; "vars" and "temps" restrict which slots ever die (debugging).
+var tidyKnob = os.Getenv("FC_TIDY")
+
+// rtRealWidth: the argument area of runtime function name as package runtime declares it (0 if unknown).
+func (c *compiler) rtRealWidth(name string) int64 {
+	pr := c.pr
+	if v, ok := pr.rtWidth.Load(name); ok {
+		return v.(int64)
+	}
+	var w int64
+	rp := pr.byPath["runtime"]
+	var rtp *types.Package
+	if rp == c.pkg {
+		rtp = c.tpkg
+	} else if rp != nil {
+		rtp, _ = pr.view(rp)
+	}
+	if rtp != nil {
+		if fn, ok := rtp.Scope().Lookup(name).(*types.Func); ok {
+			if sig := fn.Type().(*types.Signature); sig.TypeParams().Len() == 0 {
+				w = c.abiOf(sig).argWidth
+			}
+		}
+	}
+	pr.rtWidth.Store(name, w)
+	return w
+}
+
+// noteWB: a write barrier is being emitted here (FC_WBCHECK: wbcheck.go).
+func (g *gen) noteWB() {
+	if wbCheck && g.out != nil {
+		g.out.wbPos = append(g.out.wbPos, g.curPos)
+	}
+}
+
+// wbWarn (FC_WBWARN=1): report write barriers emitted in functions the source marks //go:nowritebarrier or
+// //go:nowritebarrierrec (the stock compiler proves there are none).
+var wbWarn = os.Getenv("FC_WBWARN") != ""
+
+// callGraph (FC_CALLGRAPH=<file>): a line per function: name, has no stack check, is declared //go:nosplit, has no
+// safe point for asynchronous preemption, its frame size, then the symbols it calls (tools/fc/safecheck.sh reads it).
+var callGraph = func() *os.File {
+	if name := os.Getenv("FC_CALLGRAPH"); name != "" {
+		f, _ := os.Create(name)
+		return f
+	}
+	return nil
+}()
+var callGraphMu sync.Mutex
+
+// fixBP: BP = SP + the frame size (patched in when it is known).
+func (g *gen) fixBP() {
+	g.a.byte(0x48, 0x8D, 0xAC, 0x24)
+	g.bpFix = append(g.bpFix, g.a.pc())
+	g.a.p4.hole(g.a.pc(), 4, p4FrameSize)
+	g.a.u32(0)
+}

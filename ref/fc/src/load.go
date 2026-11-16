@@ -1,0 +1,1043 @@
+// load.go: the front end. Every package the target depends on is parsed and type-checked from source by
+// go/types, in one address space, dependencies first and in parallel. No export data is read or written.
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/scanner"
+	"go/token"
+	"go/types"
+	"go/version"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+// Pkg is one package of the build: the fields `go list -json` prints, and what the front end adds.
+type Pkg struct {
+	vargenOnce sync.Once // (rtype.go: vargen)
+	vargen     map[token.Pos]int
+	ImportPath string
+	Dir        string
+	Name       string
+	GoFiles    []string
+	SFiles     []string
+	Imports    []string
+	ImportMap  map[string]string
+	EmbedFiles []string
+	Export     string // the stock-compiled archive (go list -export)
+	Standard   bool
+	Module     *struct{ Path, Version, GoVersion string }
+	linkPath   string // what the code and the linker call it, when that is not ImportPath ("main": build.go)
+
+	// cgo (cgo.go): what `go list -json` says with CGO_ENABLED=1
+	CgoFiles, CFiles, CXXFiles, MFiles, FFiles, HFiles, SwigFiles, SwigCXXFiles []string
+	CgoCFLAGS, CgoCPPFLAGS, CgoCXXFLAGS, CgoFFLAGS, CgoLDFLAGS, CgoPkgConfig    []string
+	cgo                                                                         *cgoRun
+
+	// functions by demand (demand.go)
+	eager    bool // every function is compiled, asked for or not
+	dmu      sync.Mutex
+	dq       []*types.Func // asked for by compiled code, not compiled yet
+	dch      chan struct{} // a token when dq grows
+	drainers atomic.Int64  // threads compiling from dq (serveDemands)
+
+	files    []*ast.File
+	keepOnce sync.Once
+	keepFns  map[*types.Func]bool // functions whose uintptr arguments keep their pointers alive (call.go: uintptrKeep)
+	tpkg     *types.Package
+	info     *types.Info
+	deps     []*Pkg
+	once     sync.Once
+	err      error
+
+	// two-pass front end: the package as its importers see it (declarations only)
+	dpkg     *types.Package
+	dOnce    sync.Once
+	dinfo    *types.Info   // what the declarations pass recorded; becomes info when the bodies are checked (checkBodies)
+	bodies   *types.Bodies // the function bodies the declarations pass left
+	perFn    bool          // each function body has an Info of its own (bodyInfo); info holds the package level only
+	bodyInfo map[*ast.BlockStmt]*types.Info
+	derr     error
+	depOnce  sync.Once
+
+	// fused check (fuseCheck): a function's body is checked when its code is about to be generated
+	fuse     bool
+	bodyIdx  map[*ast.BlockStmt]int // a declared function's body -> its index in bodies
+	bodyDecl []*ast.FuncDecl        // by body index
+	bodyOnce []sync.Once            // by body index: the check of that body
+	fnInfo   []*types.Info          // by body index, valid once bodyOnce[i] is done
+	finOnce  sync.Once              // every body checked and the initialization order computed
+	errMu    sync.Mutex
+	depErr   error
+
+	parseOnce sync.Once
+	scanOnce  sync.Once
+	mod       *modInfo // a self plan: the module the package is in (nil: the standard library, a main module)
+	scanned   bool     // imps, srcBytes and Name come from scan (a self plan)
+	discOnce  sync.Once
+	imps      []string          // import paths as written in the files
+	src       map[string][]byte // file bytes read by the self plan, until parsed
+	listed    bool              // GoFiles came from a plan file
+
+	srcBytes         int64
+	parseNS, checkNS int64
+
+	lnOnce       sync.Once
+	checkEnd     time.Time // when the full check finished
+	linkname     map[string]string
+	linknamed    map[string]bool // local names with any //go:linkname directive
+	linknamedStd map[string]bool
+	declOnce     sync.Once
+	decls        map[*types.Func]*ast.FuncDecl
+}
+
+type Program struct {
+	fset   *token.FileSet
+	byPath map[string]*Pkg
+	sizes  types.Sizes
+	sem    *prioPool
+	io     chan struct{} // packages being read from disk at once
+	plan   *selfPlan     // nil when the packages come from a plan file
+	mu     sync.Mutex    // guards byPath while packages are being discovered
+
+	tctx     *types.Context // shared by every package: one object per instantiated type
+	byTpkg   sync.Map       // *types.Package -> *Pkg
+	declPkgs sync.Map       // *types.Package -> true: the packages made by the declarations-only pass
+	lineDirs sync.Map       // *token.File -> true: the file may have //line directives (fileLine)
+	// oldLoops: *token.File -> true: the file's language version is before go1.22, so the variables its for
+	// statements declare are one per loop, not one per iteration (oldLoopVars)
+	oldLoops    sync.Map
+	anyOldLoops atomic.Bool
+	linkNames   sync.Map      // types.Type -> its link name, for every compiler of a whole-program build
+	typeOwner   sync.Map      // descriptor symbol name -> the *compiler that writes it (whole-program builds)
+	wrapOwner   sync.Map      // method wrapper symbol name -> the *compiler that compiles it (lazyTypes)
+	lazyTypes   bool          // descriptors by demand (rtype.go: lazyNamed)
+	lazyFuncs   bool          // functions by demand (demand.go)
+	fnWanted    sync.Map      // *types.Func -> true: compiled as a root or queued for its package
+	pending     atomic.Int64  // packages in their first pass + queued functions not yet compiled
+	quiet       chan struct{} // closed when pending reaches zero: nothing more will be asked for
+	quietOnce   sync.Once
+	idleJobs    chan chan func() // parked goroutines of runJob
+	stockPath   map[string]bool  // lazyTypes: the packages the stock compiler compiles in this build
+	// stockArchives: the stock linker links this build and these packages are the stock compiler's (by plain
+	// import path, its archive): an itab both sides can write is merged by content, as the stock compiler's
+	// are, so its references to their symbols are by index (writeITab, indexRefs)
+	stockArchives map[string]string // (the archives are known after the go command built them: stockPkgs)
+	stockPkgs     []*Pkg
+	mainPath      string // fc build -link: the program's main package (the only "main" to the linker)
+	stockIdxOnce  sync.Once
+	stockIdx      map[idxKey]idxRef
+	instOwner     sync.Map       // instance symbol name -> the *compiler that compiles it
+	shards        []*compiler    // fc build -link with fclink in process: the homes of shared symbols (shard.go)
+	shardWG       sync.WaitGroup // drain jobs of the shards running
+	noalg         sync.Map       // types.Type -> true: compiler-made types with no equality and no hash (map groups, closures)
+	groupOf       sync.Map       // *types.Struct -> *types.Map: the map a group struct belongs to (rtype_alg.go: mapGroup)
+	autoPos       token.Pos      // "<autogenerated>":1, the position of the code a shard generates
+	rtWidth       sync.Map       // runtime function name -> the argument area of its real signature
+	rtcOnce       sync.Once
+	rtClosure     map[string]bool // the runtime and what it imports, by plain import path
+	fullFn        sync.Map        // a declarations-pass *types.Func -> the full pass's
+	declNS        int64           // time in declarations-only checks
+	byInfo        sync.Map        // *types.Info -> *Pkg
+	rtOnce        sync.Once
+	localMu       sync.Mutex
+	localInst     map[*types.TypeName][]*localInst // a type declared in a generic function -> its instances
+	localOf       map[*types.Named]*localInst      // and back, from an instance
+	localBuildMu  sync.Mutex                       // held while one such instance is built (generics.go: localInstance)
+	rtDecls       *types.Package                   // the runtime functions the stock compiler knows, for their signatures
+}
+
+func newProgram() *Program {
+	return &Program{fset: token.NewFileSet(), byPath: map[string]*Pkg{}, sizes: types.SizesFor("gc", "amd64"), tctx: types.NewContext(),
+		sem: newPrioPool(runtime.GOMAXPROCS(0)), io: make(chan struct{}, ioWidth)}
+}
+
+// readPlan reads a stream of `go list -json` objects.
+func (pr *Program) readPlan(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	dec := json.NewDecoder(f)
+	// either a stream of objects (go list -json) or one array (the driver's own planner: sb -dumpplan)
+	br := bufio.NewReader(f)
+	if b, _ := br.Peek(1); len(b) == 1 && b[0] == '[' {
+		var ps []*Pkg
+		if err := json.NewDecoder(br).Decode(&ps); err != nil {
+			return err
+		}
+		for _, p := range ps {
+			p.listed = true
+			p.cgoImports()
+			pr.byPath[p.ImportPath] = p
+		}
+		return nil
+	}
+	dec = json.NewDecoder(br)
+	for {
+		p := new(Pkg)
+		if err := dec.Decode(p); err == io.EOF {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		p.listed = true
+		p.cgoImports()
+		pr.byPath[p.ImportPath] = p
+	}
+}
+
+type pkgImporter struct {
+	pr *Program
+	p  *Pkg
+}
+
+func (i pkgImporter) Import(path string) (*types.Package, error) {
+	if path == "unsafe" {
+		return types.Unsafe, nil
+	}
+	if m, ok := i.p.ImportMap[path]; ok {
+		path = m
+	}
+	d := i.pr.byPath[path]
+	if d == nil {
+		return nil, fmt.Errorf("%s: import %q is not in the plan", i.p.ImportPath, path)
+	}
+	tp, err := i.pr.view(d)
+	if tp == nil {
+		return nil, fmt.Errorf("%s: import %q was not checked (%v)", i.p.ImportPath, path, err)
+	}
+	return tp, nil
+}
+
+// twoPass (off with FC_TWOPASS=0): a package is checked twice. First its declarations only, which is all its
+// importers need, so the chain of checks through the import graph is a chain of short ones; then in full,
+// for its own code generation, importing the declaration-only packages. The two passes make different
+// type objects for the same package: nothing may compare objects across them (symbols are linked by name;
+// full() maps a function to the full pass's object).
+var twoPass = os.Getenv("FC_TWOPASS") != "0"
+
+// bodiesLater (off with FC_BODIES=0, which gives the two passes above): the declarations pass is the first
+// half of the one check of a package, not a second check: it records into the package's Info and keeps
+// the function bodies (types.CheckDecls, driver/gotypes), and check() checks those against the same
+// *types.Package, the bodies of a big package in several shards at once. So importers and the package's
+// own code see the same objects, declarations are checked once, and the longest serial step of a build
+// (the full check of its biggest package) is cut into its declarations and an n-th of its bodies.
+var bodiesLater = twoPass && os.Getenv("FC_BODIES") != "0"
+
+// newInfo: an Info for a check. Types, Defs, Uses and Selections are not made: the checker stores those in
+// the nodes (slots.go). n is the size of the source the Info is for (unused now).
+func newInfo(n int) *types.Info {
+	if slotCheck {
+		return &types.Info{
+			Types:      map[ast.Expr]types.TypeAndValue{},
+			Defs:       map[*ast.Ident]types.Object{},
+			Uses:       map[*ast.Ident]types.Object{},
+			Implicits:  map[ast.Node]types.Object{},
+			Selections: map[*ast.SelectorExpr]*types.Selection{},
+			Instances:  map[*ast.Ident]types.Instance{},
+		}
+	}
+	return &types.Info{
+		Implicits: map[ast.Node]types.Object{},
+		Instances: map[*ast.Ident]types.Instance{},
+	}
+}
+
+// fnInfos (off with FC_FNINFO=0): what the checker records about a function body goes into an Info of that
+// function's own, not into one set of maps for the package. The maps of a big package (five million
+// expressions in MinIO's closure, 0.9 GB) do not fit any cache, and both the checker writing them and the
+// code generator reading them were a quarter of the build's CPU in hash-map probes; a function's maps are
+// small and still in the cache when its code is generated. Not for packages compiled with the escape
+// analysis or the runtime's rules (the runtime's closure, FC_ESC=1), which look at a package as a whole.
+var fnInfos = os.Getenv("FC_FNINFO") != "0"
+
+// fuseCheck (FC_FUSE=1): the check of a function body is fused with its code generation. check() checks
+// only what belongs to the package level (function literals in initializers); the body of a declared
+// function is checked by whoever first asks for its Info (infoFor), which is the thread about to
+// generate its code: the nodes the checker has just annotated are the nodes the generator reads next.
+// The initialization order, which depends on every body, is computed when the functions are done
+// (finishBodies). Only for packages whose functions have Infos of their own (perFn).
+var fuseCheck = os.Getenv("FC_FUSE") == "1"
+
+func (p *Pkg) onBodyErr(err error) {
+	p.errMu.Lock()
+	if p.err == nil {
+		p.err = err
+	}
+	p.errMu.Unlock()
+}
+
+// bodyErr is the first error of p's check so far.
+func (p *Pkg) bodyErr() error {
+	p.errMu.Lock()
+	defer p.errMu.Unlock()
+	return p.err
+}
+
+// fuseBodies is checkBodies for a fused check: the package-level bodies now, the rest by demand.
+func (p *Pkg) fuseBodies() {
+	b := p.bodies
+	n := b.Len()
+	decls := make(map[*ast.BlockStmt]*ast.FuncDecl, n)
+	for _, f := range p.files {
+		for _, d := range f.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok && fd.Body != nil {
+				decls[fd.Body] = fd
+			}
+		}
+	}
+	p.bodyIdx = make(map[*ast.BlockStmt]int, n)
+	p.bodyDecl = make([]*ast.FuncDecl, n)
+	p.bodyOnce = make([]sync.Once, n)
+	p.fnInfo = make([]*types.Info, n)
+	var first []int
+	for i := 0; i < n; i++ {
+		body := b.Body(i)
+		if fd := decls[body]; fd != nil && !b.IsLit(i) {
+			p.bodyIdx[body] = i
+			p.bodyDecl[i] = fd
+		} else {
+			first = append(first, i)
+		}
+	}
+	b.Check(0, first, func(int) *types.Info { return p.dinfo }, p.onBodyErr)
+	p.fuse = true
+}
+
+// ensureBody checks body i if nobody has.
+func (p *Pkg) ensureBody(i int) {
+	p.bodyOnce[i].Do(func() {
+		in := newInfo(0)
+		copySig(in, p.dinfo, p.bodyDecl[i])
+		p.fnInfo[i] = in
+		p.bodies.Check(i+1, []int{i}, func(int) *types.Info { return in }, p.onBodyErr)
+	})
+}
+
+// finishBodies: every body of p is checked and p.info.InitOrder is there. For a package without a fused
+// check that was so when check() returned.
+func (p *Pkg) finishBodies() {
+	if !p.fuse {
+		return
+	}
+	p.finOnce.Do(func() {
+		if lazyBodiesActive.Load() {
+			// functions by demand: only what the variables' initializers reach is needed for the order;
+			// a function nothing asks for is never checked (and an error in it never reported)
+			p.bodies.ReachFromVars(func(i int) {
+				if p.bodyDecl[i] != nil {
+					p.ensureBody(i)
+				}
+			})
+		} else {
+			for i := range p.bodyOnce {
+				if p.bodyDecl[i] != nil {
+					p.ensureBody(i)
+				}
+			}
+		}
+		p.bodies.InitOrder(p.dinfo, p.onBodyErr)
+	})
+}
+
+// infoFor: the Info that knows about fd's body and signature.
+func (p *Pkg) infoFor(fd *ast.FuncDecl) *types.Info {
+	if p.fuse {
+		if fd != nil && fd.Body != nil {
+			if i, ok := p.bodyIdx[fd.Body]; ok {
+				p.ensureBody(i)
+				return p.fnInfo[i]
+			}
+		}
+		return p.info
+	}
+	if fd != nil && fd.Body != nil {
+		if in := p.bodyInfo[fd.Body]; in != nil {
+			return in
+		}
+	}
+	return p.info
+}
+
+// infos: every Info of the package (the package level first).
+func (p *Pkg) infos() []*types.Info {
+	out := make([]*types.Info, 0, 1+len(p.bodyInfo))
+	out = append(out, p.info)
+	if p.fuse {
+		p.finishBodies()
+		for _, in := range p.fnInfo {
+			if in != nil {
+				out = append(out, in)
+			}
+		}
+		return out
+	}
+	for _, f := range p.files {
+		for _, d := range f.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok && fd.Body != nil {
+				if in := p.bodyInfo[fd.Body]; in != nil {
+					out = append(out, in)
+				}
+			}
+		}
+	}
+	return out
+}
+
+// copySig copies what src knows about fd's name, receiver and signature into dst, so that a function's
+// Info answers for every node of its declaration (the maps that are left: Instances and Implicits).
+func copySig(dst, src *types.Info, fd *ast.FuncDecl) {
+	if len(src.Instances) == 0 && len(src.Implicits) == 0 {
+		return
+	}
+	visit := func(x ast.Node) bool {
+		if x == nil {
+			return true
+		}
+		if id, ok := x.(*ast.Ident); ok {
+			if in, ok := src.Instances[id]; ok {
+				dst.Instances[id] = in
+			}
+		}
+		if o, ok := src.Implicits[x]; ok {
+			dst.Implicits[x] = o
+		}
+		return true
+	}
+	if fd.Recv != nil {
+		ast.Inspect(fd.Recv, visit)
+	}
+	ast.Inspect(fd.Type, visit)
+}
+
+// checkBodies is the second half of p's check (bodiesLater); the caller holds a slot of pr.sem.
+func (pr *Program) checkBodies(p *Pkg) {
+	var mu sync.Mutex
+	onErr := func(err error) {
+		mu.Lock()
+		if p.err == nil {
+			p.err = err
+		}
+		mu.Unlock()
+	}
+	b := p.bodies
+	n := b.Len()
+	k := 1
+	if p.srcBytes >= bodyShardMin {
+		k = min(runtime.GOMAXPROCS(0), int(p.srcBytes/(bodyShardMin/2)))
+	}
+	if declOnly {
+		n = 0
+	}
+	if p.perFn && fuseCheck && !declOnly {
+		p.fuseBodies()
+		return
+	}
+	// function literals outside functions to shard 0 (they share their variable's declaration, and are
+	// recorded with the package level); the functions biggest first, each to the lightest shard; a shard
+	// checks its bodies in source order
+	shards := make([][]int, k)
+	load := make([]int, k)
+	var fns []int
+	for i := 0; i < n; i++ {
+		if b.IsLit(i) {
+			shards[0] = append(shards[0], i)
+			load[0] += b.Size(i)
+		} else {
+			fns = append(fns, i)
+		}
+	}
+	if k > 1 {
+		sort.SliceStable(fns, func(x, y int) bool { return b.Size(fns[x]) > b.Size(fns[y]) })
+	}
+	for _, i := range fns {
+		m := 0
+		for s := 1; s < k; s++ {
+			if load[s] < load[m] {
+				m = s
+			}
+		}
+		shards[m] = append(shards[m], i)
+		load[m] += b.Size(i)
+	}
+	var fnInfo []*types.Info // by body, when each has its own
+	if p.perFn {
+		decls := make(map[*ast.BlockStmt]*ast.FuncDecl, len(fns))
+		for _, f := range p.files {
+			for _, d := range f.Decls {
+				if fd, ok := d.(*ast.FuncDecl); ok && fd.Body != nil {
+					decls[fd.Body] = fd
+				}
+			}
+		}
+		fnInfo = make([]*types.Info, n)
+		p.bodyInfo = make(map[*ast.BlockStmt]*types.Info, len(fns))
+		for _, i := range fns {
+			body := b.Body(i)
+			fd := decls[body]
+			if fd == nil {
+				continue // (not a declared function: recorded with the package level)
+			}
+			in := newInfo(b.Size(i) + 64)
+			copySig(in, p.dinfo, fd)
+			fnInfo[i] = in
+			p.bodyInfo[body] = in
+		}
+	}
+	infos := make([]*types.Info, k) // per shard, when the bodies of a shard share one
+	infos[0] = p.dinfo
+	par := &parallel{pool: pr.sem, prio: p.srcBytes + 1, helpers: k - 1}
+	for s := 0; s < k; s++ {
+		sort.Ints(shards[s])
+		if s > 0 && !p.perFn {
+			infos[s] = newInfo(load[s] * 5 / 4)
+		}
+		par.run(func() {
+			b.Check(s, shards[s], func(i int) *types.Info {
+				if fnInfo != nil && fnInfo[i] != nil {
+					return fnInfo[i]
+				}
+				if p.perFn {
+					return p.dinfo // (only shard 0 has such bodies)
+				}
+				return infos[s]
+			}, onErr)
+		})
+	}
+	par.wait()
+	if k > 1 && !p.perFn {
+		// one Info for the package: the shards' maps into the first
+		d := p.dinfo
+		for _, in := range infos[1:] {
+			for e, v := range in.Implicits {
+				d.Implicits[e] = v
+			}
+			for e, v := range in.Instances {
+				d.Instances[e] = v
+			}
+			if slotCheck {
+				for e, v := range in.Types {
+					d.Types[e] = v
+				}
+				for e, v := range in.Defs {
+					d.Defs[e] = v
+				}
+				for e, v := range in.Uses {
+					d.Uses[e] = v
+				}
+				for e, v := range in.Selections {
+					d.Selections[e] = v
+				}
+			}
+		}
+		par.wait()
+	}
+	b.InitOrder(p.dinfo, onErr)
+	p.bodies = nil
+}
+
+// ioWidth: packages read at once (FC_IO).
+var ioWidth = func() int {
+	if n, err := strconv.Atoi(os.Getenv("FC_IO")); err == nil && n > 0 {
+		return n
+	}
+	return 32
+}()
+
+// bodyShardMin: a package with this much source has its bodies checked in shards (one per half of it,
+// up to the number of CPUs).
+const bodyShardMin = 512 << 10
+
+// view checks d as far as its importers need and returns the package they import.
+func (pr *Program) view(d *Pkg) (*types.Package, error) {
+	if !twoPass {
+		pr.check(d)
+		return d.tpkg, d.err
+	}
+	d.dOnce.Do(func() {
+		if d.derr = pr.resolveDeps(d); d.derr != nil {
+			return
+		}
+		// (asked before the slot is taken: inRuntime may parse, which waits for a slot)
+		d.perFn = bodiesLater && fnInfos && escWhere != "1" && !pr.inRuntime(d)
+		pr.sem.acquire(prioDecl + d.srcBytes)
+		defer pr.sem.release()
+		conf := types.Config{Importer: pkgImporter{pr, d}, Sizes: pr.sizes, GoVersion: goVersionOf(d), Context: pr.tctx,
+			IgnoreFuncBodies: true,
+			Error: func(err error) {
+				if d.derr == nil {
+					d.derr = err
+				}
+			}}
+		t0 := time.Now()
+		if bodiesLater {
+			conf.IgnoreFuncBodies = false
+			if d.perFn {
+				d.dinfo = newInfo(int(d.srcBytes) / 4) // (the package level only)
+			} else {
+				d.dinfo = newInfo(int(d.srcBytes))
+			}
+			d.dpkg, d.bodies, _ = conf.CheckDecls(plainPath(d.ImportPath), pr.fset, d.files, d.dinfo)
+		} else {
+			d.dpkg, _ = conf.Check(plainPath(d.ImportPath), pr.fset, d.files, nil)
+		}
+		atomic.AddInt64(&pr.declNS, int64(time.Since(t0)))
+		if declStat && time.Since(t0) > 30*time.Millisecond {
+			fmt.Fprintf(os.Stderr, "decl %s %d ms\n", d.ImportPath, time.Since(t0).Milliseconds())
+		}
+		if d.derr != nil {
+			d.dpkg = nil
+		} else {
+			pr.byTpkg.Store(d.dpkg, d)
+			if !bodiesLater {
+				pr.declPkgs.Store(d.dpkg, true)
+			}
+		}
+	})
+	return d.dpkg, d.derr
+}
+
+// resolveDeps parses p, finds the packages it imports and has each checked as far as an importer needs.
+func (pr *Program) resolveDeps(p *Pkg) error {
+	p.depOnce.Do(func() {
+		// (a self plan knows the imports from the scan: the packages p imports are started while p is parsed)
+		parsed := make(chan struct{})
+		if pr.plan != nil && !p.listed {
+			pr.scan(p)
+			go func() { pr.parse(p); close(parsed) }()
+		} else {
+			pr.parse(p)
+			close(parsed)
+		}
+		if p.err != nil {
+			<-parsed
+			p.depErr = p.err
+			return
+		}
+		defer func() {
+			<-parsed
+			if p.depErr == nil && p.err != nil {
+				p.depErr = p.err
+			}
+		}()
+		var wg sync.WaitGroup
+		for _, ip := range p.imps {
+			if m, ok := p.ImportMap[ip]; ok {
+				ip = m
+			}
+			d := pr.byPath[ip]
+			if d == nil {
+				p.depErr = fmt.Errorf("%s: import %q is not in the plan", p.ImportPath, ip)
+				return
+			}
+			if dbg := os.Getenv("FC_DBGDEPS"); dbg != "" && plainPath(d.ImportPath) == dbg {
+				fmt.Fprintf(os.Stderr, "dep: %q imports %q -> %q (%p)\n", p.ImportPath, ip, d.ImportPath, d)
+			}
+			p.deps = append(p.deps, d)
+			wg.Add(1)
+			go func() { defer wg.Done(); pr.view(d) }()
+		}
+		wg.Wait()
+		for _, d := range p.deps {
+			if _, err := pr.view(d); err != nil {
+				p.depErr = err
+				return
+			}
+		}
+	})
+	return p.depErr
+}
+
+// oldLoopVars: is the language version of a file before go1.22 (loop variables are per loop)? pkgV is the
+// module's go line ("" for the standard library: the toolchain's), fileV the version of the file's //go:build
+// line, if it has one. The checker's rule (go/types, initFiles): a file's line may raise the version, and
+// may lower it when the module is at go1.21 or later, though never under go1.21. As cmd/compile reads it
+// for its DistinctVars (noder: the file's version, "" or >= go1.22).
+func oldLoopVars(pkgV, fileV string) bool {
+	v := pkgV
+	if fileV != "" && version.IsValid(fileV) {
+		c := -1 // (below the toolchain's own version, or equal to it: then nothing is old)
+		if pkgV != "" {
+			c = version.Compare(fileV, pkgV)
+		}
+		if c > 0 || c < 0 && (pkgV == "" || version.Compare(pkgV, "go1.21") >= 0) {
+			v = fileV
+			if version.Compare(v, "go1.21") < 0 {
+				v = "go1.21"
+			}
+		}
+	}
+	return v != "" && version.Compare(v, "go1.22") < 0
+}
+
+// oldLoopVar: is the for statement at pos in a file whose loop variables are per loop?
+func (pr *Program) oldLoopVar(pos token.Pos) bool {
+	if !pr.anyOldLoops.Load() {
+		return false
+	}
+	_, old := pr.oldLoops.Load(pr.fset.File(pos))
+	return old
+}
+
+func goVersionOf(p *Pkg) string {
+	if p.Module != nil && p.Module.GoVersion != "" {
+		return "go" + p.Module.GoVersion
+	}
+	return ""
+}
+
+func plainPath(path string) string {
+	if i := strings.Index(path, " ["); i >= 0 {
+		return path[:i]
+	}
+	return path
+}
+
+// full: fn as the full pass of its package declares it (fn may come from the declarations-only pass).
+func (pr *Program) full(fn *types.Func) *types.Func {
+	if !twoPass || fn.Pkg() == nil {
+		return fn
+	}
+	// (not p.dpkg: another goroutine may be in the middle of p's declarations pass while fn is of its full pass)
+	if _, decl := pr.declPkgs.Load(fn.Pkg()); !decl {
+		return fn
+	}
+	p := pr.byTypes(fn.Pkg())
+	if p == nil {
+		return fn
+	}
+	if v, ok := pr.fullFn.Load(fn); ok {
+		return v.(*types.Func)
+	}
+	pr.check(p)
+	if p.tpkg == nil {
+		return fn
+	}
+	var out *types.Func
+	if recv := fn.Type().(*types.Signature).Recv(); recv == nil {
+		out, _ = p.tpkg.Scope().Lookup(fn.Name()).(*types.Func)
+	} else {
+		rt := types.Unalias(recv.Type())
+		if pt, ok := rt.(*types.Pointer); ok {
+			rt = types.Unalias(pt.Elem())
+		}
+		if n, ok := rt.(*types.Named); ok {
+			if tn, ok := p.tpkg.Scope().Lookup(n.Obj().Name()).(*types.TypeName); ok {
+				if fnamed, ok := types.Unalias(tn.Type()).(*types.Named); ok {
+					for i := 0; i < fnamed.NumMethods(); i++ {
+						if m := fnamed.Method(i); m.Name() == fn.Name() {
+							out = m
+						}
+					}
+				}
+			}
+		}
+	}
+	if out == nil {
+		out = fn
+	}
+	pr.fullFn.Store(fn, out)
+	return out
+}
+
+// parse reads and parses p's files (once). With a self plan (selfplan.go) it first finds which files of the
+// directory belong to the build, from the bytes it then parses.
+// scan reads p's files (a self plan: the directory decides which) and finds what they import, from the
+// import declarations alone: the graph of a program is known after reading its files' heads, not after
+// parsing it (MinIO's cmd parses for 130 ms; its imports are the next level of the graph). No slot: this
+// is waiting for the disk and a few microseconds per file.
+func (pr *Program) scan(p *Pkg) {
+	p.scanOnce.Do(func() {
+		if pr.plan == nil || p.listed {
+			return
+		}
+		// Reading a directory and its files is waiting for the disk, not work for a core: on a cold
+		// page cache eight readers (the slots) left cores idle at the start of a build. So reads have
+		// their own, wider limit.
+		pr.io <- struct{}{}
+		err := pr.plan.loadDir(p)
+		<-pr.io
+		if err != nil {
+			p.err = err
+			return
+		}
+		seen := map[string]bool{}
+		for _, name := range p.GoFiles {
+			src := p.src[name]
+			p.srcBytes += int64(len(src))
+			pkgName, imports, ok := scanImports(src)
+			if !ok {
+				p.err = fmt.Errorf("%s: cannot read the package clause and imports", filepath.Join(p.Dir, name))
+				return
+			}
+			if p.Name == "" {
+				p.Name = pkgName
+			}
+			for _, ip := range imports {
+				if ip != "unsafe" && ip != "C" && !seen[ip] {
+					seen[ip] = true
+					p.imps = append(p.imps, ip)
+				}
+			}
+		}
+		p.scanned = true
+	})
+}
+
+// scanImports reads the head of a Go file with the tokenizer alone: the package name and the import
+// paths, in order. It stops at the first token after the import declarations.
+func scanImports(src []byte) (pkg string, imports []string, ok bool) {
+	var sc scanner.Scanner
+	fset := token.NewFileSet() // (positions are not kept)
+	sc.Init(fset.AddFile("", -1, len(src)), src, nil, 0)
+	next := func() (token.Token, string) {
+		for {
+			_, tok, lit := sc.Scan()
+			if tok != token.SEMICOLON {
+				return tok, lit
+			}
+		}
+	}
+	tok, _ := next()
+	if tok != token.PACKAGE {
+		return "", nil, false
+	}
+	tok, pkg = next()
+	if tok != token.IDENT {
+		return "", nil, false
+	}
+	spec := func(tok token.Token, lit string) bool { // [name | . | _] "path"
+		if tok == token.IDENT || tok == token.PERIOD {
+			tok, lit = next()
+		}
+		if tok != token.STRING {
+			return false
+		}
+		path, err := strconv.Unquote(lit)
+		if err != nil {
+			return false
+		}
+		imports = append(imports, path)
+		return true
+	}
+	for {
+		tok, _ = next()
+		if tok != token.IMPORT {
+			return pkg, imports, true
+		}
+		tok, lit := next()
+		if tok != token.LPAREN {
+			if !spec(tok, lit) {
+				return "", nil, false
+			}
+			continue
+		}
+		for {
+			tok, lit = next()
+			if tok == token.RPAREN {
+				break
+			}
+			if !spec(tok, lit) {
+				return "", nil, false
+			}
+		}
+	}
+}
+
+func (pr *Program) parse(p *Pkg) {
+	p.parseOnce.Do(func() {
+		pr.scan(p)
+		if p.err != nil {
+			return
+		}
+		if err := p.waitGen(); err != nil { // (cgo.go: cgo's Go output is among the files)
+			p.err = err
+			return
+		}
+		pr.sem.acquire(prioParse)
+		defer pr.sem.release()
+		seen := map[string]bool{}
+		for _, name := range p.GoFiles {
+			path := name
+			if !filepath.IsAbs(path) {
+				path = filepath.Join(p.Dir, name)
+			}
+			src := p.src[name]
+			if rtByFc && filepath.Base(name) == "consts_norace.go" && plainPath(p.ImportPath) == "internal/runtime/sys" {
+				// fc's frames are larger than the stock compiler's (every variable has a slot), and the
+				// runtime's nosplit call chains must fit under the stack guard: an fc-built runtime takes
+				// the guard the race detector's build uses (twice the bound; StackGuardMultiplier 2).
+				path = filepath.Join(filepath.Dir(path), "consts_race.go")
+				src = nil
+			}
+			if src == nil {
+				var err error
+				if src, err = os.ReadFile(path); err != nil {
+					p.err = err
+					return
+				}
+			}
+			if !p.scanned {
+				p.srcBytes += int64(len(src))
+			}
+			t0 := time.Now()
+			f, err := parser.ParseFile(pr.fset, path, src, parser.ParseComments|parser.SkipObjectResolution)
+			p.parseNS += int64(time.Since(t0))
+			if err != nil {
+				p.err = err
+				return
+			}
+			p.files = append(p.files, f)
+			if oldLoopVars(goVersionOf(p), f.GoVersion) {
+				pr.oldLoops.Store(pr.fset.File(f.Pos()), true)
+				pr.anyOldLoops.Store(true)
+			}
+			if bytes.Contains(src, []byte("//line ")) || bytes.Contains(src, []byte("/*line ")) {
+				// (a superset of the files whose positions a //line directive moves: those take the slow
+				// path of fileLine, the rest none)
+				pr.lineDirs.Store(pr.fset.File(f.Pos()), true)
+			}
+			if p.Name == "" {
+				p.Name = f.Name.Name
+			}
+			if p.scanned {
+				continue
+			}
+			for _, im := range f.Imports {
+				ip := strings.Trim(im.Path.Value, "\"`")
+				if ip != "unsafe" && ip != "C" && !seen[ip] {
+					seen[ip] = true
+					p.imps = append(p.imps, ip)
+				}
+			}
+		}
+		p.src = nil
+	})
+}
+
+// check parses and type-checks p after its dependencies. Safe to call from many goroutines.
+func (pr *Program) check(p *Pkg) error {
+	p.once.Do(func() {
+		if err := pr.resolveDeps(p); err != nil {
+			if p.err == nil {
+				p.err = err
+			}
+			return
+		}
+		if bodiesLater {
+			if _, err := pr.view(p); err != nil {
+				p.err = err
+				return
+			}
+			pr.sem.acquire(p.srcBytes)
+			defer pr.sem.release()
+			t0 := time.Now()
+			pr.checkBodies(p)
+			p.checkNS = int64(time.Since(t0))
+			p.checkEnd = time.Now()
+			if p.err == nil {
+				p.info = p.dinfo
+				pr.byInfo.Store(p.info, p)
+				p.tpkg = p.dpkg
+			}
+			return
+		}
+		pr.sem.acquire(p.srcBytes)
+		defer pr.sem.release()
+		p.info = newInfo(int(p.srcBytes))
+		pr.byInfo.Store(p.info, p)
+		gover := ""
+		if p.Module != nil && p.Module.GoVersion != "" {
+			gover = "go" + p.Module.GoVersion
+		}
+		conf := types.Config{Importer: pkgImporter{pr, p}, Sizes: pr.sizes, GoVersion: gover, Context: pr.tctx,
+			Error: func(err error) {
+				if p.err == nil {
+					p.err = err
+				}
+			}}
+		conf.IgnoreFuncBodies = declOnly
+		path := p.ImportPath
+		if i := strings.Index(path, " ["); i >= 0 {
+			path = path[:i]
+		}
+		t0 := time.Now()
+		p.tpkg, _ = conf.Check(path, pr.fset, p.files, p.info)
+		p.checkNS = int64(time.Since(t0))
+		p.checkEnd = time.Now()
+		if p.err != nil {
+			p.tpkg = nil
+		} else {
+			pr.byTpkg.Store(p.tpkg, p)
+		}
+	})
+	return p.err
+}
+
+// byTypes: the package a go/types package was checked from.
+func (pr *Program) byTypes(tp *types.Package) *Pkg {
+	if p, ok := pr.byTpkg.Load(tp); ok {
+		return p.(*Pkg)
+	}
+	return nil
+}
+
+// declOnly (FC_DECLONLY=1): an experiment: check declarations only and stop after the front end, to time
+// the chain of declaration checks through the import graph.
+var declStat = os.Getenv("FC_DECLSTAT") != ""
+
+var declOnly = os.Getenv("FC_DECLONLY") != ""
+
+// samePkg: the same package, whichever pass of the front end made the object.
+func samePkg(a, b *types.Package) bool {
+	return a == b || a != nil && b != nil && a.Path() == b.Path()
+}
+
+// rtByFc: the runtime and what it imports are compiled by fc too. FC_RUNTIME=1 turns it on, FC_RUNTIME=0
+// off; unset, it is on in `fc build -link` when the linker is fclink (buildMode), off in the mixed mode of
+// the tests, where the runtime is the stock compiler's.
+var rtByFc = os.Getenv("FC_RUNTIME") != "" && os.Getenv("FC_RUNTIME") != "0"
+
+// useFclink: is the linker fclink (rather than the stock linker)? fclink is part of fc (fclinklib) and
+// links in process; FC_LINKER= (set, empty) asks for the stock linker.
+func useFclink() bool {
+	fl, ok := os.LookupEnv("FC_LINKER")
+	return !ok || fl != ""
+}
+
+// objFiles: FC_OBJFILES=1: fc build -link writes objects and runs the fclink command (linkerPath) on them,
+// as before the in-process link (M5).
+var objFiles = os.Getenv("FC_OBJFILES") != "" && os.Getenv("FC_OBJFILES") != "0"
+
+// linkerPath: the fclink command's path, for FC_OBJFILES=1. FC_LINKER names it; unset, it is the one
+// beside this binary: fclink<X> for fc<X> (a builder's FC_TAG), else fclink.
+func linkerPath() string {
+	if fl, ok := os.LookupEnv("FC_LINKER"); ok {
+		return fl
+	}
+	if exe, err := os.Executable(); err == nil {
+		dir, base := filepath.Split(exe)
+		for _, name := range []string{"fclink" + strings.TrimPrefix(base, "fc"), "fclink"} {
+			fl := filepath.Join(dir, name)
+			if st, err := os.Stat(fl); err == nil && !st.IsDir() {
+				return fl
+			}
+		}
+	}
+	return ""
+}

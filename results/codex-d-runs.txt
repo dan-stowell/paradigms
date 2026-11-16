@@ -1,0 +1,340 @@
+ROUND 1 dataset=minio threads=1 load=0.77 date=Mon Nov 16 16:00:33 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=31.537 csr=74.057 flood=29.541 total=135.135 ms
+sample decode=31.675 csr=48.602 flood=28.380 total=108.657 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (1 threads): flood best 28.4 ms, 663630 live, 111 levels in 7 rounds
+best decode=31.537 csr=48.602 flood=28.380 total=108.657 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=31.995 ms
+baseline sample=30.035 ms
+p2par (1 threads): flood best 30.0 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 1 dataset=minio threads=8 load=0.77 date=Mon Nov 16 16:00:34 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=11.297 csr=24.485 flood=13.177 total=48.959 ms
+sample decode=5.831 csr=11.714 flood=12.519 total=30.063 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 12.5 ms, 663630 live, 111 levels in 7 rounds
+best decode=5.831 csr=11.714 flood=12.519 total=30.063 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=23.670 ms
+baseline sample=12.073 ms
+p2par (8 threads): flood best 12.1 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 1 dataset=kube-apiserver threads=1 load=0.77 date=Mon Nov 16 16:00:35 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=61.103 csr=143.076 flood=44.444 total=248.622 ms
+sample decode=61.227 csr=94.482 flood=44.581 total=200.290 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (1 threads): flood best 44.4 ms, 926486 live, 103 levels in 7 rounds
+best decode=61.103 csr=94.482 flood=44.444 total=200.290 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=41.887 ms
+baseline sample=39.483 ms
+p2par (1 threads): flood best 39.5 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 1 dataset=kube-apiserver threads=8 load=1.35 date=Mon Nov 16 16:00:37 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=21.932 csr=33.374 flood=28.665 total=83.971 ms
+sample decode=8.928 csr=29.477 flood=21.572 total=59.978 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 21.6 ms, 926486 live, 103 levels in 7 rounds
+best decode=8.928 csr=29.477 flood=21.572 total=59.978 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=29.959 ms
+baseline sample=20.289 ms
+p2par (8 threads): flood best 20.3 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 2 dataset=minio threads=1 load=1.35 date=Mon Nov 16 16:00:39 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=32.280 ms
+baseline sample=30.060 ms
+p2par (1 threads): flood best 30.1 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=32.587 csr=71.898 flood=33.624 total=138.109 ms
+sample decode=32.674 csr=48.826 flood=32.127 total=113.627 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (1 threads): flood best 32.1 ms, 663630 live, 111 levels in 7 rounds
+best decode=32.587 csr=48.826 flood=32.127 total=113.627 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 2 dataset=minio threads=8 load=1.35 date=Mon Nov 16 16:00:40 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=22.804 ms
+baseline sample=15.899 ms
+p2par (8 threads): flood best 15.9 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=16.183 csr=30.223 flood=23.312 total=69.717 ms
+sample decode=6.245 csr=15.697 flood=16.493 total=38.435 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 16.5 ms, 663630 live, 111 levels in 7 rounds
+best decode=6.245 csr=15.697 flood=16.493 total=38.435 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 2 dataset=kube-apiserver threads=1 load=1.48 date=Mon Nov 16 16:00:41 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=66.208 ms
+baseline sample=41.452 ms
+p2par (1 threads): flood best 41.5 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=67.579 csr=153.880 flood=45.649 total=267.108 ms
+sample decode=64.765 csr=101.010 flood=43.901 total=209.676 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (1 threads): flood best 43.9 ms, 926486 live, 103 levels in 7 rounds
+best decode=64.765 csr=101.010 flood=43.901 total=209.676 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 2 dataset=kube-apiserver threads=8 load=1.48 date=Mon Nov 16 16:00:43 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=28.417 ms
+baseline sample=24.945 ms
+p2par (8 threads): flood best 24.9 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=22.731 csr=38.256 flood=21.418 total=82.405 ms
+sample decode=9.903 csr=23.746 flood=19.595 total=53.244 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 19.6 ms, 926486 live, 103 levels in 7 rounds
+best decode=9.903 csr=23.746 flood=19.595 total=53.244 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 3 dataset=minio threads=1 load=1.48 date=Mon Nov 16 16:00:45 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=32.001 csr=75.434 flood=32.749 total=140.184 ms
+sample decode=32.563 csr=50.116 flood=30.409 total=113.087 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (1 threads): flood best 30.4 ms, 663630 live, 111 levels in 7 rounds
+best decode=32.001 csr=50.116 flood=30.409 total=113.087 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=34.059 ms
+baseline sample=32.727 ms
+p2par (1 threads): flood best 32.7 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 3 dataset=minio threads=8 load=1.52 date=Mon Nov 16 16:00:46 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=11.611 csr=30.620 flood=33.758 total=75.989 ms
+sample decode=8.781 csr=17.440 flood=22.116 total=48.337 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 22.1 ms, 663630 live, 111 levels in 7 rounds
+best decode=8.781 csr=17.440 flood=22.116 total=48.337 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=317.301 ms
+baseline sample=33.141 ms
+p2par (8 threads): flood best 33.1 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 3 dataset=kube-apiserver threads=1 load=1.52 date=Mon Nov 16 16:00:47 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=109.432 csr=214.434 flood=78.807 total=402.673 ms
+sample decode=114.465 csr=169.458 flood=55.148 total=339.072 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (1 threads): flood best 55.1 ms, 926486 live, 103 levels in 7 rounds
+best decode=109.432 csr=169.458 flood=55.148 total=339.072 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=46.839 ms
+baseline sample=44.211 ms
+p2par (1 threads): flood best 44.2 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 3 dataset=kube-apiserver threads=8 load=1.52 date=Mon Nov 16 16:00:50 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=29.409 csr=55.528 flood=23.966 total=108.903 ms
+sample decode=9.538 csr=28.114 flood=21.500 total=59.152 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 21.5 ms, 926486 live, 103 levels in 7 rounds
+best decode=9.538 csr=28.114 flood=21.500 total=59.152 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=29.958 ms
+baseline sample=21.437 ms
+p2par (8 threads): flood best 21.4 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 4 dataset=minio threads=1 load=1.48 date=Mon Nov 16 16:00:51 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=30.052 ms
+baseline sample=26.711 ms
+p2par (1 threads): flood best 26.7 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=44.079 csr=76.181 flood=30.060 total=150.321 ms
+sample decode=31.788 csr=49.832 flood=29.287 total=110.907 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (1 threads): flood best 29.3 ms, 663630 live, 111 levels in 7 rounds
+best decode=31.788 csr=49.832 flood=29.287 total=110.907 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 4 dataset=minio threads=8 load=1.48 date=Mon Nov 16 16:00:52 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=577.068 ms
+baseline sample=119.570 ms
+p2par (8 threads): flood best 119.6 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=11.514 csr=23.752 flood=17.806 total=53.072 ms
+sample decode=6.439 csr=13.569 flood=14.744 total=34.751 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 14.7 ms, 663630 live, 111 levels in 7 rounds
+best decode=6.439 csr=13.569 flood=14.744 total=34.751 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 4 dataset=kube-apiserver threads=1 load=1.48 date=Mon Nov 16 16:00:54 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=42.072 ms
+baseline sample=42.100 ms
+p2par (1 threads): flood best 42.1 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=62.992 csr=147.474 flood=47.260 total=257.726 ms
+sample decode=61.880 csr=99.103 flood=46.253 total=207.236 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (1 threads): flood best 46.3 ms, 926486 live, 103 levels in 7 rounds
+best decode=61.880 csr=99.103 flood=46.253 total=207.236 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 4 dataset=kube-apiserver threads=8 load=1.44 date=Mon Nov 16 16:00:56 UTC 2026
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=28.819 ms
+baseline sample=21.078 ms
+p2par (8 threads): flood best 21.1 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=29.396 csr=41.512 flood=20.742 total=91.650 ms
+sample decode=14.468 csr=26.096 flood=20.563 total=61.128 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 20.6 ms, 926486 live, 103 levels in 7 rounds
+best decode=14.468 csr=26.096 flood=20.563 total=61.128 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 5 dataset=minio threads=1 load=1.44 date=Mon Nov 16 16:00:58 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=32.139 csr=73.918 flood=31.286 total=137.343 ms
+sample decode=45.600 csr=54.932 flood=31.120 total=131.652 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (1 threads): flood best 31.1 ms, 663630 live, 111 levels in 7 rounds
+best decode=32.139 csr=54.932 flood=31.120 total=131.652 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=34.567 ms
+baseline sample=27.729 ms
+p2par (1 threads): flood best 27.7 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 5 dataset=minio threads=8 load=1.44 date=Mon Nov 16 16:00:59 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/minio 2
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=14.010 csr=32.195 flood=24.292 total=70.498 ms
+sample decode=8.070 csr=15.823 flood=15.577 total=39.471 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 15.6 ms, 663630 live, 111 levels in 7 rounds
+best decode=8.070 csr=15.823 flood=15.577 total=39.471 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/minio 2
+baseline sample=19.957 ms
+baseline sample=17.638 ms
+p2par (8 threads): flood best 17.6 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 5 dataset=kube-apiserver threads=1 load=1.44 date=Mon Nov 16 16:01:00 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=62.572 csr=147.236 flood=42.502 total=252.309 ms
+sample decode=61.950 csr=98.653 flood=41.583 total=202.187 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (1 threads): flood best 41.6 ms, 926486 live, 103 levels in 7 rounds
+best decode=61.950 csr=98.653 flood=41.583 total=202.187 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=45.052 ms
+baseline sample=41.427 ms
+p2par (1 threads): flood best 41.4 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+ROUND 5 dataset=kube-apiserver threads=8 load=1.41 date=Mon Nov 16 16:01:02 UTC 2026
+COMMAND prlimit --as=8589934592 build/p2pipe /home/exedev/paradigms/data/kube-apiserver 2
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=26.841 csr=43.986 flood=16.216 total=87.043 ms
+sample decode=13.907 csr=29.859 flood=16.042 total=59.809 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 16.0 ms, 926486 live, 103 levels in 7 rounds
+best decode=13.907 csr=29.859 flood=16.042 total=59.809 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+COMMAND prlimit --as=8589934592 /tmp/p2pipe-ytsok6ds/p2par /home/exedev/paradigms/data/kube-apiserver 2
+baseline sample=19.413 ms
+baseline sample=15.331 ms
+p2par (8 threads): flood best 15.3 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
