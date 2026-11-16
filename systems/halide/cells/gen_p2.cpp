@@ -2,21 +2,24 @@
 //
 // Halide has no worklist and no loop that runs until nothing changes: a pipeline is a fixed DAG of Funcs over
 // bounded domains. So one pipeline call is ONE LEVEL of a level-synchronous flood, and the driver (p2.cpp) calls
-// it until the frontier is empty (then once the method pipeline, then floods again). All the state is ONE
-// in-place u8 Func `st` (its pure definition is undef: the caller's buffer persists across calls), with sites:
-//   [0, nblk * BLK)     per symbol id (padded to whole blocks): LIVE 1, IFACE 2, DONE 4 (expanded as a type converted to an interface),
-//                       FR0 8, FR1 16 (in the frontier of an even / odd level)
-//   SIG + s             signature s seen (a live interface method call)
-//   NAMED + n           method name n called by reflection-like code
-//   REFL                reflect's Method is live
-//   CAND + m            method m: 1 candidate (its type is live and converted to an interface), 2 called
-//   SUM + p * nblk + b  block b (BLK ids) has a symbol in frontier p: the level loop skips empty blocks
-// An update definition writes ONE site per iteration, so a symbol's expansion is a ragged RDom over
-// (op, symbol in block, block), every op one site: op 0 notes reflect, then
-// then one op per relocation (lazy: decoded from the rel_* columns right here) or per edge (eager: p2_edge),
-// two per method, and last the symbol itself. Each op runs as two iterations (phase): phase 0 sets the target's bits, phase 1 marks the target's
-// block in the next frontier's summary if the target is in it.
-// Parallel: iterations race on shared sites, so the update is atomic() (a compare-and-swap per site write).
+// it until the frontier is empty (then once the method pipeline, then floods again).
+//
+// All the state is ONE in-place u8 Func `st` (pure definition undef: the caller's buffer persists across calls).
+// One byte per fact, so that every write stores the constant 1 (or goes to a scratch byte): racing writers can
+// then never lose each other's facts, and the parallel schedule needs no atomics. (Attempt 1, packed bits per
+// symbol with atomic(): Halide falls back to a mutex array, 10x slower even on one thread: see NOTES.md.)
+// Regions, per symbol id (padded to whole blocks of BLK ids): LIVE, IFACE, EXP (expanded once as live), DONE
+// (expanded as a type converted to an interface), SCR (scratch for writes that do nothing); then SIG + s (a live
+// interface call of signature s), NAMED + n, REFL, CAND + m (method m's type is live and converted to an
+// interface), CALLED + m, SCRM + m (scratch for the method pipeline), SUM + p * nblk + b (block b has a symbol
+// in the frontier of parity p).
+//
+// The frontier is implicit: a symbol needs expanding if it is a live definition not yet expanded, or a live type
+// converted to an interface not yet expanded as one. A level loops over the blocks in its list (`act`, made by
+// the previous call) and their symbols. An update writes ONE site per iteration, so a symbol's expansion is a
+// ragged RDom (phase, op, symbol in block, block): op 0 reflect, then one op per relocation (lazy: decoded from
+// the rel_* columns right here) or per edge (eager: p2_edge), two per method, and last the symbol itself; each op
+// is three phases (three sites): the target's block in the next list, its IFACE byte, its LIVE byte.
 #include "Halide.h"
 #include "join.h"
 using namespace Halide;
@@ -24,36 +27,31 @@ using namespace Halide;
 static Expr u32(Expr e) { return cast<uint32_t>(e); }
 static Expr i32(Expr e) { return cast<int32_t>(e); }
 static Expr u8(Expr e) { return cast<uint8_t>(e); }
-enum { LIVE = 1, IFACE = 2, DONE = 4, FR0 = 8, FR1 = 16 };
 enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16, fFollow = 32 };
 static const int BLK = 16;
 
-// the site layout, from the sizes
 struct Layout {
-    Expr nid, nsig, nstr, nmeth, nblk, SIG, NAMED, REFL, CAND, SUM, total;
+    Expr nid, nsig, nstr, nmeth, nblk, nidp, LIVE, IFACE, EXP, DONE, SCR, SIG, NAMED, REFL, CAND, CALLED, SCRM, SUM, total;
     Layout(Expr nid_, Expr nsig_, Expr nstr_, Expr nmeth_) : nid(nid_), nsig(nsig_), nstr(nstr_), nmeth(nmeth_) {
-        nblk = (nid + BLK - 1) / BLK;
-        SIG = nblk * BLK, NAMED = SIG + nsig, REFL = NAMED + nstr + 1, CAND = REFL + 1, SUM = CAND + nmeth;
-        total = SUM + 2 * nblk;
+        nblk = (nid + BLK - 1) / BLK, nidp = nblk * BLK;
+        LIVE = 0, IFACE = nidp, EXP = 2 * nidp, DONE = 3 * nidp, SCR = 4 * nidp;
+        SIG = 5 * nidp, NAMED = SIG + nsig, REFL = NAMED + nstr + 1, CAND = REFL + 1, CALLED = CAND + nmeth;
+        SCRM = CALLED + nmeth, SUM = SCRM + nmeth, total = SUM + 2 * nblk;
     }
 };
 
-// the sizes every pipeline takes
-#define SIZES                                  \
-    Input<int> nid{"nid"};                     \
-    Input<int> nsig{"nsig"};                   \
-    Input<int> nstr{"nstr"};                   \
+#define SIZES                  \
+    Input<int> nid{"nid"};     \
+    Input<int> nsig{"nsig"};   \
+    Input<int> nstr{"nstr"};   \
     Input<int> nmeth{"nmeth"};
 
 static Expr ite(Expr c, Expr a, Expr b) {  // if_then_else: only the taken side is evaluated
     return Internal::Call::make(a.type(), Internal::Call::if_then_else, {c, a, b}, Internal::Call::PureIntrinsic);
 }
 static Expr bit(Expr v, int b) { return (v & u8(b)) != 0; }
-// the frontier bit of parity p (0 or 1)
-static Expr frBit(Expr p) { return u8(select(p == 0, FR0, FR1)); }
 
-// the list of blocks whose summary byte (st(base + b)) is set: a serial scan over the few thousand blocks,
-// then a scatter
+// the list of blocks whose summary byte (st(base + b)) is set: a serial scan over the blocks, then a scatter
 static void blockList(Func st, Expr base, Expr nblk, Func list, Func count) {
     Var b("b");
     RDom r(0, nblk, "rb");
@@ -68,13 +66,7 @@ static void blockList(Func st, Expr base, Expr nblk, Func list, Func count) {
     count() = pos(nblk - 1);
 }
 
-static void scheduleUpdate(Stage s, RVar outer, bool par, int chunk) {
-    if (!par) return;
-    s.atomic(true);  // (true: no associativity proof: the update reads other sites; Halide uses a CAS loop)
-    hj::parChunks(s, outer, chunk);
-}
-
-// The initial state: IFACE from the flags, the roots LIVE and in frontier 0.
+// The initial state: IFACE from the flags, the roots LIVE and their blocks in list 0.
 class Init : public Generator<Init> {
 public:
     SIZES
@@ -87,33 +79,33 @@ public:
     void generate() {
         Layout L(nid, nsig, nstr, nmeth);
         Expr nsl = fl.dim(0).extent() - 1;
-        st(x) = select(x <= nsl && bit(fl(min(x, nsl)), fIface), u8(IFACE), u8(0));
-        RDom r(0, roots.dim(0).extent(), 0, 2, "r");  // (root, phase): the root's bits, then its block
+        Expr id = x - L.IFACE;
+        st(x) = select(x >= L.IFACE && x < L.EXP && id <= nsl && bit(fl(clamp(id, 0, nsl)), fIface), u8(1), u8(0));
+        RDom r(0, roots.dim(0).extent(), 0, 2, "r");  // (root, phase)
         Expr t = unsafe_promise_clamped(i32(roots(r.x)), 0, nid - 1);
-        Expr site = select(r.y == 0, t, L.SUM + t / BLK);
-        st(site) = select(r.y == 0, st(site) | u8(LIVE | FR0), u8(1));
+        st(select(r.y == 0, L.LIVE + t, L.SUM + t / BLK)) = u8(1);
         st.parallel(x, 1 << 16, TailStrategy::GuardWithIf);
         blockList(st, L.SUM, L.nblk, next, nnext);
     }
 };
 
-// One level: expand every symbol in frontier `parity`.
+// One level: expand every symbol that needs it in the blocks of list `act` (parity p); the blocks of the targets
+// that will need expanding go to list 1 - p.
 class Flood : public Generator<Flood> {
 public:
     GeneratorParam<bool> lazy{"lazy", true};  // decode relocations here (true) or read p2_edge (false)
     GeneratorParam<bool> par{"par", false};
-    GeneratorParam<int> chunk{"chunk", 4};    // blocks per parallel task
+    GeneratorParam<int> chunk{"chunk", 16};   // blocks per parallel task
     SIZES
     Input<int> parity{"parity"};
-    // the blocks with a symbol in frontier `parity` (made by the previous call). A where on an outer RVar is an
-    // if around the innermost loop, re-tested for every op, and Halide does not hoist it (it reads st, which the
-    // loop writes): looping over all blocks costs every symbol's whole row every level. So the block loop runs
-    // over this list, and the symbol test is folded into the op loop's bound (the only where Halide turns into
-    // a bound is one on the innermost RVar).
+    // The blocks to visit. (A where on an outer RVar is an if around the innermost loop, re-tested for every op,
+    // and not hoisted when it reads st: looping over all blocks costs every symbol's whole row every level. So the
+    // block loop runs over this list, and the symbol test is folded into the op loop's bound: the only where
+    // Halide turns into a loop bound is one on the innermost RVar that has a where.)
     Input<Buffer<int32_t, 1>> act{"act"};
     Input<int> nact{"nact"};
     Input<Buffer<uint8_t, 1>> fl{"fl"};
-    // lazy: the relocation columns and the 1a answer; the edges that are not relocations (xoff/xdst/xkind)
+    // lazy: the relocation columns and the 1a answer
     Input<Buffer<uint32_t, 1>> canon{"canon"};
     Input<Buffer<uint32_t, 1>> builtin{"builtin"};
     Input<Buffer<uint32_t, 1>> srel{"srel"};
@@ -131,32 +123,30 @@ public:
     Input<Buffer<uint32_t, 1>> mtyp{"mtyp"};
     Input<Buffer<uint32_t, 1>> sigrep{"sigrep"};  // a signature's representative (equal (name, type) pairs)
     Output<Buffer<uint8_t, 1>> st{"st"};
-    Output<Buffer<int32_t, 1>> next{"next"};      // the blocks in the next frontier (act of the next call)
-    Output<Buffer<int32_t, 0>> nnext{"nnext"};    // how many
+    Output<Buffer<int32_t, 1>> next{"next"};      // the blocks of the next level
+    Output<Buffer<int32_t, 0>> nnext{"nnext"};
 
     Var x{"x"};
 
     void generate() {
         Layout L(nid, nsig, nstr, nmeth);
         Expr nsl = fl.dim(0).extent() - 1, nb = builtin.dim(0).extent(), R = rpkg.dim(0).extent();
-        Expr p = parity, frC = frBit(p), frN = frBit(1 - p);
+        Expr p = parity, SUMN = L.SUM + (1 - p) * L.nblk;
         auto flag = [&](Expr t) { return select(t <= nsl, fl(clamp(t, 0, nsl)), u8(0)); };
+        auto has = [&](Expr region, Expr id) { return st(region + id) != 0; };
 
         st(x) = undef<uint8_t>();
-        // update 0: clear the next frontier's block summary
+        // update 0: clear the next level's block summary
         RDom rz(0, L.nblk, "rz");
-        st(L.SUM + (1 - p) * L.nblk + rz) = u8(0);
+        st(SUMN + rz) = u8(0);
 
-        // update 1: the expansion. RDom (phase, op, symbol in block, block in the list).
-        RDom rk(0, 2, 0, 1 << 26, 0, BLK, 0, nact, "rk");
+        // update 1: the expansion, RDom (phase, op, symbol in block, block in the list)
+        RDom rk(0, 3, 0, 1 << 26, 0, BLK, 0, nact, "rk");
         Expr ph = rk.x, op = rk.y;
-        // (promises, not clamps: a clamp makes bounds inference size info for every possible block)
+        // (promises, not clamps: a clamp makes bounds inference size `info` for every block the id could be in)
         Expr b = unsafe_promise_clamped(act(rk.w), 0, L.nblk - 1), c = b * BLK + rk.z;
-        Expr cs = clamp(c, 0, nsl);
-        // what the symbol's ops need from the inputs, once per symbol (computed at the symbol loop: inline, every
-        // op would reload it)
-        // (indexed by the loop's own (symbol in block, block in list): indexed by the id, bounds inference would size
-        // it for every block the data-dependent id could be in)
+        // What a symbol's ops need from the inputs, once per symbol. Indexed by the loop's own (symbol in block,
+        // block in list): indexed by the id, bounds inference would size it for every block the id could be in.
         Func info("info");
         Var zv("zv"), wv("wv");
         {
@@ -166,21 +156,23 @@ public:
             Expr o = unsafe_promise_clamped(i32(sobj(cc)), 0, pkgOff.dim(0).extent() - 2);
             Expr base = i32(pkgOff(o)), npk = i32(pkgOff(o + 1)) - base - 5;
             info(zv, wv) = Tuple(nr, i32(xoff(cc + 1) - xoff(cc)), i32(moff(cc + 1) - moff(cc)), i32(srel(cc)), i32(xoff(cc)),
-                             i32(moff(cc)), base, npk, i32(f));
+                                 i32(moff(cc)), base, npk, i32(f));
         }
-        Expr nr = info(rk.z, rk.w)[0], nx = info(rk.z, rk.w)[1], nm = info(rk.z, rk.w)[2], rel0 = info(rk.z, rk.w)[3];
-        Expr x0 = info(rk.z, rk.w)[4], m0 = info(rk.z, rk.w)[5], base = info(rk.z, rk.w)[6], npk = info(rk.z, rk.w)[7];
-        Expr flc = u8(info(rk.z, rk.w)[8]);
-        Expr stc = st(c);
-        Expr uii = bit(flc, fGoType) && bit(stc, IFACE);
-        Expr proceed = c <= nsl && bit(flc, fDef) && !(uii && bit(stc, DONE));
+        auto I = [&](int k) { return info(rk.z, rk.w)[k]; };
+        Expr nr = I(0), nx = I(1), nm = I(2), rel0 = I(3), x0 = I(4), m0 = I(5), base = I(6), npk = I(7), flc = u8(I(8));
+        Expr isDef = c <= nsl && bit(flc, fDef);
+        Expr uii = bit(flc, fGoType) && has(L.IFACE, c);
+        Expr needs = isDef && has(L.LIVE, c) && (!has(L.EXP, c) || (uii && !has(L.DONE, c)));
+        // The methods count only for a type converted to an interface. If IFACE arrives on c during its own
+        // expansion (another thread, or a self edge), nops grows: the last iteration (the bound was fixed at loop
+        // entry) is then a method op, not the self op, so c is not marked EXP / DONE and is expanded again, in full,
+        // next level. (With the methods always in the layout and DONE set from the uii seen at the last op, a
+        // parallel run lost 2,106 live symbols: DONE without the method ops.)
+        nm = select(uii, nm, 0);
         Expr nops = 2 + nr + nx + 2 * nm;
-        rk.where(op < select((stc & frC) != 0, nops, 0));  // the only where: Halide makes it the op loop's bound
+        rk.where(op < select(needs, nops, 0));
 
-        // ops: 0 reflect, then the relocations, the other edges, two per method, and last the symbol itself (clear
-        // its frontier bit, set DONE). atomic() refuses an update whose written SITE depends on the Func's own
-        // values, so the op layout and every site come from the inputs only; the state (uii, proceed, the
-        // target's bits) only decides the VALUE written, and an op that should do nothing rewrites its site.
+        // the op's target
         Expr selfOp = op == nops - 1, reflOp = !selfOp && op == 0;
         Expr isRel = !selfOp && op >= 1 && op < 1 + nr, isX = !selfOp && op >= 1 + nr && op < 1 + nr + nx;
         Expr isM = !selfOp && op >= 1 + nr + nx;
@@ -204,44 +196,36 @@ public:
         Expr kindX = i32(xkind(e));
         // (if_then_else, not select: select evaluates both sides, so every op would decode a relocation)
         Expr t = ite(isRel, tRel, ite(isX, xdst(e), ite(isM && mo % 2 == 0, mtyp(m), u32(0))));
-        Expr tk = select(isRel, 0, isX, kindX, 1);  // a method's type: as useiface
-        Expr ti = unsafe_promise_clamped(i32(t), 0, nid - 1);
-        Expr stt = st(ti), flt = flag(ti);
-        Expr plainBits = select(uii && bit(flt, fGoType) && bit(flt, fDef) && !bit(stt, IFACE), u8(IFACE | LIVE) | frN,
-                                !bit(stt, LIVE), u8(LIVE) | frN, u8(0));
-        Expr ifaceBits = select(!bit(stt, IFACE), u8(IFACE) | select(bit(stt, LIVE), frN, u8(0)), u8(0));
-        Expr nodeOp = (isRel || isX || isM) && t != 0 && (tk == 0 || tk == 1) && !(isM && mo % 2 == 1);
-        Expr act_ = proceed && (!isM || uii);  // does this op change anything
-        Expr sigOp = isX && kindX == 2, namedOp = isX && kindX == 3, candOp = isM && mo % 2 == 1;
-        Expr sigSite = L.SIG + i32(sigrep(clamp(i32(t), 0, nsig - 1))), namedSite = L.NAMED + clamp(i32(t), 0, nstr);
-        // phase 0: (site, its new value)
-        Expr site0 = select(selfOp, c, reflOp, L.REFL, nodeOp, ti, sigOp, sigSite, namedOp, namedSite,
-                            candOp, L.CAND + m, c);
-        // phase 1: a node op marks the target's block if the target is in the next frontier; else rewrite c
-        Expr mark = act_ && nodeOp && (stt & frN) != 0;
-        Expr site1 = select(nodeOp, L.SUM + (1 - p) * L.nblk + ti / BLK, c);
-        Expr site = unsafe_promise_clamped(select(ph == 0, site0, site1), 0, L.total - 1);
-        Expr old = st(site);
-        Expr new0 = select(selfOp, (old & ~frC) | select(uii, u8(DONE), u8(0)),
-                           !act_, old,
-                           reflOp, old | select(bit(flc, fReflect), u8(1), u8(0)),
-                           nodeOp, old | select(tk == 0, plainBits, ifaceBits),
-                           sigOp || namedOp || candOp, old | u8(1),
-                           old);
-        Expr new1 = select(mark, u8(1), old);
-        st(site) = select(ph == 0, new0, new1);
+        Expr ti = unsafe_promise_clamped(i32(t), 0, nid - 1), flt = flag(ti);
+        Expr plainOp = (isRel || (isX && kindX == 0)) && t != 0;
+        Expr ifaceOp = ((isX && kindX == 1) || (isM && mo % 2 == 0 && uii)) && t != 0;
+        Expr sigOp = isX && kindX == 2, namedOp = isX && kindX == 3, candOp = isM && mo % 2 == 1 && uii;
+
+        // the rules (p2.c), as which bytes to set; read before this op writes, each phase re-reads (a racing
+        // writer of the same fact does its own pushes, so a stale read only duplicates work)
+        Expr liveT = has(L.LIVE, ti), ifaceT = has(L.IFACE, ti);
+        Expr setIface = select(plainOp, uii && bit(flt, fGoType) && bit(flt, fDef) && !ifaceT, ifaceOp && !ifaceT);
+        Expr setLive = plainOp && !liveT;
+        Expr push = setLive || (setIface && (plainOp || liveT));  // its block goes to the next list
+        Expr scr = L.SCR + c;
+        Expr site0 = select(push, SUMN + ti / BLK, selfOp, L.EXP + c, reflOp && bit(flc, fReflect), L.REFL,
+                            sigOp, L.SIG + i32(sigrep(clamp(i32(t), 0, nsig - 1))), namedOp, L.NAMED + clamp(i32(t), 0, nstr),
+                            candOp, L.CAND + m, scr);
+        Expr site1 = select(setIface, L.IFACE + ti, selfOp && uii, L.DONE + c, scr);
+        Expr site2 = select(setLive || (plainOp && setIface), L.LIVE + ti, scr);
+        Expr site = unsafe_promise_clamped(select(ph == 0, site0, ph == 1, site1, site2), 0, L.total - 1);
+        st(site) = u8(1);
+
+        blockList(st, SUMN, L.nblk, next, nnext);
 
         info.compute_at(st, rk.z);
-        st.update(1).unroll(rk.x);  // the two phases, straight-line: LLVM shares the decode between them
-        scheduleUpdate(st.update(1), rk.w, par, chunk);
-        blockList(st, L.SUM + (1 - p) * L.nblk, L.nblk, next, nnext);
-
+        if (par) hj::parChunks(st.update(1).allow_race_conditions(), rk.w, chunk);  // only constant stores race
     }
 };
 
-// When the frontier is empty: the methods something can now call. A candidate is called if reflect is live and
-// it is exported, or its name is called by name, or a live signature has its (name, type). Then its type and
-// both entries become LIVE in frontier `parity`.
+// When a level finds nothing: the methods something can now call. A candidate is called if reflect is live and
+// it is exported, or its name is called by name, or a live signature has its (name, type). Then its type and both
+// entries become LIVE (their blocks in list `parity`).
 class Methods : public Generator<Methods> {
 public:
     GeneratorParam<bool> par{"par", false};
@@ -259,28 +243,21 @@ public:
     Var x{"x"};
     void generate() {
         Layout L(nid, nsig, nstr, nmeth);
-        Expr frP = frBit(parity);
+        Expr SUMP = L.SUM + parity * L.nblk;
         st(x) = undef<uint8_t>();
-        RDom r(0, 8, 0, nmeth, "r");  // (op * 2 + phase, method): ops 0-2 its type and entries, op 3 "called"
-        Expr m = min(r.y, nmeth - 1), op = r.x / 2, ph = r.x % 2;  // (min: the parallel split runs past the end)
-        Expr cm = st(L.CAND + m);
+        RDom r(0, 7, 0, nmeth, "r");  // (op, method): for each of type, ifn, tfn: its block, its LIVE; then CALLED
+        Expr m = min(r.y, nmeth - 1), q = r.x / 2, ph = r.x % 2;  // (min: the parallel split runs past the end)
         Expr ms = msig(m);
         Expr call = (st(L.REFL) != 0 && mexp(m) != 0) || st(L.NAMED + clamp(i32(mname(m)), 0, nstr)) != 0 ||
                     (ms >= 0 && st(L.SIG + clamp(ms, 0, nsig - 1)) != 0);
-        r.where(cm == 1 && call);
-        Expr t = select(op == 0, mtyp(m), op == 1, mifn(m), mtfn(m));
+        r.where(r.x < select(st(L.CAND + m) != 0 && st(L.CALLED + m) == 0 && call, 7, 0));
+        Expr t = select(q == 0, mtyp(m), q == 1, mifn(m), mtfn(m));
         Expr ti = unsafe_promise_clamped(i32(t), 0, nid - 1);
-        Expr node = op < 3 && t != 0;
-        Expr stt = st(ti);
-        Expr mark = node && (stt & frP) != 0;
-        Expr site = unsafe_promise_clamped(select(ph == 0, select(node, ti, L.CAND + m),
-                                                  select(node, L.SUM + parity * L.nblk + ti / BLK, L.CAND + m)),
-                                           0, L.total - 1);
-        Expr old = st(site);
-        Expr v0 = select(node, old | select(!bit(old, LIVE), u8(LIVE) | frP, u8(0)), op == 3, old | u8(2), old);
-        st(site) = select(ph == 0, v0, select(mark, u8(1), old));  // (sites from the inputs only: see Flood)
-        blockList(st, L.SUM + parity * L.nblk, L.nblk, next, nnext);
-        scheduleUpdate(st.update(0), r.y, par, 4096);
+        Expr setLive = q < 3 && t != 0 && st(L.LIVE + ti) == 0;
+        Expr site = select(r.x == 6, L.CALLED + m, setLive, select(ph == 0, SUMP + ti / BLK, L.LIVE + ti), L.SCRM + m);
+        st(unsafe_promise_clamped(site, 0, L.total - 1)) = u8(1);
+        blockList(st, SUMP, L.nblk, next, nnext);
+        if (par) hj::parChunks(st.update(0).allow_race_conditions(), r.y, 4096);
     }
 };
 

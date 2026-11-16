@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     auto xkindB = own(xkind);
     printf("non-relocation edges: %u (of %d in p2_edge)\n", xoff[nsl + 1], edst.dim(0).extent());
 
-    int nblk = (nid + 15) / 16, total = nblk * 16 + nsig + nstr + 1 + 1 + nmeth + 2 * nblk;
+    int nblk = (nid + 15) / 16, total = 5 * nblk * 16 + nsig + nstr + 1 + 1 + 3 * nmeth + 2 * nblk;  // gen_p2.cpp Layout
     Buffer<u8, 1> st(total);
     Buffer<u32, 1> sigrep(nsig);
     Buffer<int32_t, 1> msig(nmeth);
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
     auto check = [&]() {
         std::vector<u32> list;
         for (int g = 1; g < nid; g++)
-            if (st(g) & 1) list.push_back(g);
+            if (st(g)) list.push_back(g);  // the LIVE region
         printf("%d levels in %d rounds, %ld blocks of 1024 ids; ", levels, rounds, blocks);
         return check32("live", list.data(), list.size(), "oracle/p2_live.u32") != 0;
     };
