@@ -449,11 +449,9 @@ static void exec(int from, int to) {
 			for (;;) {
 				rounds++;
 				exec(i + 1, j);
-				quiet = 1;
+				quiet = 1; // print the first round only
 				uint64_t v = firstValue(prog[j].arg);
-				quiet = q;
 				if (v == 0) break;
-				if (rounds == 1) quiet = 1; // print the first round only
 			}
 			quiet = q;
 			printf("  (%d rounds)\n", rounds);
@@ -493,6 +491,7 @@ static void exec(int from, int to) {
 int main(int argc, char **argv) {
 	if (argc < 4) { fprintf(stderr, "usage: dk flatdir threads script.sql...\n"); return 2; }
 	double t0 = now();
+	setvbuf(stdout, NULL, _IOLBF, 0);
 	flatDir = argv[1];
 	readMeta();
 	duckdb_database db;
