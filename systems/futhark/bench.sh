@@ -5,7 +5,11 @@
 # join loops and scan look-backs busy-wait) and the patched one ("yield": sched_yield() in those loops, build.sh).
 # warm: the entry alone, inputs resident, repeated in one process until a run is >= ~1 s (REPS below);
 # e2e: the whole process (start, read and upload the flat files, one run, copy the output out), 5 runs, no check.
+# HUGE=1: every large malloc of the Futhark runtime (inputs, outputs, intermediates) on 2 MB huge pages, through
+#   glibc's tunable (no code change; needs vm.nr_hugepages reserved, falls back to 4 KB pages when the pool is empty).
+# CFGS="c:1:1 multicore:8:8spin mcy:8:8yield" picks the configurations (backend:threads:label).
 set -e
+[ -n "$HUGE" ] && export GLIBC_TUNABLES=glibc.malloc.hugetlb=2
 cd "$(dirname "$0")"
 D=${1:-/home/exedev/paradigms/data/minio}
 [ -n "$NOBUILD" ] || YIELD=1 ./build.sh >/dev/null 2>&1
@@ -20,10 +24,12 @@ cells="1a p1 20 40
 3a p3 80 100
 3a_loop p3 80 100
 3b p3 6 20"
-echo "# $(date -u +%FT%TZ) load $(cut -d' ' -f1-3 /proc/loadavg) data $D"
+echo "# ${HUGE:+HUGE=1 }$(date -u +%FT%TZ) load $(cut -d' ' -f1-3 /proc/loadavg) data $D"
 echo "$cells" | while read cell p r1 r8; do
-	for cfg in "c 1 $r1 1" "multicore 8 $r8 8spin" "mcy 8 $r8 8yield"; do
-		set -- $cfg
+	for cfg in ${CFGS:-c:1:1 multicore:8:8spin mcy:8:8yield}; do
+		IFS=: read be th lab <<< "$cfg"
+		reps=$r8; [ $th = 1 ] && reps=$r1
+		set -- $be $th $reps $lab${HUGE:++huge}
 		line=$(run build/${p}_$1.exe $D $2 $3 $cell nocheck | grep ' | min')
 		printf "%-8s %-7s warm  %s\n" $cell $4 "$(echo "$line" | sed 's/.*| //')"
 		ts=""

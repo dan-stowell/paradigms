@@ -1,4 +1,179 @@
-# Futhark on this VM
+# Futhark: problems 1-3 on MinIO (cells), then the install notes
+
+Futhark 0.29.1, `c` backend (sequential) for 1 core, `multicore` backend for 8. All compute is in `p1.fut`,
+`p2.fut`, `p3.fut` (+ `msort.fut`); the C drivers (`p1.c p2.c p3.c`, shared `drv.h`) only mmap the flat files,
+hand them to the generated library (`futhark_new_*`, which copies), call the entries, time them, and compare
+the outputs with the oracles. Build: `systems/futhark/build.sh` (`YIELD=1` also builds the non-spinning runtime,
+`build/*_mcy.exe`). Rerun every timing: `systems/futhark/bench.sh` (`HUGE=1` for 2 MB pages).
+
+## Surprises
+
+1. **2 MB pages for the whole runtime are a 1.2-1.7x win on every cell, with no code change.**
+   `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` makes glibc back its large mallocs with MAP_HUGETLB, and the Futhark
+   runtime gets every array from malloc. Intermediate arrays are allocated per entry call and part of that
+   memory goes back to the kernel between calls, so with 4 KB pages each warm rep pays 16,589 (1a) to 33,183 (1c) minor faults;
+   with huge pages 18-67. Interleaved, 3 rounds, 1 core, 16:33Z, load 5.3-6.3 (min-max of the 3 rounds' medians):
+
+   | cell | 4 KB pages, ms (faults/rep) | 2 MB pages, ms (faults/rep) |
+   |---|---|---|
+   | 1a | 143-158 (16,589) | 89-111 (38) |
+   | 1b_scan | 74-94 (19,285) | 47-48 (37) |
+   | 1c | 197-225 (33,183) | 115-133 (67) |
+   | 2 | 122-157 (9,453) | 103-119 (24) |
+   | 2lazy | 196-224 (3,785) | 167-200 (18) |
+
+   End to end it matters more (the uploads of the inputs fault too): 3b process 0.59-0.61 s -> 0.38-0.42 s on 1
+   core, 0.41-0.44 -> 0.17-0.22 s on 8 (104,142 -> 2,456 faults per process). This is ATTACKS 2's observation
+   made general: for a runtime that allocates per operation, the page size is a first-order knob.
+2. **The stock multicore runtime spins, and on this shared machine that costs more than the parallelism wins.**
+   The join loop of every parallel operation and the scans' decoupled look-back busy-wait; Futhark has no
+   wait-policy knob. `YIELD=1 build.sh` patches the generated C (sed, 7-26 `sched_yield()` per program) so a
+   waiting thread yields. Interleaved P2 at 8 threads, load 10-12 (16:21Z): eager flood medians 156-310 ms
+   spinning vs 120-297 yielding; lazy 235-459 vs 106-181. Under load 13 (bench at 16:30Z) neither helps:
+   8-thread P2 is slower than 1 core. At 111 levels x ~25 parallel operations per level, the flood is ~2,800
+   barriers, and each one waits for the slowest descheduled thread. Read all 8-thread numbers below as
+   upper bounds measured on an oversubscribed machine.
+3. **The binary search a data-parallel program reaches for first is the slow part.** "Which row owns item j" as
+   a binary search per item (1b, 3b) vs a scatter of row starts + a max-scan: 1b 455-471 -> 47-103 ms on 1 core;
+   3b 177-183 -> 111-120 ms (interleaved, 16:31Z, load 10). 9.4 M searches of 23 steps over a 20 MB offset
+   array are cache misses; the scan is two streaming passes.
+
+## Correctness (all OK, 2026-11-16, MinIO)
+
+    cd systems/futhark && ./build.sh
+    D=/home/exedev/paradigms/data/minio
+    build/p1_c.exe $D 1 1 1a; build/p1_c.exe $D 1 1 1b_scan; build/p1_c.exe $D 1 1 1c    # -> P1a OK, P1b_scan OK, P1c OK
+    build/p2_c.exe $D 1 1 2; build/p2_c.exe $D 1 1 2lazy                                  # -> P2 OK, P2lazy OK
+    build/p3_c.exe $D 1 1 3a; build/p3_c.exe $D 1 1 3b                                    # -> P3a OK, P3b OK
+
+(args: DATADIR THREADS REPS CELL; the same with `_multicore.exe $D 8 ...`.) Each driver compares the output
+arrays element by element with `oracle/p1_canon.u32`, `p1_builtin.u32`, `p1_reltarget.u32`, `p1c_canon.u32`,
+`p2_live.u32`, `p3_addr.u32`, and every placed symbol's bytes with `p3_image.bin`; 3b also counts relocation
+errors (0). Variants 1b (binary search), 2lazy_look, 3a_loop, 3b_bytes also pass. As in the C references, 1b
+and 1c take 1a's canon from its oracle, 3b takes 3a's addresses and `p3_addr_all`, 2lazy takes 1a's canon; each
+cell stands alone.
+
+## Timings
+
+`bench.sh`, 2026-11-16T16:26-16:30Z (load 5.5 rising to 13.2) and `HUGE=1 bench.sh` 16:32-16:33Z (load 4.9-7.0),
+MinIO. warm = entry only, inputs resident, repeated in one process (>= ~1 s); e2e = whole process, 5 runs.
+min / median ms. 1 = `c` backend; 8 = `multicore`, stock (spinning) runtime unless marked yield. The 8-thread
+rows were taken at load 5-13 on 8 cores: they measure the machine as much as Futhark (Surprise 2).
+
+| cell | 1 core warm | 1 core e2e | 8 thr warm | 8 thr e2e | 1 core warm, 2 MB | 8 thr warm, 2 MB | 8 thr e2e, 2 MB | plain C 1 core / tuned C 8 |
+|---|---|---|---|---|---|---|---|---|
+| 1a join by name | 152 / 178 | 275 / 308 | 60 / 84 (yield 61 / 77) | 208 / 248 | 79 / 88 | 24 / 28 | 68 / 70 | 195 / 8.6-10.5 |
+| 1b targets (scan) | 76 / 103 | 215 / 226 | 59 / 71 | 211 / 235 | 47 / 49 | 18 / 24 | 64 / 71 | 44 / 5.3-6.3 |
+| 1b targets (binary search) | 459 / 471 | 628 / 645 | 86 / 96 | 267 / 300 | 455 / 465 | 70 / 83 | 136 / 142 | |
+| 1c content join | 202 / 210 | 332 / 349 | 127 / 165 (yield 107 / 144) | 267 / 268 | 111 / 115 | 38 / 46 | 83 / 87 | 57-61 / 7.2-8.9 |
+| 2 reach (p2_edge CSR) | 140 / 188 | 303 / 349 | 155 / 259 | 347 / 519 | 97 / 105 | 58 / 102 | 135 / 142 | 39-43 / 13-17 |
+| 2lazy (decode in flood) | 303 / 346 | 996 / 1343 * | 241 / 412 | 1171 / 1499 * | 165 / 173 | 90 / 137 | 362 / 440 * | p2lazy 52.6 / 13.6-15.4 |
+| 3a layout (scan) | 22 / 25 | 117 / 137 | 10 / 31 | 98 / 128 | 22 / 22 | 12 / 30 | 25 / 37 | 8-19 / - |
+| 3a layout (loop) | 14 / 21 | 40 / 40 | 8.5 / 12 (yield 7.3 / 10.5) | 36 / 50 | 13 / 14 | 14 / 17 | 49 / 56 | |
+| 3b relocate | 108 / 119 | 342 / 368 | 40 / 48 | 286 / 332 | 107 / 109 | 41 / 50 | 114 / 119 | 48.6-56 (4 KB) 23.9 (2 MB) / 13.4-14 (4 KB) 5.4-6.8 (2 MB) |
+
+\* 2lazy's e2e includes its untimed-in-warm setup (aux_edges: the funcdata and kind 1-3 rows, 260-530 ms), as
+ref/flat/p2lazy.c also excludes from its flood time.
+
+Best 8-core warm (min, 2 MB pages): 1a 24, 1b 18, 1c 38, 2 58, 2lazy 90, 3a 7.3-12, 3b 41 ms.
+
+## ATTACKS 1 (reach counting its own decode)
+
+- **Can Futhark express "decode a reference when the flood reaches it"? Yes.** `reach_lazy`'s `edges` function
+  expands each frontier source's relocation range (`expand` over `slot_rel`) and maps the decode
+  (package-base table, then canon) over the expanded relocations, inside the level loop; the graph is never
+  materialized. The R_USETYPE skip rule (type 26 skips the next two) becomes a segmented scan of a 3-state
+  machine's transition functions (function composition is associative), or a bounded look-back
+  (`2lazy_look`, the second attempt: not faster, 108-130 vs 96-118 ms at 8 threads, 16:21Z).
+- **Does it beat the eager C pipeline (108.7 ms 1 thread / 30.1 ms 8)? No.** 1 core: lazy 165-200 ms (2 MB
+  pages) / 196-224 (4 KB). The eager Futhark pipeline would be its own 1b (47-48 ms) + a CSR build (not written)
+  + the flood over p2_edge (97-119 ms), > 144 ms: also above 108.7. 8 threads: lazy 90-137 ms median, eager flood
+  58-102, at load 5-7.
+- **Why.** Futhark's flood is level-synchronous: 111 levels, each ~25 data-parallel operations (filters,
+  expands = scan + scatter + segmented iota, scatters, the dedup), each a full pass with its own allocation. At
+  1 core the eager flood costs ~0.9 ms per level against C's 0.4; the lazy flood adds an expand and a
+  segmented scan per level, so in Futhark lazy *loses* to eager (165 vs 97 ms) where in C it wins. What makes
+  the lazy shape cheap in C (a sequential walk of a row, decode and mark in the same loop) is a nested,
+  irregular loop with writes to shared state, which Futhark must flatten into separate passes.
+- First tuning pass (before these numbers): the method rule checked every one of the 106 K methods every level
+  (`filter call (iota M)`, the largest item in the profile); now a pending list holds the candidate methods
+  that have not fired.
+
+## ATTACKS 2 (relocate on huge pages)
+
+- **Can the runtime put 3b's output on 2 MB pages? Yes, without touching the code**:
+  `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` (with `vm.nr_hugepages=512` reserved here). Futhark exposes no
+  allocator hook; the C API offers no way to hand it a buffer (`futhark_new_*` copies).
+- **Minor faults of 3b**: per warm rep 4,623-6,833 (4 KB) vs 18-80 (2 MB); per process (load + 1 run) 104,142
+  (1 core) / 168,488 (8 threads) vs 2,456 / 2,798. The C reference faults 19,109 per rep (a fresh 109 MB image
+  each time); Futhark's warm reps fault less because the image's memory is recycled (even with `FUT_FRESH=1`,
+  which empties the runtime's free list, so glibc keeps it), so the warm number does not pay the image's first
+  touch; the first rep of each process does.
+- **Times**, 5 interleaved process runs each, 3 reps per process, 16:31Z, load 5.8-6.1:
+  first rep (fresh image) 1 core 181-190 ms (4 KB) vs 119-150 (2 MB); 8 threads 126-137 vs 52-64; later reps
+  1 core 112-126 vs 107-116 (within noise), 8 threads 44-67 vs 29-55.
+  3b itself is 2-4.5x the C reference (C 1 core 49 / 24 ms on 4 KB / 2 MB pages): the copy and the patch are
+  scatters of (index, byte) pairs (one per byte of data, 8 per relocation), which is how a scatter must be
+  shaped in Futhark: there is no memcpy of a run into a slice of a shared array from inside a map.
+
+## Per cell: easy / forced / impossible
+
+- **1a** (49 lines incl. the hash table). Easy: the winner rule as `reduce_by_index u64.max` over a packed
+  `rank << 32 | ~id`. Forced: the hash table itself (no hash maps in the language; built by rounds of linear
+  probing where `reduce_by_index i64.max` claims empty slots, no atomics). Impossible: nothing.
+- **1b** (18 lines for the scan version). Easy: the decode is a pure map. Forced: each relocation's owner slot
+  must be computed (scatter + max-scan); the first shape, a binary search per relocation, was 6-10x slower.
+- **1c** (14 lines, reusing 1a's table). Easy, same shape as 1a with a different packed key.
+- **2** (74 lines eager, +63 lazy). Easy: each rule is a scatter of `true` into a flag array (all monotone, so
+  races are benign). Forced: the frontier as a getter function (a function argument cannot be size-polymorphic),
+  the expand of rows each level, dedup by scatter-the-index-and-check; the R_USETYPE skip rule as a segmented scan
+  of state-transition functions. Impossible: a cheap lazy decode (see ATTACKS 1).
+- **3a** (86 lines + 26 msort). Easy: layout as a scan of "align then add" maps, which compose (adv_then; the
+  scan is exact against the oracle). Forced: the typelink sort (the library's merge sort is GPU-shaped, 13 ms for
+  33 K keys; a CPU-shaped bottom-up merge sort is 2 ms). The sequential cursor loop (`3a_loop`, in-place
+  updates under uniqueness types) is as fast as the data-parallel scan here: 360 K symbols is too small.
+- **3b** (60 lines). Easy: patch values as a `match` over kinds. Forced: copying bytes as a scatter of
+  (index, byte) pairs in 64-byte chunks (per-byte binary search, `3b_bytes`, 480 ms); no bulk copy. Impossible:
+  choosing the output's page size from the language (done from outside, via glibc).
+
+## Core code (excerpts)
+
+The layout walk as a scan (p3.fut): an advance is `x -> rup(x + c, a) + d`; two compose into one.
+
+```futhark
+def adv_then ((c1, a1, d1): adv) ((c2, a2, d2): adv) : adv =
+  let e = d1 + c2
+  in if a2 <= a1 then (c1, a1, rup e a2 + d2) else (c1 + rup e a1, a2, d2)
+...
+  let ends = segmented_scan adv_then adv_id (map (\i -> i % (nunits * nc) == 0) (iota ncells)) steps
+```
+
+The lazy reach's edges of a frontier (p2.fut): expand the rows, decode where followed.
+
+```futhark
+    let rs = expand (\c -> if decodes c then i64.u32 (slot_rel[c + 1] - slot_rel[c]) else 0)
+                    (\c j -> (c, i64.u32 slot_rel[c] + j)) proc
+    let fol = followed (map (\(c, r) -> r == i64.u32 slot_rel[c]) rs) (map (\(_, r) -> rel_type[r]) rs)
+    let rt = map2 (\(c, r) f -> if f then decode canon builtin pkg_off pkg (i64.u32 slot_obj[c]) rel_pkg[r] rel_idx[r] else 0) rs fol
+```
+
+The 1a winner (p1.fut):
+
+```futhark
+  let value g = u64.u32 rank[g] << 32 | u64.u32 (!(u32.i64 g))
+  let win = reduce_by_index (replicate m 0u64) u64.max 0 (drop W slot :> [nn]i64) (map value named)
+```
+
+Lines (non-blank, non-comment): p1.fut 103, p2.fut 137, p3.fut 168, msort.fut 26; drivers p1.c 65, p2.c 57,
+p3.c 87, drv.h 67 (loading, timing, checking only).
+
+## Tools
+
+`FUT_PROFILE=1 build/p2_multicore.exe ... 2> prof.json; python3 prof.py prof.json` sums the runtime's
+per-operation report by source location. `FUT_TUNING=file` sets tuning parameters (`name=value` lines).
+`FUT_FRESH=1` (p3) empties the runtime's free list before each rep.
+
+# Install notes (Futhark on this VM)
 
 ## Install (done 2026-11-16)
 
