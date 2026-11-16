@@ -1,4 +1,4 @@
-# Futhark: problems 1-3 on MinIO (cells), then the install notes
+# Futhark: problems 1-4 on MinIO (cells), then the install notes
 
 Futhark 0.29.1, `c` backend (sequential) for 1 core, `multicore` backend for 8. All compute is in `p1.fut`,
 `p2.fut`, `p3.fut` (+ `msort.fut`); the C drivers (`p1.c p2.c p3.c`, shared `drv.h`) only mmap the flat files,
@@ -19,6 +19,13 @@ the outputs with the oracles. Build: `systems/futhark/build.sh` (`YIELD=1` also 
    (`2bat`, a worklist loop inside a map over frontier chunks): 35-45 rounds, duplicate expansions, 1.5-2.5x
    slower. Trap on the way: a growable (`++`, existential-size) stack in the drain cost several memory-block
    reference-count updates per push in the generated C, 3x slower than a fixed-size stack.
+0b. **(P4) Futhark does have a bulk copy into a slice, and it is 3-5x faster than the scatter shape 3b uses.**
+   `row with [a : a + m] = xs[f : f + m]` in a sequential loop compiles to a memcpy (through the runtime's
+   `lmad_copy`). Put that loop inside a `map` over 64 equal blocks of the output and the copy is data-parallel
+   again: P4's copy of 60.7 MB costs ~20-35 ms of CPU at 1 core this way vs ~110 ms as 32-byte rows of
+   (index, byte) scattered (PARTS=1 minus PARTS=0, cpu/rep, 17:56Z, load ~13). 3b's note "no bulk copy into a
+   slice" holds only *inside a map*; a loop inside a map has one. Not yet tried on 3b (IDEAS I18).
+
 1. **2 MB pages for the whole runtime are a 1.2-1.7x win on every cell, with no code change.**
    `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` makes glibc back its large mallocs with MAP_HUGETLB, and the Futhark
    runtime gets every array from malloc. Intermediate arrays are allocated per entry call and part of that
@@ -218,6 +225,141 @@ p3.c 87, drv.h 67 (loading, timing, checking only).
 `FUT_PROFILE=1 build/p2_multicore.exe ... 2> prof.json; python3 prof.py prof.json` sums the runtime's
 per-operation report by source location. `FUT_TUNING=file` sets tuning parameters (`name=value` lines).
 `FUT_FRESH=1` (p3) empties the runtime's free list before each rep.
+
+# P4: code generation by shape (2026-11-16)
+
+`p4.fut` (one entry, `emit`) + `p4.c` (driver: loads `data/minio-p4`, times, checks). Rebuilds all 60,733,909 bytes
+of 136,634 bodies from templates + operands + glue, the function offsets, and the 1,780,281 relocations.
+
+**Check** (every shape passes; the relocations are compared as a sorted list, as ref/p4/p4.c does):
+
+    cd systems/futhark && ./build.sh p4
+    D=/home/exedev/paradigms/data/minio-p4
+    for c in 4 4g 4f 4b 4bf; do build/p4_c.exe $D 1 1 $c; done        # -> P4 OK, P4g OK, P4f OK, P4b OK, P4bf OK
+    build/p4_multicore.exe $D 8 1 4bf                                    # -> P4bf OK
+
+It compares the image with `oracle/p4_code.bin` byte for byte (memcmp), the offsets with `oracle/p4_fn_off.u64`,
+the relocations with `oracle/p4_rel_*`, and counts holes with an encoding/width the encoder cannot write (0).
+
+**The shape.** All in Futhark; nothing but loading and checking in C.
+- Lay out: `item_src` per item (a map: from glue or a template, offset, length), `at = exscan lens`.
+- Holes: a flattened map over (node, hole) pairs, made by `expand` over the 1.12 M nodes with each template's
+  hole list (`class_holes`: a per-template filter of its holes, 8-byte immediates split into two 4-byte parts).
+  A node's segments are items (checked: 1,640,416 = 1,640,416), so `seg_item[nseg_off[r] + s]` (one scatter) gives
+  the item of segment s; position `P = at[item] + hole_at - seg_lo`, operand `node_op[r] + (h - tmpl_hole_off[t])`;
+  rel32 = `at[v] + a - (P + 4)`, a gather. Each hole is a row of 4 (index, byte) writes scattered into the image.
+- Relocations: three `expand`s concatenated (reloc holes over nodes, glue relocations over items, markers over
+  functions), returned unsorted. In-language, natural.
+- The copy, five shapes (`how`, cell names in p4.c):
+
+  | cell | copy + patch | 1 core warm (2 MB pages) |
+  |---|---|---|
+  | `4` | scatter of 32-byte (index, byte) rows (3b's shape), then the patch scatter | 411 / 458 |
+  | `4g` | gather: owner of every output byte by scatter + max-scan over 60.7 M, then the patch scatter | 535 / 569 |
+  | `4f` | one scatter of 32-byte rows, holes written into each row by a loop | ~2x `4` (1.0-1.1 s CPU vs 0.5) |
+  | `4b` | map over 64 blocks, sequential loop of slice copies (memcpy) inside; then the patch scatter | **348 / 376** |
+  | `4bf` | map over 64 blocks; each item's slice copy then its holes, in the block's loop (C's loop, per block) | 357 / 424 (c), **326 / 374** (multicore 1 thread) |
+
+**Timings.** `HUGE=1 CFGS="c:1:1 multicore:1:1mc multicore:8:8spin mcy:8:8yield" CELLS="4 4b 4bf 4g" bench.sh`,
+2026-11-16T18:00:37-18:02:48Z, load 12.1 falling to 10.7; then 4 KB pages 18:02:48-18:03:43Z, load 9.8-10.7. Raw
+output: `p4-bench-2026-11-16T1800Z.txt`. min / median / max ms, warm = the entry with inputs resident (5 reps at
+1 core, 10 at 8), e2e = whole process (load 300 MB of flat files into Futhark + one run + copy out), 5 runs. The C
+references ran interleaved after each cell (best lay out + best emit of 10 warm reps, 5 processes).
+
+| cell | 1 core warm | 1 core e2e | mc 1 thr warm | 8 spin warm | 8 yield warm | 8 thr e2e (best cfg) |
+|---|---|---|---|---|---|---|
+| 4 | 411 / 458 / 578 | 508 / 522 / 545 | 426 / 435 / 481 | 220 / 245 / 337 | 229 / 272 / 348 | 383 / 396 / 440 |
+| 4g | 535 / 569 / 593 | 576 / 638 / 675 | 513 / 556 / 628 | 374 / 434 / 547 | 254 / 304 / 346 | 398 / 464 / 530 |
+| 4b | 348 / 376 / 417 | 440 / 455 / 475 | 355 / 396 / 426 | 189 / 210 / 249 | 200 / 228 / 294 | 310 / 359 / 373 |
+| 4bf | 357 / 424 / 466 | 476 / 505 / 606 | **326 / 374 / 439** | 185 / 204 / 251 | **161 / 187 / 216** | 254 / 269 / 298 |
+| 4bf, 4 KB pages | 515 / 554 / 811 | 882 / 924 / 931 | | 208 / 251 / 290 | | 507 / 533 / 563 |
+| C ref/p4/p4.c (1) | 102-110 / 106-115 | | | | | |
+| C ref/p4/p4par.c (8) | | | | 28-43 / 30-46 | | |
+
+So: **3.2x the plain C at 1 core** (326 vs 102 ms min), **5.3x the OpenMP C at 8 threads** (161 vs 30), both on a
+machine at load 10-12 (8-thread numbers are upper bounds, as for P1-P3: cpu/rep 525-750 ms at 8 threads means the
+threads got ~3-4 cores). 2 MB pages: 1.4-1.6x at 1 core, 1.2x at 8, faults per warm rep 95 K -> 265 (Surprise 1 again).
+
+**Where the time goes** (1 core, `PARTS` switches pieces off; cpu/rep, 17:46Z, load ~20, so only the proportions
+mean anything): everything but the copy, patch and relocations (lay out, hole tables, the static check, zeroing
+the image) ~100-120 ms; the 32-byte-row copy ~110; the patch scatter ~130; the relocations ~90-100. The blocked
+copy takes the copy to ~20-35. gprof of the generated C (`-pg`, line-level, mapped back through the generated
+`// p4.fut:N` comments) agrees: in `4`, the copy rows 28%, the patch rows 18%, expand's scans 12%, relocations 6%.
+What is left is passes: every expand is a scan + scatter + max-scan + map over its output, and there are four
+(patched holes 6.33 M, reloc holes 1.35 M, glue relocs 0.34 M, markers 0.1 M), each with its tuples materialized.
+
+**Tuning that did not matter** (all within noise at load 15-20): chunk 8 / 16 / 32 / 64 for the row copy;
+`--unsafe` (bounds checks off); multicore at 1 thread vs the c backend (equal within noise).
+
+**First-version mistakes worth recording** (each measured, 1 core):
+- The patch rows and a `reduce` counting bad holes were fused into one redomap, which materialized all 8 x 6.33 M
+  (index, byte) pairs: removing the fusion (the check moved to the template table) took the entry 1.1 s -> 0.6 s.
+- A `filter` over the 7.68 M (item, hole) pairs to pick the relocation holes was the single biggest operation
+  (a scan of wide tuples); per-template class lists (a filter over 1.86 M template holes, done once) replaced it.
+- The segment of each template hole by a linear walk over the template's segments: calls have hundreds; a binary
+  search instead.
+
+**The "commonest K templates, rest as glue" variant does not change the shape**: in this program a glue item and
+a node segment differ only in where their bytes come from and whether they have holes; making rare-template nodes
+glue moves bytes from one source array to the other. It needs a new extraction (the glue would hold their patched
+bytes and their holes' relocations), not a different Futhark program, so it was not built.
+
+**Easy / forced / impossible.**
+- Easy: lengths by map, places by exclusive scan, jumps by gathering `at[v]`, relocations as expands (no sort
+  needed: compared as a set). Every hole is independent, so the patch is one flat map.
+- Forced: the copy. As 3b found, a map cannot write a run of bytes into a slice of a shared array, so the natural
+  copy is a scatter of (index, byte) pairs, one per byte; the fast copy is a map over blocks with a *sequential*
+  loop of slice updates inside (C's loop, 64 times in parallel), which needs the first item of each block (a binary
+  search) and items clipped at block edges. Also forced: hole -> segment -> item needs three tables (per-template
+  hole segments, per-node segment offsets, segment -> item scatter) that C gets from its loop position.
+- Impossible: nothing. Slow: the flat version is ~4.5x C at 1 core; the blocked one 3.2x.
+
+**Lines** (non-blank, non-comment): p4.fut 159 with all five shapes (the `4bf` path alone ~95: lay out 12, hole
+tables 25, patch_item 12, copy_blocks 18, relocations 15, entry plumbing ~13); p4.c 122 (loading, timing, checking).
+
+**Core code** (p4.fut). The holes as a flattened map over (node, hole) pairs:
+
+```futhark
+  let holes_of (idx, start) =
+    expand (\r -> let t = i64.u32 node_tmpl[r] in start[t + 1] - start[t])
+           (\r j -> let (h, k) = idx[start[i64.u32 node_tmpl[r]] + j] in (r, h, k)) (iota NN)
+  let place r h =
+    let (s, lo, _) = hseg[h]
+    in (at[seg_item[nseg_off[r] + s]] + i64.u32 hole_at[h] - lo, i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[i64.u32 node_tmpl[r]])
+  let value h k p o =
+    if hole_enc[h] == 2 then (p, 4, at_of op_val[o] + op_aux[o] - (p + 4))
+    else (p + 4 * k, i64.u8 hole_w[h] - 4 * k, op_val[o] >> (32 * k))
+  ...
+  let (wi, wv) = holes_of patched |> map patch |> map bytes |> flatten |> unzip
+  in scatter code wi wv
+```
+
+The blocked copy (the fast shape): a map over blocks, C's loop inside each.
+
+```futhark
+def blit [S] (row: *[S]u8) (to: i64) (xs: []u8) (from: i64) (m: i64) : *[S]u8 =
+  row with [to : to + m] = (xs[from : from + m] :> [to + m - to]u8)
+  ...
+  let block b =
+    let lo = b * S
+    let hi = i64.min total (lo + S)
+    let (i0, _) = loop (l, h) = (0, n) while h - l > 1 do let m = (l + h) / 2 in if at[m] <= lo then (m, h) else (l, m)
+    let (row, _) =
+      loop (row, i) = (replicate S 0u8, i0) while i < n && at[i] < hi do
+        let (fromt, o, l) = src[i]
+        let a = i64.max at[i] lo
+        let e = i64.min (at[i] + l) hi
+        let m = i64.max 0 (e - a)
+        let from = o + a - at[i]
+        let row = if fromt then blit row (a - lo) tmpl_bin from m else blit row (a - lo) glue_bin from m
+        let row = if fromt then fix i lo row else row
+        in (row, i + 1)
+    in row
+  in take total (flatten (map block (iota P))) :> [total]u8
+```
+
+Reading: the flat version reads like the problem statement (a scan, a map over pairs, a scatter); the blocked
+one reads like C wrapped in a map, and is the one that is fast. That is the P4 finding for this column.
 
 # Install notes (Futhark on this VM)
 

@@ -40,3 +40,15 @@ GPU-shaped, 6x slower).
 **41 / 50 (8)**; e2e 342 (1), 286 (8); 2 MB 114 (8) - 60 lines - forced: the copy as a scatter of (index, byte)
 pairs in 64-byte chunks (no bulk copy into a slice); impossible from the language: output page size (glibc tunable
 does it: faults 104 K -> 2.5 K per process; first rep 126-137 -> 52-64 ms at 8 threads).
+
+**4 code generation by shape (emit)** - correct (`build/p4_c.exe /home/exedev/paradigms/data/minio-p4 1 1 4bf` ->
+P4bf OK: 60,733,909 bytes = oracle/p4_code.bin, fn offsets, 1,780,281 relocations as a sorted list; all five shapes
+4 4g 4f 4b 4bf pass) - best shape `4bf` (blocked copy + patch), 2 MB pages, 2026-11-16T18:00-18:03Z, load 10-12:
+warm min/med/max **326 / 374 / 439 (1, multicore 1 thread)**, 357 / 424 / 466 (1, c backend), **161 / 187 / 216 (8,
+yield)**, 185 / 204 / 251 (8, spin); e2e 383 / 429 / 460 (1), 254 / 269 / 298 (8); 4 KB pages 515 (1) / 208 (8) warm.
+Flat shape `4` (row scatter): 411 (1) / 220 (8). Interleaved C: ref/p4/p4.c 102-110 (1), p4par.c 28-43 (8): Futhark
+3.2x (1) / 5.3x (8, upper bound on a loaded machine) - 159 lines (all five shapes; ~95 for 4bf) + 122 driver - easy:
+lengths by map, places by exclusive scan, holes as a flat map over (node, hole) pairs, rel32 by gathering at[v],
+relocations as three expands (no sort); forced: the copy (a map cannot memcpy into a slice: either one (index, byte)
+pair per byte, or a map over 64 blocks with a sequential loop of slice updates inside, which is C's loop and 3-5x
+cheaper), and hole -> segment -> item tables that C gets from its loop position; impossible: nothing.

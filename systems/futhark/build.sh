@@ -1,13 +1,13 @@
 #!/bin/bash
 # Build every problem's Futhark library with the multicore and the sequential c backend, and its driver.
-#   build.sh [p1 p2 p3]     FUTFLAGS=--unsafe build.sh   (bounds checks off)
+#   build.sh [p1 p2 p3 p4]     FUTFLAGS=--unsafe build.sh   (bounds checks off)
 #   YIELD=1 build.sh: the multicore runtime's spin-waits (the join loop of a parallel op, idle workers stealing,
 #   the scan's look-back on its predecessor's flag) call sched_yield() each time round, so a descheduled thread
 #   is not waited on for a whole time slice on a shared machine (Futhark has no wait-policy knob). -> build/*_mcy.exe
 set -e
 cd "$(dirname "$0")"
 mkdir -p build
-progs=${@:-p1 p2 p3}
+progs=${@:-p1 p2 p3 p4}
 for p in $progs; do
 	for be in multicore c; do
 		futhark $be $FUTFLAGS --library -o build/${p}_$be $p.fut 2>&1 | grep -v "^$" | grep -v "Size expression\|error-index\|For more information" || true
