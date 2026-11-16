@@ -6,6 +6,8 @@
 //     4f  copy and patch in one scatter of 32-byte rows                                     (how 2)
 //     4b  copy in CHUNK blocks (default 64; map over blocks, sequential slice copies inside), patch as a scatter (how 3)
 //     4bf copy and patch in CHUNK blocks (default 64)                                       (how 4)
+//     4D  the flattened stream (ATTACKS 4, p4runs D): `prepare` timed apart (PREP_REPS, default 3), then the emit
+//         from it (`emit_flat`) is what TIMEIT times
 //     4lay  the lay out alone
 //   PARTS=n (bits: 1 copy, 2 patch, 4 relocations; default 7) switches pieces off for timing (no check)
 #include "p4.h"
@@ -79,6 +81,24 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	struct TUP *out = NULL;
+	if (strcmp(cell, "4D") == 0) {
+		struct futhark_opaque_stream *st = NULL;
+		int r0 = reps;
+		reps = getenv("PREP_REPS") ? atoi(getenv("PREP_REPS")) : 3;
+		TIMEIT("prepare", {
+			if (st) futhark_free_opaque_stream(ctx, st);
+			fut_check(futhark_entry_prepare(ctx, &st, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,
+			                                item_ref, item_seg, glue_off, glue_bin, glue_rel_off, grel_off, grel_siz, grel_type, grel_sym,
+			                                grel_add, node_tmpl, node_op, op_val, op_aux, tmpl_off, tmpl_bin, tmpl_seg_off, tseg_end,
+			                                tmpl_hole_off, hole_at, hole_w, hole_enc, hole_rtype),
+			          "prepare");
+		});
+		reps = r0;
+		TIMEIT(cell, {
+			if (out) futhark_free_opaque_tup8_arr1d_u8_arr1d_i64_arr1d_i64_arr1d_u8_arr1d_u16_arr1d_u32_arr1d_i64_i64(ctx, out);
+			fut_check(futhark_entry_emit_flat(ctx, &out, st), cell);
+		});
+	} else
 	TIMEIT(cell, {
 		if (out) futhark_free_opaque_tup8_arr1d_u8_arr1d_i64_arr1d_i64_arr1d_u8_arr1d_u16_arr1d_u32_arr1d_i64_i64(ctx, out);
 		fut_check(futhark_entry_emit(ctx, &out, parts, how, chunk, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,

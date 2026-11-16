@@ -392,6 +392,47 @@ def blit [S] (row: *[S]u8) (to: i64) (xs: []u8) (from: i64) (m: i64) : *[S]u8 =
 Reading: the flat version reads like the problem statement (a scan, a map over pairs, a scatter); the blocked
 one reads like C wrapped in a map, and is the one that is fast. That is the P4 finding for this column.
 
+## P4 from the flattened stream (`4D`, ATTACKS 4's control D, 2026-11-16T18:40Z)
+
+Hypothesis (lead, from results/codex-cp7.md): flattening the emit stream (each item's bytes and its holes resolved
+and rebased once, so the hot loop does no item -> template -> segment -> hole lookups) is 2.2x for C and should help
+Futhark more. **Confirmed: 4.5x for Futhark (1 thread), 4.2x (8 threads), and the Futhark emit from the flat stream
+beats the plain C template emit.**
+
+- `prepare` (in Futhark, natural: it is the old emit's tables without the final scatter): the blob (the image
+  with all holes zero, by the blocked copy), one patch record per integer or jump hole (absolute position, width,
+  enc, value or target item, aux; 8-byte integers pre-split into two 4-byte parts), the relocations complete, `at`,
+  the function offsets. Returned as an opaque record (`type stream`) that stays inside Futhark between the entries.
+- `emit_flat`: `scatter (copy blob)` of one flat map over the 6.33 M patch records (rows of 4 (index, byte); a
+  jump's rel32 by gathering `at[v]`), and the relocations copied out. 8 lines. Unlike p4runs D the rel32 targets
+  still go through `at` (as D does too) and the relocations are copied, not pushed.
+- Correct: `build/p4_c.exe /home/exedev/paradigms/data/minio-p4 1 1 4D` and `build/p4_multicore.exe ... 8 1 4D`
+  -> P4D OK (same full check as every P4 cell).
+
+`systems/futhark/bench4D.sh` (5 interleaved rounds; in each one process per program and thread count; Futhark 10
+warm reps on 2 MB pages, prepare 3 reps; C `P4_REPS=32`, best of), 18:40:42Z, load 2.7, quiet. Best | min / median
+/ max of the per-process medians (C: of the per-process bests), ms. Raw: `p4-flat-bench-2026-11-16T1840Z.txt`.
+
+| | 1 thread | 8 threads |
+|---|---|---|
+| Futhark `4bf` (template emit, incl. lay out + relocations) | 283.8 \| 296.3 / 303.3 / 313.2 (mc), 310.5 \| 318.5 / 326.9 / 332.7 (c) | 95.3 \| 108.0 / 112.8 / 120.6 |
+| **Futhark `4D` emit** | **65.1 \| 65.8 / 67.8 / 71.9** (mc), 72.5 \| 73.8 / 74.0 / 76.5 (c) | **23.4 \| 24.6 / 26.9 / 28.1** |
+| Futhark `prepare` (the flattening) | 311.9 \| 317.8 / 323.8 / 331.8 (mc), 296.1 \| 297.6 / 304.7 / 376.2 (c) | 121.1 \| 130.8 / 138.4 / 151.6 |
+| C ref/p4/p4.c (lay out + emit) | 106.2 / 107.5 / 108.8 | |
+| C ref/p4/p4runs.c D emit | 48.4 / 48.7 / 48.8 | 10.4 / 14.2 / 14.9 |
+| C p4runs D prep (single-threaded in both) | 343.5 / 359.7 / 369.7 | 342.3 / 347.1 / 385.0 |
+
+- Flattening gains: Futhark 303 -> 68 ms (4.5x) at 1 thread, 113 -> 27 (4.2x) at 8; C p4 107.5 -> D 48.7 (2.2x).
+- Gap to C: template emit 3.0x (1 thread, vs p4) / ~3.5x (8, vs p4par in earlier windows); flat emit 1.4x (1) /
+  1.9x (8) vs D. Futhark's flat emit (68 ms) is faster than C's template emit (107).
+- The flattening's cost: 324 ms (1 thread) / 138 ms (8) in Futhark, i.e. the old emit's work, done once; cheaper
+  than C's prep (347-360 ms, serial). It pays off only if the stream is reused (or stored) over ~1.3 emits at 1
+  thread; as one step per build, prepare + emit (392 ms) is no faster than 4bf (303). The stream is also big:
+  blob 60.7 MB + patch records 6.33 M x 26 B = 165 MB + relocations 41 MB (C's D: 416 MB of columns).
+- Why Futhark gains more: in the template emit its costs were the lookups' passes (hole -> segment -> item tables,
+  four expands with materialized tuples), not the copies; flattening deletes exactly those passes and leaves a
+  memcpy plus one flat map + scatter, Futhark's best shape. C's lookups were cheap pointer chasing inside one loop.
+
 # Install notes (Futhark on this VM)
 
 ## Install (done 2026-11-16)
