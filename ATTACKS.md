@@ -148,3 +148,33 @@ mechanism (stealing, credits) for ~15 lines of rules. A build farm's machines ar
 under load is part of the speed. **Next:** a quiet-machine run (does async lose anything with nothing else running?),
 and whether a level-free flood also cuts Futhark's/Goose's cost (fewer, larger rounds: e.g. expand several levels per
 superstep, a "delta-stepping" of the flood).
+
+## 4. Code generation by shape: the emit costs pieces, not bytes; merge templates by width
+
+**Problem.** Code generation by shape (4): emit fc's 60.7 MB of MinIO function bodies from 108,833 byte templates,
+7.68 M operands and 17.6 MB of glue (ref/p4/README.md).
+
+**Before.** The obvious model, from copy-and-patch compilers (Xu and Kjolstad 2021; ideas/copy-and-patch.md): a
+template table plus a patch pass; speed is bandwidth, and the table should be keyed by typed shape (SHAPES.md: 4,096
+shapes cover 96.7% of nodes).
+
+**Observation.** (a) The plain C emit runs at **0.42 GB/s** (1 core, 145 ms median for 60.7 MB), 60x below this VM's
+read bandwidth, and patching holes is only **7.6%** of it (codex-p4par, P4_NOPATCH split): the cost is 2.38 M
+pieces of ~25 bytes, each a lookup, a variable-length copy and a branch. 8 threads give 2.2x (51/66/68 ms, load ~20).
+(b) The typed shape does not fix the bytes (ref/p4/NOTES.md: 74.6% of nodes in the top 4,096 *byte* templates).
+One splitter is purely mechanical: a displacement is disp8 exactly when the operand fits in int8, **0 exceptions in
+4,864,669 holes** (lead, results/cp1check.py).
+
+**Attack.** Key templates with the displacement width relaxed (store disp32, shrink when the operand fits): **108,833
+-> 66,046 templates; the top 4,096 cover 82.3% of nodes instead of 74.6%**, and the emitter reproduces the oracle byte for
+byte (codex-cp, `ref/p4/check-cp.sh`, lead rerun P4 OK). But keep each node's length precomputed: deriving lengths
+from operands at layout time made the scan 6.3x slower (7.68 M operand reads instead of 2.38 M lengths). Specialising
+the hot templates into straight-line C (Deegen's method) cut instructions 26% and the covered segments' emit 1.67x
+(median), but ranges overlap and those templates are only 36% of the emitted bytes; 2.9 MB of generated C.
+
+**What it says about the paradigms.** Futhark expresses the whole problem in 159 lines (lengths by map, places by
+scan, holes as a flat map, rel32 by gather, relocations by expand) and is correct on the first shapes, at 3.2x C on 1
+core; what it had to force is the copy itself (a map cannot memcpy into a slice; a sequential slice-update loop inside
+a map over 64 blocks can, 3-5x cheaper than scattering bytes). **Next:** fewer, larger pieces: fuse a node's segments
+with hole-free neighbours and glue into one run at extraction (CP7 supernodes), counted as pieces per byte, and the
+Halide cell (running).
