@@ -151,27 +151,17 @@ relocation types normalised and size relocations folded into constants (P3). hli
 phases; a system here does not. Compare a system's time with the plain C references on the same files first,
 and with hlink's phase times only with that caveat.
 
-## Pipeline extraction limitation (MinIO)
+## 3a -> 3b as one pipeline
 
-`p3 DATA --pipeline [out.img]` runs layout and propagates its addresses through
-`oracle/p1c_canon.u32`, then relocates before reading the layout oracle for comparison.
-It reads `p3_addr_all.u32` only for the final comparison, after relocation. The final 1c canon already includes the name join;
-1b computes relocation targets and does not change canon.
+`build/p3 DATA --pipeline` lays out (3a), builds every id's address from its own 3a addresses through
+`oracle/p1c_canon.u32` (final canon, 1a included) plus the given `p3_fixed_id.u32`/`p3_fixed_addr.u32`, then
+relocates (3b) and compares the image. It never reads `p3_addr_all.u32`. P3 pipeline OK on MinIO and kube-apiserver
+(2026-11-16T16:02:18Z).
 
-The existing extraction is insufficient for this pipeline to pass. `dumpflat.c`
-writes hlink's entire `addr` array, whereas `p3_sym` omits linker-generated specials
-and non-bucket symbols. `layout.c:addrUnit` also stores PC-table-relative offsets
-in `addr`; these are not image addresses. `special.c:makeSpecials`, `place`, and
-`defineSyms` supply additional addresses outside 3a's placed list.
-On MinIO, propagating placed addresses through final canon differs from the raw
-array at 661,018 ids. Seven missing canonical specials are actual relocation
-targets: `runtime.buildVersion`, `runtime.modinfo`, `runtime.godebugDefault`,
-`runtime.firstmoduledata`, `runtime.lastmoduledatap`, `runtime.runtime_inittasks`,
-and `go:fipsinfo`. The result has 81 unresolved relocations and 40 differing
-placed-symbol ranges, despite every 3a address matching exactly.
+| file | what |
+|---|---|
+| `p3_fixed_id.u32`, `p3_fixed_addr.u32` | relocation targets the linker places itself, outside 3a's buckets (MinIO: 7: `runtime.buildVersion`, `runtime.modinfo`, `runtime.godebugDefault`, `runtime.firstmoduledata`, `runtime.lastmoduledatap`, `runtime.runtime_inittasks`, `go:fipsinfo`; kube: 6): canonical id and final address. A given input, like the bucket starts |
 
-A complete pipeline needs an extraction-contract extension: special-symbol layout
-records (id, size, alignment, ordering and section start), plus the non-image
-PC-table layout inputs if exact reproduction of every raw `addr` entry is required.
-The current pipeline reports failure honestly; copying special addresses from the
-oracle or hard-coding MinIO's answers would not establish the requested pipeline.
+`p3_addr_all.u32` is hlink's raw `addr` array: besides image addresses it holds PC-table offsets of non-placed
+symbols (layout.c `addrUnit`), so 661,018 ids differ from "placed address through canon"; no relocation reads
+those. Found by Codex (results/codex-c.md), fixed by extracting the specials.

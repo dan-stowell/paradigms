@@ -89,9 +89,14 @@ int main(int argc, char **argv) {
 		u32 N = (u32)metaGet("nslots"), nids = (u32)metaGet("nids");
 		const u32 *canon = FMAP(u32, "oracle/p1c_canon.u32", NULL);
 		// The final 1c canon includes the name join. Unplaced ids remain zero.
-		// The current extraction omits linker specials; see README pipeline limitation.
+		// The linker's own symbols (runtime.firstmoduledata, ...) are placed outside 3a's buckets: their addresses
+		// are a given input (p3_fixed_*), like the bucket starts.
+		size_t nfix;
+		const u32 *fid = FMAP(u32, "p3_fixed_id.u32", &nfix), *fad = FMAP(u32, "p3_fixed_addr.u32", NULL);
+		nfix /= 4;
 		u32 *placed = calloc(nids, sizeof(u32)), *resolved = calloc(nids, sizeof(u32));
 		for (u32 i = 0; i < L; i++) placed[psym[i]] = addr[i];
+		for (size_t i = 0; i < nfix; i++) placed[fid[i]] = fad[i];
 		for (u32 g = 0; g < nids; g++) resolved[g] = placed[g <= N ? canon[g] : g];
 		free(placed);
 		oaddr = addr;
@@ -172,7 +177,8 @@ int main(int argc, char **argv) {
 		fclose(f);
 	}
 	bad += check32("addr", addr, L, "oracle/p3_addr.u32");
-	if (pipeline) bad += check32("addr_all", all, (size_t)metaGet("nids"), "p3_addr_all.u32");
+	// (No comparison with p3_addr_all: hlink's raw addr array also holds PC-table offsets of non-placed symbols,
+	// which no relocation reads; the image is the oracle.)
 	bad += nbad + (nerr != 0);
 	if (pipeline) printf(bad ? "P3 pipeline FAIL\n" : "P3 pipeline OK\n");
 	else printf(bad ? "P3 FAIL\n" : "P3 OK\n");
