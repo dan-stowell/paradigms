@@ -131,6 +131,18 @@ fn env_int(name: const u8[:], dflt: i64) -> i64 {
     return dflt;
 }
 
+// min / median / max of times (ms), sorted in place
+fn spread(note: u8[>..]&, what: const u8[:], times: f64[>..]&) {
+    sort(times) { x, y => x < y };
+    format(note, what, " ");
+    format_flt(note, times[0], 1);
+    format(note, "/");
+    format_flt(note, times[times.len / 2], 1);
+    format(note, "/");
+    format_flt(note, times[times.len - 1], 1);
+    format(note, " ms  ");
+}
+
 fn report(note: u8[>..]&, what: const u8[:], t0: f64, t1: f64) {
     format(note, what, " ");
     format_flt(note, ms(t0, t1), 1);

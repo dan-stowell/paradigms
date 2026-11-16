@@ -148,24 +148,43 @@ fn content_join(canon: u32[:], out: u32[>..]&) {
     }
 }
 
+// P1_REPS=n: the three joins n times (tables and outputs rebuilt each time): min/median/max per phase
 fn main() {
+    let reps = env_int("P1_REPS", 1);
     let t0 = clock();
     var canon: u32[>..] = [];
     var builtin: u32[>..] = [];
-    join_by_name(canon, builtin);
-    let t1 = clock();
     var tgt: u32[>..] = [];
-    rel_targets(canon, builtin, tgt);
-    let t2 = clock();
     var canon2: u32[>..] = [];
-    content_join(canon, canon2);
+    var ta: f64[>..] = [];
+    var tb: f64[>..] = [];
+    var tc: f64[>..] = [];
+    for rep in reps {
+        canon.clear();
+        builtin.clear();
+        tgt.clear();
+        canon2.clear();
+        tab.clear();
+        htab.clear();
+        let r0 = clock();
+        join_by_name(canon, builtin);
+        let r1 = clock();
+        rel_targets(canon, builtin, tgt);
+        let r2 = clock();
+        content_join(canon, canon2);
+        let r3 = clock();
+        ta.push(ms(r0, r1));
+        tb.push(ms(r1, r2));
+        tc.push(ms(r2, r3));
+    }
     let t3 = clock();
     var note: u8[>..] = [];
-    format(note, "p1 goose (1 thread): ");
+    format(note, "p1 goose (1 thread, x", reps, "): ");
     report(note, "load", t_start, t0);
-    report(note, "1a join by name", t0, t1);
-    report(note, "1b relocation targets", t1, t2);
-    report(note, "1c content-hash join", t2, t3);
+    spread(note, "1a join by name", ta);
+    spread(note, "1b relocation targets", tb);
+    spread(note, "1c content-hash join", tc);
+    report(note, "load+all reps", t_start, t3);
     print(note);
     var bad = check32("canon", canon, "oracle/p1_canon.u32");
     bad += check32("builtin", builtin, "oracle/p1_builtin.u32");

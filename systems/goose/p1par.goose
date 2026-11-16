@@ -8,6 +8,7 @@
 //   1c: the same shuffle by content-hash class over the copies the flood reached.
 // main only starts the phases, collects the results and checks them.
 //   p1par /home/exedev/paradigms/data/minio [workers 1..8]
+// P1_REPS=n: the three phases n times (main starts each round; tables and outputs rebuilt): min/median/max
 import flat;
 import par;
 
@@ -147,7 +148,10 @@ fn run<T>(k: i64, W: i64, tag: T) {
     load_part(k, W);
     let n = hi - lo;
     qput(Ready { k: k, load_ms: ms(t0, clock()) });
+  for rep in env_int("P1_REPS", 1) {
     let go = qget<Go>();
+    tab.clear();
+    htab.clear();
     let t1 = clock();
 
     // ---- 1a: shuffle the keyed slots to their keys' owners
@@ -312,6 +316,7 @@ fn run<T>(k: i64, W: i64, tag: T) {
     report(note, "1b", t3, t4);
     report(note, "1c", t4, t5);
     if env_set("P1TRACE") { print(note); }
+  }
 }
 
 thread_fn worker(k: i64, W: i64) {
@@ -339,44 +344,62 @@ fn main() {
     var load_max = 0.0;
     for k in W { let r = qget<Ready>(); load_max = max(load_max, r.load_ms); }
     let t1 = clock();
-    for k in W { qput(Go { go: true }); }
+    let reps = env_int("P1_REPS", 1);
     var builtin: u32[>..] = [];
+    var canon: u32[>..] = [];
+    var tgt: u32[>..] = [];
+    var canon2: u32[>..] = [];
+    var ta: f64[>..] = [];
+    var tb: f64[>..] = [];
+    var tc: f64[>..] = [];
+    var tw: f64[>..] = [];
+    var t4 = 0.0;
+  for rep in reps {
+    builtin.clear();
+    canon.clear();
+    tgt.clear();
+    canon2.clear();
+    let r1 = clock();
+    for k in W { qput(Go { go: true }); }
     builtin.resize(nb, 0);
     for k in W {
         let p = qget<BuiltinPart>();
         for i, j in p.idx { builtin[i] = p.vals[j]; }
     }
     for k in W { qput(Builtins { vals: builtin[..] }); }
-    var canon: u32[>..] = [];
     canon.resize(N + 1, 0);
     for k in W {
         let p = qget<CanonPart>();
         canon[p.lo..p.lo + p.vals.len].move_from(p.vals[..]);
     }
-    let t2 = clock();
-    var tgt: u32[>..] = [];
+    let r2 = clock();
     tgt.resize(nrel, 0);
     for k in W {
         let p = qget<TgtPart>();
         tgt[p.lo..p.lo + p.vals.len].move_from(p.vals[..]);
     }
-    let t3 = clock();
-    var canon2: u32[>..] = [];
+    let r3 = clock();
     canon2.resize(N + 1, 0);
     for k in W {
         let p = qget<Canon2Part>();
         canon2[p.lo..p.lo + p.vals.len].move_from(p.vals[..]);
     }
-    let t4 = clock();
+    t4 = clock();
+    ta.push(ms(r1, r2));
+    tb.push(ms(r2, r3));
+    tc.push(ms(r3, t4));
+    tw.push(ms(r1, t4));
+  }
     for id in ids { thread_wait(id); }
     let t5 = clock();
     var note: u8[>..] = [];
     format(note, "p1par goose (", W, " workers): ");
     report(note, "spawn+load", t0, t1);
-    report(note, "1a", t1, t2);
-    report(note, "1b", t2, t3);
-    report(note, "1c", t3, t4);
-    report(note, "warm 1a+1b+1c", t1, t4);
+    format(note, "x", reps, ": ");
+    spread(note, "1a", ta);
+    spread(note, "1b", tb);
+    spread(note, "1c", tc);
+    spread(note, "warm 1a+1b+1c", tw);
     report(note, "exit", t4, t5);
     print(note);
     var bad = check32("canon", canon, "oracle/p1_canon.u32");
