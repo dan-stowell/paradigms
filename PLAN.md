@@ -62,11 +62,10 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T20:20Z): grid full (20/20), 5 ATTACKS backed. Nothing running. Next, in order:
-(1) Layout + relocate after an edit (ATTACKS 5's open question), as a Codex C job in /home/exedev/paradigms-c: with
-the unified id map (data/minio-edit{,2}/diff/, README there; ddflow writediff), how many live symbols' addresses
-(p3_addr) and how many relocated bytes change after edit 1/2 with the current layout; then with per-package slack
-(pad each package's text/data so a package that grows within its slack moves nothing else): bytes of slack needed,
-addresses moved, relocations to repatch, and a C incremental 3a+3b timed vs ref/flat/p3. Check: patched image equals
-B's oracle image in the produced regions. (2) Quiet reruns of the 8-thread grid numbers while nothing runs
-(systems/*/bench.sh one at a time, taskset; load now ~1). (3) Skeptic after (1).
+Now (2026-11-16T20:25Z): grid full (20/20), 5 ATTACKS backed. Running: (a) Codex job `codex-relayout` in
+/home/exedev/paradigms-c (prompt: layout + relocate after edits 1/2, current vs per-unit slack layout, C incremental
+3a+3b checked vs from-scratch; log codex-relayout.log, waits on `^EXIT [0-9]+$`; output results/c-relayout.md);
+(b) an Opus builder in a worktree: stable identity in C (ref/flat/unify.c vs ddflow's 0.7-1.1 s, checked equal to
+diff/idmap_b.u32; results/c-unify.md). When both land: lead reruns their checks, merge, ATTACKS 5 Observation 4
+(+ identity cost), GRID. Then: quiet reruns of the 8-thread grid numbers (systems/*/bench.sh one at a time, taskset),
+skeptic review.
