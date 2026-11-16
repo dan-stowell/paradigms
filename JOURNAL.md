@@ -99,13 +99,10 @@ attack (ATTACKS 4). **What did the oracle number do since the last milestone? If
 am I doing about it?** 16/20 + DuckDB 3 with 3 ATTACKS -> 17/20 + DuckDB 3 + GraphBLAS 2 with 4 ATTACKS. Not stalled,
 but slower: the three remaining cells are all problem 4 (Goose, Halide, Soufflé); Halide is building, Goose goes next.
 The 8-thread numbers are weak evidence because the machine was oversubscribed by my own helpers; reruns go in the Now line.
-<<<<<<< HEAD
 - 2026-11-16T18:22:41Z launched Goose P4 builder, Futhark 3b follow-up, codex-cp7 (pieces vs time).
 - 2026-11-16T18:33:08Z merged Futhark 3b_blk (slice-update copy; lead rebuilt, P3b_blk OK both backends): 2.7x / 3.6x the old 3b.
 - 2026-11-16T18:35:42Z triaged M3 skeptic: 5 accepted (Halide fresh-image check added, ATTACKS 3 retitled/corrected, Halide kube anomaly = load, page-reuse caveat).
-=======
 
 2026-11-16 CP7: prepared contiguous runs in C (hole-free-neighbour fusion, whole-function blobs, sequence deduplication), plus an unmerged prepared control to distinguish fewer copies from hoisted metadata lookup. All variants pass bytes, unconditional function offsets and sorted relocations at 1/8 threads and constrained-team/fallback checks. Five interleaved 128-repetition measurements underway; preprocessing separately timed, logical prepared-input footprint counted.
 2026-11-16T18:31:29Z CP7 measurement: 55/55 oracle passes, five interleaved P4_REPS=128 runs, 1/8 threads, 12 GiB, load 2.53–4.85. Prepared unmerged D/1 48.474 ms vs p4par/1 94.695; A/1 43.981, B/1 44.689, C/1 46.589 ms. B has 17.43× fewer copies than D but only 1.08× lower time; fusion benefits at eight threads overlap noise. C stores 55,389 distinct runs / 48,985,021 bytes. Report, raw logs, reproducible summary and independent UBSan/negative-offset review committed; no new grid cell or ATTACKS entry, entry 4 refined.
->>>>>>> origin/codex-cp7
 - 2026-11-16T18:36:46Z merged codex-cp7 (lead rerun all P4 OK): flattened per-item stream 2x p4; merging pieces 17x adds only 1.08x -> ATTACKS 4 corrected: indirection per piece is the cost.
