@@ -1,0 +1,8 @@
+items 2381252 glue items 740836 node segments 1640416
+copy bytes 60733909 glue 17573654 templates 43160255
+hole counts integer/rel32/relocation [5633606, 700229, 1346646] total 7680481
+patched bytes integer/rel32 [11168719, 2800916] total 13969635
+relocations 1780281 node 1346646 glue 338440 markers 95195
+model read bytes 195025203 write bytes 160157032 operand/target reads 83420680 glue/marker reads 8143870
+model read ms 5.41736675 write ms 5.931741925925926 overlapped bound ms 5.931741925925926 serial service ms 11.349108675925926
+copy-only read ms 1.6870530277777778 write ms 2.249404037037037 overlapped bound ms 2.249404037037037

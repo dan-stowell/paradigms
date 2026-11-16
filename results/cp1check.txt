@@ -1,0 +1,7 @@
+kind 1 width 1 fits-int8 True: 2586863
+kind 1 width 4 fits-int8 False: 1326786
+kind 2 width 1 fits-int8 True: 35909
+kind 2 width 4 fits-int8 False: 2891
+kind 3 width 1 fits-int8 True: 834460
+kind 3 width 4 fits-int8 False: 77760
+exceptions to width == (fits int8 ? 1 : 4): 0 of 4864669

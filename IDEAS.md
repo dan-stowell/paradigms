@@ -7,6 +7,9 @@ Sources (written 2026-11-16 by Sonnet prior-art readers and the four installers;
 abstracts or memory and say so: check before citing):
 
 - `ideas/resolve-reach.md` (19), `ideas/layout-codegen.md` (17), `ideas/wildcard.md` (16 systems, top 3)
+- `ideas/copy-and-patch.md` (8, problem 4; Sonnet reader 17:30Z, C&P and Deegen papers read in full): top CP1 width-relaxed
+  templates (claims disp8/disp32 is a pure function of the operand, 0 exceptions in 4.86 M holes: **lead-verified 17:33Z**, `python3 -I results/cp1check.py data/minio-p4`; the 66,592-template bound is not yet), CP4 a
+  generated straight-line emitter per hot template (Deegen 1.62 GiB/s vs our 0.42 GB/s), CP2 always-disp32 (new oracle)
 - `systems/futhark/IDEAS.md` (13), `systems/halide/IDEAS.md` (13), `systems/souffle/IDEAS.md` (15),
   `systems/goose/IDEAS.md` (13)
 
@@ -41,6 +44,8 @@ abstracts or memory and say so: check before citing):
 
 | test | source | status |
 |---|---|---|
-| BFS level count and frontier-size histogram on the flat graph | resolve-reach 9 | open |
-| relocation-kind histogram of the 2.05 M live relocations | layout-codegen | open |
+| BFS level count and frontier-size histogram on the flat graph | resolve-reach 9 | **done 17:35Z** (results/levels.md): 111 levels; 81 have frontier < 4,096 and hold 5.9% of pops; the 8 widest hold 54%. Suggests a hybrid: parallel while wide, sequential drain for the tail |
+| CP1 width-relaxed templates (ideas/copy-and-patch.md) | Sonnet reader, verified premise | codex-cp (`ref/p4/check-cp.sh`, lead rerun 17:52Z P4 OK) | **split**: count alive (66,046 templates vs 108,833; top 4,096 cover 82.3% of nodes vs 74.6%); layout killed: deriving lengths from operands makes the scan 6.3x slower (reads 7.68 M operands instead of 2.38 M lengths). Merge the table, keep per-node lengths precomputed |
+| CP4 generated emitter for the top 4,096 templates | Deegen | codex-cp, P4 OK | **killed at its threshold**: covered-segment emit 1.67x faster (median) but ranges overlap; 26% fewer instructions; hot templates are only 36% of emitted bytes (glue 29%, cold templates 35%), so whole-emit gain is capped; 2.9 MB of generated C, 52-63 s to compile |
+| relocation-kind histogram of the 2.05 M live relocations | layout-codegen | **done 17:40Z** (results/relkinds.txt, `python3 -I results/relkinds.py data/minio`): 8 (kind, width) pairs only; call+pcrel rel32 56%, addr64 19%, addroff/methodoff 24%; 454 K distinct targets but the top 100 take 30% of relocations, 92% have addend 0. So 3b's T-gather is mostly cache-hot, and per-kind branches are few: a branch-free table of 8 formulas fits SIMD |
 | shape-coverage recount for problem 4 | layout-codegen | open (M4) |

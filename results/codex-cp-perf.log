@@ -1,0 +1,99 @@
+PERF p4 1
+2026-11-16T17:42:14Z
+ 17:42:14 up  2:26,  0 user,  load average: 17.65, 17.52, 14.02
+p4 (1 core): lay out 16.530 ms, emit 307.094 ms (60733909 bytes, 2381252 items), sort relocations 349.532 ms (1780281); 0 errors; reps 32 total 15.813 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 taskset -c 5 build/p4 /home/exedev/paradigms/data/minio-p4':
+
+       24951617716      instructions:u
+         112957693      branch-misses:u
+
+      17.244060749 seconds time elapsed
+
+       5.180648000 seconds user
+       0.251678000 seconds sys
+
+
+PERF p4par 1
+2026-11-16T17:42:31Z
+ 17:42:31 up  2:26,  0 user,  load average: 18.50, 17.73, 14.17
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 16.668 ms, emit 297.520 ms (60733909 bytes, 2381252 items), sort relocations 567.656 ms (1780281); 0 errors; reps 32 total 14.903 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 taskset -c 5 build/p4par /home/exedev/paradigms/data/minio-p4':
+
+       21893138287      instructions:u
+         111520807      branch-misses:u
+
+      16.898262168 seconds time elapsed
+
+       5.333437000 seconds user
+       0.289999000 seconds sys
+
+
+PERF p4cp4 1
+2026-11-16T17:42:48Z
+ 17:42:48 up  2:27,  0 user,  load average: 18.59, 17.79, 14.25
+output: MAP_HUGETLB 2 MB
+p4cp4 (1 threads): lay out 13.456 ms, emit 228.198 ms (60733909 bytes, 2381252 items), sort relocations 332.550 ms (1780281); 0 errors; reps 32 total 12.952 s
+function offsets: 0 differ
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 taskset -c 5 build/p4cp4 /home/exedev/paradigms/data/minio-p4':
+
+       16184319547      instructions:u
+         112770374      branch-misses:u
+
+      14.648118232 seconds time elapsed
+
+       4.757501000 seconds user
+       0.365645000 seconds sys
+
+
+PERF p4par 8
+2026-11-16T17:43:03Z
+ 17:43:03 up  2:27,  0 user,  load average: 18.19, 17.74, 14.29
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 4.913 ms, emit 58.718 ms (60733909 bytes, 2381252 items), sort relocations 242.312 ms (1780281); 0 errors; reps 32 total 3.433 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4par /home/exedev/paradigms/data/minio-p4':
+
+       21804042029      instructions:u
+         111338205      branch-misses:u
+
+       4.307759265 seconds time elapsed
+
+       5.486414000 seconds user
+       0.243651000 seconds sys
+
+
+PERF p4cp4 8
+2026-11-16T17:43:07Z
+ 17:43:07 up  2:27,  0 user,  load average: 18.57, 17.83, 14.33
+output: MAP_HUGETLB 2 MB
+p4cp4 (8 threads): lay out 7.572 ms, emit 73.293 ms (60733909 bytes, 2381252 items), sort relocations 379.172 ms (1780281); 0 errors; reps 32 total 4.695 s
+function offsets: 0 differ
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4cp4 /home/exedev/paradigms/data/minio-p4':
+
+       16095233021      instructions:u
+         113951244      branch-misses:u
+
+       5.712311817 seconds time elapsed
+
+       5.317521000 seconds user
+       0.580961000 seconds sys

@@ -1,0 +1,7 @@
+original 7 relaxed 5 nodes 7 node_bytes 46
+top 256 nodes 7 100.000000% bytes 46 100.000000%
+top 1024 nodes 7 100.000000% bytes 46 100.000000%
+top 4096 nodes 7 100.000000% bytes 46 100.000000%
+decoded displacement fields in original templates {'non_sib': 3, 'sib': 2}
+table_bytes 37 table_holes 5
+PASS: BP, SIB, RIP, no-base SIB, 66-prefix width normalization; fixture /tmp/cp1-review-vp8ihmvz

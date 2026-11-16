@@ -1,0 +1,20 @@
+data/minio/ 2053801 relocations
+  kind 5 siz 4: 597624 (29.1%)
+  kind 7 siz 4: 552858 (26.9%)
+  kind 1 siz 8: 387975 (18.9%)
+  kind 4 siz 4: 261198 (12.7%)
+  kind 3 siz 4: 235261 (11.5%)
+  kind 2 siz 8: 16587 (0.8%)
+  kind 8 siz 4: 2076 (0.1%)
+  kind 6 siz 4: 222 (0.0%)
+  distinct targets 453696 top 100 cover 0.296 top 1000 0.416 addend==0 0.923
+data/kube-apiserver/ 2823088 relocations
+  kind 7 siz 4: 802689 (28.4%)
+  kind 5 siz 4: 765199 (27.1%)
+  kind 1 siz 8: 437215 (15.5%)
+  kind 4 siz 4: 430521 (15.3%)
+  kind 3 siz 4: 355512 (12.6%)
+  kind 2 siz 8: 30658 (1.1%)
+  kind 8 siz 4: 1015 (0.0%)
+  kind 6 siz 4: 279 (0.0%)
+  distinct targets 610218 top 100 cover 0.295 top 1000 0.391 addend==0 0.916
