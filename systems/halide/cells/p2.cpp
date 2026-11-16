@@ -82,21 +82,23 @@ int main(int argc, char **argv) {
     auto xkindB = own(xkind);
     printf("non-relocation edges: %u (of %d in p2_edge)\n", xoff[nsl + 1], edst.dim(0).extent());
 
-    int nblk = (nid + 1023) / 1024, total = nid + nsig + nstr + 1 + 1 + nmeth + 2 * nblk;
+    int nblk = (nid + 15) / 16, total = nblk * 16 + nsig + nstr + 1 + 1 + nmeth + 2 * nblk;
     Buffer<u8, 1> st(total);
     Buffer<u32, 1> sigrep(nsig);
     Buffer<int32_t, 1> msig(nmeth);
     Buffer<int32_t, 0> nnext = Buffer<int32_t, 0>::make_scalar();
     Buffer<int32_t, 1> actA(nblk), actB(nblk);  // the blocks in the frontier: read one, write the other
     int levels = 0, rounds = 0;
+    long blocks = 0;  // blocks expanded, over all levels
     auto run = [&](int v) {
         bool lazy = floods[v].name[6] == 't', par = floods[v].name[strlen(floods[v].name) - 1] == 't';
         preps[par].fn(sname, stype, mname, mtyp, sigrep, msig);
         init(nid, nsig, nstr, nmeth, fl, roots, st, actA, nnext);
-        levels = rounds = 0;
+        levels = rounds = 0, blocks = 0;
         for (int parity = 0;;) {
             rounds++;
             do {
+                blocks += nnext();
                 floods[v].fn(nid, nsig, nstr, nmeth, parity, actA, nnext(), fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
                              lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, actB, nnext);
                 std::swap(actA, actB);
@@ -110,7 +112,7 @@ int main(int argc, char **argv) {
         std::vector<u32> list;
         for (int g = 1; g < nid; g++)
             if (st(g) & 1) list.push_back(g);
-        printf("%d levels in %d rounds; ", levels, rounds);
+        printf("%d levels in %d rounds, %ld blocks of 1024 ids; ", levels, rounds, blocks);
         return check32("live", list.data(), list.size(), "oracle/p2_live.u32") != 0;
     };
     const char *th = getenv("HL_NUM_THREADS");
