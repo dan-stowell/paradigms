@@ -51,6 +51,25 @@ int main(int argc, char **argv) {
 			if (out) futhark_free_u32_1d(ctx, out);
 			fut_check(futhark_entry_reach_hybrid(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, lo, hi, budget), cell);
 		});
+	} else if (strcmp(cell, "2bat") == 0) {
+		// batched levels (ATTACKS.md 3): P2C chunks per round (default 256), P2B pops per chunk (1024),
+		// P2CAP edges per chunk buffer (4096; raised to the widest due row), P2H push-table slots (2048, a power of 2)
+		const char *e;
+		int64_t C = (e = getenv("P2C")) ? atoll(e) : 256, B = (e = getenv("P2B")) ? atoll(e) : 1024;
+		int64_t cap = (e = getenv("P2CAP")) ? atoll(e) : 4096, H = (e = getenv("P2H")) ? atoll(e) : 2048;
+		SYNC();
+		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		struct futhark_i64_1d *st;
+		fut_check(futhark_entry_batch_stats(ctx, &st, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, C, B, cap, H), "stats");
+		int64_t s[6];
+		futhark_values_i64_1d(ctx, st, s);
+		SYNC();
+		printf("batch C %lld B %lld cap %lld H %lld: %lld rounds, %lld symbols expanded (%lld with duplicates), %lld edges walked\n",
+		       (long long)C, (long long)B, (long long)cap, (long long)H, (long long)s[0], (long long)s[2], (long long)s[3], (long long)s[4]);
+		TIMEIT(cell, {
+			if (out) futhark_free_u32_1d(ctx, out);
+			fut_check(futhark_entry_reach_batch(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, C, B, cap, H), cell);
+		});
 	} else {
 		struct futhark_u32_1d *canon = LOAD(u32, "oracle/p1_canon.u32"), *builtin = LOAD(u32, "oracle/p1_builtin.u32");
 		struct futhark_u32_1d *srel = LOAD(u32, "slot_rel.u32"), *sobj = LOAD(u32, "slot_obj.u32");
