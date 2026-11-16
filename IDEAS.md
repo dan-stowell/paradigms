@@ -38,7 +38,7 @@ abstracts or memory and say so: check before citing):
 | SuiteSparse:GraphBLAS | reach as masked BFS over a boolean semiring; the natural sparse-linear-algebra form | wildcard top 1, resolve-reach 10 | **added M3** (P1, P2) |
 | GraphIt | a schedule language for graph algorithms: Halide's axis on the problem Halide strains at | halide headline | open: after M2 |
 | DuckDB | already on the VM; resolve as SQL join + group-by, layout as window functions | wildcard top 2 | **added 15:58Z** (P1-P3) |
-| Differential Dataflow | incremental relink as a new axis | wildcard top 3 | open: needs Rust |
+| Differential Dataflow | incremental relink as a new axis | wildcard top 3 | **installing** (2026-11-16, systems/ddflow; Rust via rustup) |
 
 ## Cheap measurements to run first (from the readers)
 
