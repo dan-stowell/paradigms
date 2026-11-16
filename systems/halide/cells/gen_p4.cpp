@@ -263,8 +263,8 @@ public:
             inf(iv) = Tuple(d.src, i32(at(iv)) - d.lo, d.h0, d.nh, d.opBase, select(d.glue, d.g0, d.r0), cast<uint8_t>(d.glue));
             return inf;
         };
-        Func inf = mkInfo("info"), infC = info == 2 ? mkInfo("infoC") : inf, infP = info == 2 ? mkInfo("infoP") : inf,
-             infR = info == 2 ? mkInfo("infoR") : inf;
+        Func inf = mkInfo("info"), infC = info >= 2 ? mkInfo("infoC") : inf, infP = info >= 2 ? mkInfo("infoP") : inf,
+             infR = info >= 2 ? mkInfo("infoR") : inf;
         struct I { Expr src, pb, h0, nh, ob, rel0, glue, at, len; };
         auto I_ = [&](Expr i, Func inf) {
             I r;
@@ -385,10 +385,11 @@ public:
         // ---- the schedule
         int pc = oc.ic + 1, pp = op.ic + 1;  // the chunk RVar of each update
         int pu = gform == 1 ? 0 : 1;          // the patch's update
-        if (info == 2) {
+        if (info >= 2) {
             if (gform == 0) infC.compute_at(code, oc.r[oc.ic]);
             infP.compute_at(code, op.r[op.ic]);  // (RVar names are unique: no stage index needed)
-            infR.compute_at(rel, orl.r[orl.ic]);
+            // info 3: the relocation loop's facts per relocation instead (most items have none)
+            infR.compute_at(rel, orl.r[info == 3 ? 0 : orl.ic]);
         } else if (info == 1) {
             // vectorized: 16 items' dependent loads (node -> template -> segment) issued side by side as gathers
             Var io("io"), ii("ii");
