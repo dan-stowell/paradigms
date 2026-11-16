@@ -89,3 +89,13 @@ reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a se
 - 2026-11-16T18:20:04Z merged second attempts (Soufflé 3a no longer falls down: 1.9 s ranked chain; DuckDB P2 falls down after 3) and GraphBLAS column (P1/P2 OK, 9-24x tuned C, does not scale: frontiers below its threading threshold); lead reran every check.
 - 2026-11-16T18:20:53Z merged codex-kube: all 5 paradigms' P1-P3 cells correct on kube-apiserver; 1-thread scaling 1.5-2.5x; Halide 1a 6.7x flagged.
 - 2026-11-16T18:21:18Z ATTACKS 4: emit costs pieces not bytes (0.42 GB/s, patch 7.6%); width-relaxed templates 108,833 -> 66,046.
+
+**M3 (2026-11-16T18:40Z).** Five Opus builders and four Codex jobs in parallel, load 7-26 throughout. Second attempts
+settled two cells (Soufflé 3a now stands, DuckDB P2 falls down with three attempts written); the level-free floods
+corrected ATTACKS 3's premise in the paradigms (Futhark: 45 levels, the per-level passes are the cost; Goose already had
+10 supersteps, async 1.3-1.5x); GraphBLAS became a column (correct, 9-24x C, single-threaded by its own heuristics);
+every paradigm's P1-P3 cells are correct on kube-apiserver; problem 4 got a tuned C reference, a Futhark cell and a new
+attack (ATTACKS 4). **What did the oracle number do since the last milestone? If it stalled, what is the blocker, and what
+am I doing about it?** 16/20 + DuckDB 3 with 3 ATTACKS -> 17/20 + DuckDB 3 + GraphBLAS 2 with 4 ATTACKS. Not stalled,
+but slower: the three remaining cells are all problem 4 (Goose, Halide, Soufflé); Halide is building, Goose goes next.
+The 8-thread numbers are weak evidence because the machine was oversubscribed by my own helpers; reruns go in the Now line.

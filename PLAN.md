@@ -47,9 +47,13 @@ Milestones log:
   one-array 8-worker 3b). Oracle number: **16/20** (4 paradigms x P1-P3 + the C column's 4; P4 0/4 paradigms) **+ DuckDB 3**;
   **3 ATTACKS entries backed by measurement** (lazy decode in the flood; huge-page output; drop level synchronization).
 
-Now (2026-11-16T17:20Z, session 3): M3/M4 running. Opus builders in worktrees (Agent, isolation=worktree): Halide P4,
-Futhark P4, DuckDB P2 + Soufflé 3a second attempts (results/second-attempts.md), GraphBLAS column (systems/graphblas),
-level-free floods in Futhark + Goose (results/levelfree.md). Codex in ~/paradigms-w branch codex-kube: every paradigm's
-cells on kube-apiserver (results/codex-kube.md); codex-p4par merged; Codex in ~/paradigms-c branch codex-cp: CP1 width-relaxed templates + CP4 generated emitter (results/codex-cp.md). Next: as each lands, rebuild + rerun its
-oracle check in a copy, merge, paste CELLS into GRID.md; then M3/M4 milestone steps (LOOP.md). If the session was lost,
-check `git branch -a` for the builders' worktree branches and their reports before relaunching.
+- 2026-11-16T18:40Z M3: second attempts (Soufflé 3a ranked chain: no longer falls down; DuckDB P2 recursive query:
+  falls down after 3), level-free floods measured in Futhark and Goose (ATTACKS 3 corrected), prior-art CP1/CP4 measured
+  in C, GraphBLAS column (P1, P2), kube-apiserver for every paradigm's P1-P3 cells (all correct). M4: Futhark P4 correct
+  (3.2x / ~5x C), tuned C P4 (p4par). Oracle number: **17/20** (+ DuckDB 3, GraphBLAS 2); **4 ATTACKS backed**.
+
+Now (2026-11-16T18:40Z): M3 done (MORNING.md). Running: Halide P4 builder (worktree, Agent; report
+systems/halide/P4-REPORT.md or its reply), M3 skeptic (reviews/inbox/*-M3.md: triage into REVIEWS.md). Next: merge
+Halide P4 after rerunning its check (that makes M4); then a third P4 paradigm (Goose: its inline data and arenas fit
+the emit), CP7 supernodes in C (fuse hole-free pieces at extraction; count pieces per byte), Futhark's slice-update
+copy applied to 3b (IDEAS I18), and quiet-machine reruns of the 8-thread numbers (load was 7-26 all of M3).
