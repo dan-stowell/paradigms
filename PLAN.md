@@ -56,7 +56,7 @@ Milestones log:
   kill tests (CP1 split, CP4 killed, CP7: indirection not pieces). Oracle number: **19/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed**.
 
-Now (2026-11-16T19:06Z): M4 review triaged. Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md)
+Now (2026-11-16T18:51Z): M4 review triaged. Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md)
 and Halide batched-level flood (results/halide-levelfree.md); Codex in /home/exedev/paradigms-c (branch codex-holes:
 ref/p4/p4holes.c, results/codex-holes.md, log codex-holes.log) and /home/exedev/paradigms-g (branch codex-goose-fnoff:
 Goose P4 checks function offsets, log codex-gfn.log); each log ends with "EXIT n". On each: rebuild + rerun its check
