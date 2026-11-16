@@ -29,6 +29,26 @@ def copy_chunks [n] (chunk: i64) (total: i64) (at: [n]i64) (src: [n](bool, i64, 
   let (is, vs) = unzip (flatten (map2 row owner k))
   in scatter (replicate total 0u8) is vs
 
+def fchunk = 32i64   -- the row of the fused copy + patch, a constant so the row can live in registers
+
+-- the copy and the patch in one scatter: each chunk-byte row of a node segment is read from its template, then
+-- `fix i base row` writes the holes that fall in it (a short sequential loop inside the row)
+def copy_patch [n] (chunk: i64) (total: i64) (at: [n]i64) (src: [n](bool, i64, i64)) (glue_bin: []u8) (tmpl_bin: []u8)
+               (fix: i64 -> i64 -> *[chunk]u8 -> *[chunk]u8) =
+  let (owner, k) = repl_segm_iota (map (\(_, _, l) -> (l + chunk - 1) / chunk) src)
+  let row i k = let (fromt, o, l) = src[i]
+                let base = k * chunk
+                let bs = #[sequential] map (\j -> let p = base + j
+                                                 in if p >= l then 0u8 else if fromt then tmpl_bin[o + p] else glue_bin[o + p])
+                                               (iota chunk)
+                in if fromt then fix i base bs else bs
+  -- the rows of bytes are materialized (the loop in `fix` stops fusion); their indices are a map, fused into the scatter
+  let bytes = flatten (map2 row owner k)
+  let index x = let i = owner[x / chunk]
+                let p = k[x / chunk] * chunk + x % chunk
+                in if p < src[i].2 then at[i] + p else -1
+  in scatter (replicate total 0u8) (map index (indices bytes)) bytes
+
 -- the copy as a gather: every output byte finds its item (scatter of item starts + a max-scan), then reads it
 def copy_gather [n] (total: i64) (at: [n]i64) (src: [n](bool, i64, i64)) (glue_bin: []u8) (tmpl_bin: []u8) =
   let starts = map2 (\a (_, _, l) -> if l == 0 then -1 else a) at src
@@ -37,13 +57,14 @@ def copy_gather [n] (total: i64) (at: [n]i64) (src: [n](bool, i64, i64)) (glue_b
                    let q = o + p - at[i]
                    in if fromt then tmpl_bin[q] else glue_bin[q]) (iota total) owner
 
--- Where each template hole lies: its segment (as a number within its template) and that segment's start.
+-- Where each template hole lies: its segment (as a number within its template), that segment's start, and the
+-- segment's global number (into tseg_end).
 def hole_segs [T] [G] [H] (tmpl_seg_off: [T]u32) (tseg_end: [G]u32) (tmpl_hole_off: [T]u32) (hole_at: [H]u32) =
   let first = map (\t -> if t < T - 1 && tmpl_hole_off[t] < tmpl_hole_off[t + 1] then i64.u32 tmpl_hole_off[t] else -1) (iota T)
   let owner = scatter (replicate H 0i64) first (iota T) |> scan i64.max 0
   in map (\h -> let b = i64.u32 tmpl_seg_off[owner[h]]
                 let g = loop g = b while tseg_end[g] <= hole_at[h] do g + 1
-                in (g - b, if g == b then 0 else i64.u32 tseg_end[g - 1])) (iota H)
+                in (g - b, if g == b then 0 else i64.u32 tseg_end[g - 1], g)) (iota H)
 
 -- The holes of one class, per template, as a list of (hole, part) entries in (template, offset) order: `n h`
 -- entries for hole h (ns[h]: 0 if not in the class; 2 for an 8-byte integer, written as two 4-byte parts). The
@@ -73,10 +94,6 @@ entry emit [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
   let at = exscan lens
   let total = if N == 0 then 0 else at[N - 1] + lens[N - 1]
   let at_of i = if i == N then total else at[i]
-  -- 2. copy every item's bytes (chunk 0: as a gather, else as a scatter of chunk-byte rows)
-  let code = if parts & 1 == 0 then replicate total 0
-             else if chunk == 0 then copy_gather total at src glue_bin tmpl_bin
-             else copy_chunks chunk total at src glue_bin tmpl_bin
   -- 3. the holes. A node's segments are items: seg_item[nseg_off[r] + s] is the item of node r's segment s.
   let nseg r = let t = i64.u32 node_tmpl[r] in i64.u32 tmpl_seg_off[t + 1] - i64.u32 tmpl_seg_off[t]
   let nseg_off = exscan (map nseg (iota NN))
@@ -90,18 +107,42 @@ entry emit [F] [M] [N] [GL] [GR] [NN] [O] [T] [G] [H]
            (\r j -> let (h, k) = idx[start[i64.u32 node_tmpl[r]] + j] in (r, h, k)) (iota NN)
   -- where a hole goes, and its operand
   let place r h =
-    let (s, lo) = hseg[h]
+    let (s, lo, _) = hseg[h]
     in (at[seg_item[nseg_off[r] + s]] + i64.u32 hole_at[h] - lo, i64.u32 node_op[r] + h - i64.u32 tmpl_hole_off[i64.u32 node_tmpl[r]])
-  -- an integer's w bytes of v; a jump's rel32 to (item v, offset a)
-  let patch (r, h, k) =
-    let (p, o) = place r h
-    in if hole_enc[h] == 2 then (p, 4, at_of op_val[o] + op_aux[o] - (p + 4))
-       else (p + 4 * k, i64.u8 hole_w[h] - 4 * k, op_val[o] >> (32 * k))
+  -- what to write for part k of hole h at p, operand o: an integer's w bytes of v; a jump's rel32 to (item v, offset a)
+  let value h k p o =
+    if hole_enc[h] == 2 then (p, 4, at_of op_val[o] + op_aux[o] - (p + 4))
+    else (p + 4 * k, i64.u8 hole_w[h] - 4 * k, op_val[o] >> (32 * k))
+  let patch (r, h, k) = let (p, o) = place r h in value h k p o
   let patched = class_holes tmpl_hole_off (map2 (\e w -> if e == 3 then 0 else if w == 8 then 2 else 1) hole_enc hole_w)
   -- each (part of a) hole as a row of 4 (index, byte) writes, -1 past its width
   let bytes (p, n, v) = #[sequential] map (\k -> (if k < n then p + k else -1, u8.i64 (v >> (8 * k)))) (iota 4)
-  let (wi, wv) = holes_of patched |> map patch |> map bytes |> flatten |> unzip
-  let code = if parts & 2 == 0 then code else scatter code wi wv
+  -- 2. copy every item's bytes, then patch the holes. chunk > 0: the copy as a scatter of chunk-byte rows, then
+  -- the patch as a second scatter; chunk == 0: the copy as a gather; parts & 8: patch inside the copy's rows
+  -- for the fused copy: the patched entries of template segment g are seg_first[g] ..< seg_first[g] + seg_cnt[g]
+  let seg_cnt = hist (+) 0 G (map (\(h, _) -> hseg[h].2) patched.0) (map (const 1i64) patched.0)
+  let seg_first = exscan seg_cnt
+  let code =
+    if parts & 8 != 0 then copy_patch fchunk total at src glue_bin tmpl_bin
+                             (\i base (bs: *[fchunk]u8) : *[fchunk]u8 -> -- the holes of item i's segment that fall in this row
+                                let (idx, _) = patched
+                                let r = i64.u32 item_ref[i]
+                                let t = i64.u32 node_tmpl[r]
+                                let g = i64.u32 tmpl_seg_off[t] + i64.u32 item_seg[i]
+                                let o0 = i64.u32 node_op[r] - i64.u32 tmpl_hole_off[t]
+                                in loop bs for e in seg_first[g] ..< seg_first[g] + seg_cnt[g] do
+                                     let (h, k) = idx[e]
+                                     let (p, n, v) = value h k (at[i] + i64.u32 hole_at[h] - hseg[h].1) (o0 + h)
+                                     let q = p - at[i] - base
+                                     in loop bs for b < 4 do
+                                          if b < n && q + b >= 0 && q + b < fchunk then bs with [q + b] = u8.i64 (v >> (8 * b)) else bs
+                                )
+    else
+    let code = if parts & 1 == 0 then replicate total 0
+               else if chunk == 0 then copy_gather total at src glue_bin tmpl_bin
+               else copy_chunks chunk total at src glue_bin tmpl_bin
+    let (wi, wv) = holes_of patched |> map patch |> map bytes |> flatten |> unzip
+    in if parts & 2 == 0 then code else scatter code wi wv
   -- holes the encoder cannot have written (checked on the template table)
   let nerr = map (\h -> let w = hole_w[h] in match hole_enc[h]
                                             case 1 -> i64.bool (w != 1 && w != 2 && w != 4 && w != 8)

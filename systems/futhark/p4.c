@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	int check = !(argc > 5 && strcmp(argv[5], "nocheck") == 0);
 	int64_t chunk = strcmp(cell, "4g") == 0 ? 0 : getenv("CHUNK") ? atol(getenv("CHUNK")) : 32;
 	int64_t parts = getenv("PARTS") ? atol(getenv("PARTS")) : 7;
-	if (parts != 7) check = 0;
+	if ((parts & 7) != 7) check = 0;
 	u32 nfn = (u32)metaGet("nfn"), nrel = (u32)metaGet("nrel");
 	u64 ncode = metaGet("code_bytes");
 	double tl0 = now();
