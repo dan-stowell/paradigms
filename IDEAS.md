@@ -36,7 +36,7 @@ abstracts or memory and say so: check before citing):
 | system | why | source | status |
 |---|---|---|---|
 | SuiteSparse:GraphBLAS | reach as masked BFS over a boolean semiring; the natural sparse-linear-algebra form | wildcard top 1, resolve-reach 10 | **added M3** (P1, P2) |
-| GraphIt | a schedule language for graph algorithms: Halide's axis on the problem Halide strains at | halide headline | open: after M2 |
+| GraphIt | a schedule language for graph algorithms: Halide's axis on the problem Halide strains at | halide headline | builder started 20:30Z (P2) |
 | DuckDB | already on the VM; resolve as SQL join + group-by, layout as window functions | wildcard top 2 | **added 15:58Z** (P1-P3) |
 | Differential Dataflow | incremental relink as a new axis | wildcard top 3 | **added 19:55Z** (P1a+1b, P2, incremental relink; ATTACKS 5) |
 

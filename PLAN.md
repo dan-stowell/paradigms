@@ -66,6 +66,7 @@ Now (2026-11-16T20:25Z): grid full (20/20), 5 ATTACKS backed. Running: (a) Codex
 /home/exedev/paradigms-c (prompt: layout + relocate after edits 1/2, current vs per-unit slack layout, C incremental
 3a+3b checked vs from-scratch; log codex-relayout.log, waits on `^EXIT [0-9]+$`; output results/c-relayout.md);
 (b) an Opus builder in a worktree: stable identity in C (ref/flat/unify.c vs ddflow's 0.7-1.1 s, checked equal to
-diff/idmap_b.u32; results/c-unify.md). When both land: lead reruns their checks, merge, ATTACKS 5 Observation 4
+diff/idmap_b.u32; results/c-unify.md); (c) Opus builder: GraphIt column, P2 (systems/graphit, IDEAS
+new-columns row); (d) Opus builder: maintained resolve in C (ref/flat/p1inc.c, results/c-p1inc.md). When both land: lead reruns their checks, merge, ATTACKS 5 Observation 4
 (+ identity cost), GRID. Then: quiet reruns of the 8-thread grid numbers (systems/*/bench.sh one at a time, taskset),
 skeptic review.
