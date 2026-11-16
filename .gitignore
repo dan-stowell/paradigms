@@ -5,3 +5,6 @@ STOP
 .claude/worktrees/
 build/
 data/
+systems/goose/bin/
+systems/goose/scratch/mail
+systems/goose/scratch/thr

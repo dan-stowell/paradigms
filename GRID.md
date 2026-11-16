@@ -46,7 +46,9 @@ reads, so for the flat files they are an upper bound on the floor.
 
 | problem | Goose | Futhark | Halide | Soufflé | DuckDB (added 15:58Z) |
 |---|---|---|---|---|---|
-| 1. resolve | | | | | |
-| 2. reach | | | | | |
-| 3. lay out + relocate | | | | | |
-| 4. codegen by shape (stretch) | | | | | |
+| 1. resolve | **P1 OK** (1a/1b/1c). 1a 79-115 / 37-57; 1b 39-57 / 42-67; 1c 97-118 / 39-47 (1 / 8 workers, load 8-13). Forced: shuffle join, one table per worker; impossible: a shared table. | | | | |
+| 2. reach | **P2 OK**. CSR flood 41-49 / 22-32; lazy decode 74-79 / 37-49 (C p2lazy same window 61-71 / 21-31). Easy: decode in the drain (10 lines); forced: owner-partitioned supersteps; 8 workers scale 1.7x. | | | | |
+| 3. lay out + relocate | **P3 OK + pipeline OK**. 3a 15-26 / 17-31; 3b 87-99 / 33-40 on 4 KB, **41-42 / 17-24 on 2 MB** (C sidecar remaps pages). Falls down: one image array on 8 workers (gather +142-171). | | | | |
+| 4. codegen by shape (stretch) | not attempted | | | | |
+
+Goose column merged 16:35Z; lead reran every check (P1/P2/P3/pipeline OK, a source rebuild of p2par passes). Long form and lines: `systems/goose/CELLS.md`, `NOTES.md`.
