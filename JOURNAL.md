@@ -100,3 +100,4 @@ am I doing about it?** 16/20 + DuckDB 3 with 3 ATTACKS -> 17/20 + DuckDB 3 + Gra
 but slower: the three remaining cells are all problem 4 (Goose, Halide, Soufflé); Halide is building, Goose goes next.
 The 8-thread numbers are weak evidence because the machine was oversubscribed by my own helpers; reruns go in the Now line.
 - 2026-11-16T18:22:41Z launched Goose P4 builder, Futhark 3b follow-up, codex-cp7 (pieces vs time).
+- 2026-11-16T18:33:08Z merged Futhark 3b_blk (slice-update copy; lead rebuilt, P3b_blk OK both backends): 2.7x / 3.6x the old 3b.
