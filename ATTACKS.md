@@ -226,7 +226,12 @@ facts of **31 symbols out of 9.7 M facts** (3.2e-6) and **3 live ids** of 663,63
 UI start-up) changes 141 symbols and 234 edges but kills **12,320 live ids** (21.5 MB of image). But slot ids are
 positional (object base + index), so 3 added slots in object 109 renumber every slot in objects 110-1420: a raw diff
 is ~all facts. Recovering identity (pair objects, match by unique name/content key, Myers-align the unnamed DWARF
-remainder) takes **0.7-1.1 s**, outside the update times below. A "lowest id" tie-break churns 34 K resolve facts in
+remainder) takes **0.7-1.1 s** in DD's Rust, outside the update times below. **The same map in plain C
+(`ref/flat/unify.c`, byte-identical to DD's on both edits; lead rebuilt + `--check` 20:37Z, then reran warm: 34-36 / 50-52
+ms) costs 35 / 51 ms warm on 1 core, 84 / 115 end to end** ([results/c-unify.md](results/c-unify.md)): a memory-bandwidth
+compare of 714 MB of key columns. With one 64-bit fingerprint per object written by the extractor: 2.3 / 20 ms warm,
+11 / 44 ms end to end; what remains is per-slot hashing in the one changed object (edit 2: `cmd`, 319 K slots). 954,738
+unnamed definitions (18%) are the only slots without a stable key. A "lowest id" tie-break churns 34 K resolve facts in
 edit 2 for 73 real changes.
 
 **Observation 2: an additive edit updates 35-400x faster than recompute; a retracting one does not.** DD, lead rebuilt

@@ -149,3 +149,4 @@ all (builder running), and a Halide cell on the flattened P4 stream tests whethe
 - 2026-11-16T20:19Z started codex-relayout (layout+relocate after an edit, slack layout, C incremental 3a+3b) and an Opus builder on stable identity in C (vs ddflow unify 0.7-1.1 s): the two open pieces of ATTACKS 5.
 - 2026-11-16T20:20Z started builders: GraphIt column (P2; the open new-column idea from Halide's reader) and maintained resolve in C (ATTACKS 5's unmeasured resolve half).
 - 2026-11-16T20:23Z skeptic-inc triaged (5 accepted: ATTACKS 5 Obs 2/3 comparators and warm-repeat caveats fixed; Codex codex-p2inc-chain for chained fuzz, fresh-edit work, B->A baseline, method rows).
+- 2026-11-16T20:37Z unify.c merged (stable identity in C, results/c-unify.md): byte-identical to ddflow's idmap/strmap on both edits; lead rebuilt + --check OK, warm 34-36 / 50-52 ms vs ddflow 0.7-1.1 s; ATTACKS 5 Obs 1 updated.
