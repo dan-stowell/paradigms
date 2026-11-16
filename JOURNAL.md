@@ -117,3 +117,4 @@ the blocker, and what am I doing about it?** 17/20 -> 19/20, ATTACKS 4 backed. T
 the Now line; after it the grid is full, and the work turns to the open attacks (holes, level sync in Halide).
 - 2026-11-16T18:51Z M4 review triaged (GRID Goose P4 join cost, Halide CPU-time label, ATTACKS 3 Futhark worklist); builders: Soufflé P4, Halide batched flood; Codex: hole cost (codex-holes), Goose P4 offset check (codex-goose-fnoff).
 - 2026-11-16T18:52Z ref/fc/run.sh + ref/p4/extract.sh take TARGET/PKG (default MinIO); kube-apiserver P4 extraction started (data/kube-p4).
+- 2026-11-16T18:54Z P4 on kube-apiserver extracted (data/kube-p4: 203 K functions, 74.5 MB, 93 K templates); p4/p4par P4 OK on it.

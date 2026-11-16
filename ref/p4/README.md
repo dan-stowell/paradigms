@@ -92,3 +92,11 @@ control. These trade additional prepared input for less runtime lookup work.
 `check-runs.sh DATA` checks bytes, every function offset and sorted relocations;
 `bench-runs.sh DATA` compares them with p4/p4par in five interleaved rounds at 1/8
 threads. Counts, input sizes, timing scope and conclusions: `results/codex-cp7.md`.
+
+## Second dataset: kube-apiserver (2026-11-16T18:53Z)
+
+`TARGET=/home/exedev/targets/kubernetes PKG=./cmd/kube-apiserver GOCACHE=data/kube-p4/gocache ref/p4/extract.sh
+data/kube-p4` (the dump-on binary is byte-identical to the dump-off one; it runs `--version`). 202,980 functions,
+74.5 MB of body (MinIO 136,634 / 60.7 MB), 2.92 M items, 1.36 M nodes, 93,112 byte templates (top 4,096 cover
+83.0% of nodes), 9.32 M operands, 2.21 M relocations. `ref/p4/check.sh data/kube-p4`: p4 and p4par (1, 8 threads)
+P4 OK; p4par emit 108 ms (1) / 38 ms (8), one run, load 4.4.

@@ -117,5 +117,5 @@ cores (4.0 s without the dump), `p4mkflat` 7 s and 3.2 GB.
   Linking a hole to the child or variable whose location it is was not done.
 - Fields the encoder does not treat as operands (register numbers, condition codes, the scale of an index)
   stay in the template bytes, so they split templates rather than being patched.
-- kube-apiserver: `ref/p4/extract.sh` takes the MinIO path from `ref/fc/run.sh`; a second workload needs
-  that path made a parameter.
+- kube-apiserver: extracted to data/kube-p4 (README.md, "Second dataset"); the MinIO path in `ref/fc/run.sh` is now
+  the default of TARGET/PKG.
