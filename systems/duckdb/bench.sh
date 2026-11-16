@@ -11,7 +11,7 @@ R=${R:-5}
 REPS=${REPS:-7}
 T=$(mktemp -d)
 mkdir -p out
-dk() { systemd-run --user --scope -q -p MemoryMax=8G ./dk "$@"; }
+dk() { systemd-run --user --scope -q -p MemoryMax=10G ./dk "$@"; }
 date -u +%Y-%m-%dT%H:%M:%SZ; uptime
 for r in $(seq "$R"); do
 	for t in 1 8; do

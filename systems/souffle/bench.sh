@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bench.sh [rounds=5]: rebuild nothing; rerun every Soufflé cell on MinIO, 1 and 8 threads, interleaved, and print
+# bench.sh [rounds=5] [data dir]: rebuild nothing; rerun every Soufflé cell, 1 and 8 threads, interleaved, and print
 # one line per (cell, threads, warm|e2e) with min/median/max ms over the rounds, after checking each output
 # against its oracle. warm = flatio's "compute" (rules only: inputs already bulk-loaded into the B-trees, output
 # writing excluded); e2e = process start to exit (reading the flat files, building the indexes, rules, writing).
@@ -8,7 +8,7 @@
 #   build/prep_lazy /home/exedev/paradigms/data/minio build/lazyfacts
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
-D=${DATA:-/home/exedev/paradigms/data/minio}
+D=${2:-${DATA:-/home/exedev/paradigms/data/minio}}
 O=$here/build/bench
 mkdir -p "$O"
 n=${1:-5}
@@ -31,7 +31,7 @@ for ((r = 0; r < n; r++)); do
 		read -r cell bin fd check <<<"$c"
 		for j in 1 8; do
 			t0=$(date +%s%N)
-			line=$(prlimit --as=6000000000 "$here/build/$bin" -j$j -F "$fd" -D "$O" 2>&1 >/dev/null | grep '^flatio:')
+			line=$(systemd-run --user --scope -q -p MemoryMax=10G "$here/build/$bin" -j$j -F "$fd" -D "$O" 2>&1 >/dev/null | grep '^flatio:')
 			t1=$(date +%s%N)
 			if ! eval "${check}" >/dev/null; then echo "$cell -j$j: CHECK FAILED" >&2; fi
 			sed -nE 's/.*compute ([0-9.]+) ms.*/\1/p' <<<"$line" >>"$tmp/$cell.$j.warm"

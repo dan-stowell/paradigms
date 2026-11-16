@@ -8,7 +8,7 @@ set -u
 D=${1:-/home/exedev/paradigms/data/minio}
 B=$(cd "$(dirname "$0")" && pwd)/cells/build
 echo "# $(date -u +%FT%TZ) $(uptime)"
-lim="prlimit --as=6000000000"
+lim="systemd-run --user --scope -q -p MemoryMax=10G"
 for t in 1 8; do
     s=$([ $t = 1 ] && echo f || echo t)   # serial / parallel schedule
     HL_NUM_THREADS=$t $lim $B/p1 $D all | grep -E "^(counts|1[abc]) .*_$s |^counts" | sed "s/^/p1 threads=$t warm /"
