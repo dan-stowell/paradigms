@@ -41,6 +41,11 @@ Milestones log:
 
 - 2026-11-16T15:40Z M0: MinIO frozen; flat files + oracles for problems 1-3 (ref/flat/README.md) extracted by hlink -dumpflat; plain 1-core C references reproduce every oracle exactly (ref/flat/check.sh); hlink's phase times on this VM in GRID.md (149 ms whole link, 8 cores); floors from bottom-up FLOOR.md. Oracle number: 0/20 paradigm cells (C column filled), 0 ATTACKS backed.
 
+- 2026-11-16T17:20Z M1 + M2: every paradigm (Goose, Futhark, Halide, Soufflé, and the added DuckDB) is correct on problems
+  1-3 against the oracles (lead rebuilt each from source and reran every check); falls-downs written with two attempts
+  (Soufflé 3a: no sort; DuckDB P2: 45 rounds x 25 statements; Futhark and Halide: lazy reach slower than eager; Goose:
+  one-array 8-worker 3b). Oracle number: **16/20** (4 paradigms x P1-P3 + the C column's 4; P4 0/4 paradigms) **+ DuckDB 3**;
+  **3 ATTACKS entries backed by measurement** (lazy decode in the flood; huge-page output; drop level synchronization).
 Now (2026-11-16T16:45Z, lead session paradigms-46): M1/M2 in flight. Merged: Goose, Futhark (GRID columns), codex-e/f/g.
 **A /clear or session end kills the session's subagents**: still running inside paradigms-46: builders souffle
 (.claude/worktrees/agent-a04daa..), halide (agent-a45ed3..), duckdb (agent-a66651..); if the session is gone, relaunch

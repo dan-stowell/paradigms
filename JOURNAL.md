@@ -49,3 +49,22 @@
 
 2026-11-16T17:03Z codex-i: profile 3a and add tuned unit-parallel/MSD radix C layout; both datasets match every address at 1/8 threads. Five interleaved >=1 s runs: MinIO medians 7.37 ms plain, 5.00 / 3.89 ms tuned; hugepage request within noise, floor not reached. Details/results: results/codex-i.md.
 - 2026-11-16T17:14:11Z merged codex-i: p3a_par 3a 5.0 / 3.9 ms (plain 7.4); the typelink string sort is 4.7 of 7.4 ms; 6.5x FLOOR.md's 0.60. Lead rerun: addr 0 differ both datasets 1/8 threads.
+
+**M1 + M2, 2026-11-16T17:20Z.** All five paradigms are correct on problems 1-3 on MinIO; the lead rebuilt every cell from
+its source and reran its oracle. None of them beats tuned C on any cell; the distances are the finding. Halide is closest
+(1a 20-27 vs 12-21 ms on 8 threads; its 1a beats *plain* C 2.5-3x on one core by compacting first), Goose next (1.5-3x,
+limited by message rounds: 1.7x scaling on 8), Futhark 2-6x (helped 1.2-1.7x by one glibc tunable), DuckDB 10-150x (every
+dense-id lookup is a hash join), Soufflé 30-200x (B-tree loading; no sort, no bytes). Across all of them two costs
+recur: **the level count of the flood** (111 levels: Futhark's ~25 passes per level, Halide's pipeline call per level,
+DuckDB's ~25 statements per round, Goose's message exchange per superstep, OpenMP's barrier collapsing under load) and
+**page size** (every runtime that let the output or its tables onto 2 MB pages got 1.2-2x). Those became ATTACKS 3 and 2.
+ATTACKS 1 (lazy decode in the flood) holds only where a flood can do work per reached node cheaply (C 2x, Goose 1.4x on
+1 thread); in Futhark and Halide it is slower than eager, in DuckDB a tie, in Soufflé 2x its own eager but 30x C. The
+C references moved too: p1compact (partition the probe side: 1.5x), p2async (level-free), p3a_par (the typelink sort is
+two-thirds of layout), and the huge-page relocate at this VM's bandwidth bound. Wrong turns, killed by measurement: the
+"bandwidth-bound join" (it was random probes), huge-page inputs for the flood (9-12%), hlink's huge-page gain (noise),
+per-source dedup (8%). **What did the oracle number do since the last milestone? If it stalled, what is the blocker,
+and what am I doing about it?** From 0/20 + 0 ATTACKS at M0 (15:40Z) to 16/20 + DuckDB 3, and 3 measured ATTACKS. Not
+stalled. What remains for M3/M4: problem 4 in two paradigms (0 so far; the C reference and oracle exist), kube-apiserver
+for the paradigm cells, second attempts on the falls-downs (DuckDB's single recursive query, Soufflé 3a), quiet-machine
+reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a semiring BFS).
