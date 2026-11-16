@@ -236,21 +236,33 @@ and reran 19:55Z (edit 1, 1 worker: update 1.33-1.40 ms, P2 OK on both versions 
 C recompute**; retracting 12 K reachable ids withdraws each derivation round by round through 45 loop rounds. DD's own
 full run is 60-100x C (2.7 s / 1.6 s) and holds 2.7 GB of arrangements.
 
+**Observation 3: in plain C, maintenance wins both edits, retractions included, if deletions use derivation
+stamps** ([results/c-incremental.md](results/c-incremental.md), `ref/flat/p2inc.c`, 1 core, reading the stored diff
+`data/minio-edit{,2}/diff/`). Bench 20:12Z, load 0.7-1.7, 5 interleaved rounds, medians: edit 1 update **3 µs** (DD
+1.4 ms, p2 45 ms, p2par 17 ms on 8); edit 2 update **9.5 ms A->B / 5.2 ms B->A** (p2 43, p2par 14 on 8, DD 59 on 1
+worker / 29 on 8). Deletion is DRed (delete, rederive) where a fact survives the delete step if it has a derivation
+from a true fact with a smaller stamp (the clock when it was set): edit 2 retracts 32 K ids for 12 K real deaths;
+textbook DRed retracts 594 K and takes 123 ms (3x recompute). Checked on both edits and directions and by 300
+random diffs per edit against a from-scratch flood (the fuzzer found two bugs the edits did not: a method kept by a
+sig count whose remaining sources were its own targets, and a lost re-check across removals in one update). The
+same quiet window corrects DD's 8-worker edit-2 update: 29 ms, not 555 (that was load).
+
 **Attack.** (1) Give symbols a stable identity at extraction: (package path, name) or content hash, per-object
 order only as a last resort, and tie-breaks by name hash, not position; then the input diff of an edit is the edit's
 size (31 symbols), and nothing pays 0.7-1.1 s to find it. (2) Keep reach and resolve as maintained collections
-(semi-naive deltas, a grouped reduce per name key): additions propagate in ~1 ms. (3) For deletions, either accept
-recompute (the C flood is 20-50 ms) or keep per-symbol support counts / a dominator-style "who keeps this alive"
-index so a retraction does not replay every round. A hybrid policy is cheap to state: maintain on additions,
-recompute when the diff removes a live edge.
+(semi-naive deltas, a grouped reduce per name key): additions propagate in µs (C) to ~1 ms (DD). (3) For deletions,
+DRed with derivation stamps (Observation 3): exact on cycles, where per-symbol support counts are not, and its cone
+stays near the real deaths. The hybrid "maintain on additions, recompute on removals" is unnecessary, and would
+recompute on every real edit (each removes the edited function's old GC-locals edges).
 
-**What it would take.** A stable-id extraction (hlink -dumpflat keyed by name, or a mapping table written once), a
-maintained flood in C with deltas (a worklist that only pushes new edges' targets: the additive case is a few
-hundred lines; DD shows the semantics), and a measured retraction strategy. Not measured yet: 1c, layout and
+**What it would take.** A stable-id extraction (hlink -dumpflat keyed by name, or a mapping table written once; today
+`ddflow writediff` writes the mapping and diff once as flat files). The maintained flood is done (`p2inc.c`, ~700
+lines with checks and fuzzer); its edit-2 cost is now 3 M reverse-list re-checks of popular targets (a per-id count
+of smaller-stamp live predecessors would make each O(1)). Not measured yet: resolve maintained in C, 1c, layout and
 relocate after an edit (layout shifts every address after the edited function, so 3a/3b are mostly recompute unless
 sections are padded per package).
 
 **What it says about the paradigms.** None of the five original columns can state "the answer after this change";
 Datalog engines have the same semi-naive deltas inside one evaluation but discard them. DD expresses the whole
 reach as 71 lines and the update as two `feed` calls, but it is not a from-scratch engine (60-100x C), its updates get
-slower with 8 workers (per-round coordination), and identity is something it assumes, not something it provides.
+slower with 8 workers on a loaded machine (on a quiet one, edit 2: 29 ms on 8 vs 59 on 1), and identity is something it assumes, not something it provides.

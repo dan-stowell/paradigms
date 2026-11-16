@@ -16,6 +16,7 @@
    `func15.3 -> func15.2`, ... Name-keyed identity sees those as delete + add (and their DWARF children too). A
    compiler that named closures by content or source position-stable keys would shrink such diffs.
 
-4. **One worker for updates, many for the first full run.** Small updates are 1.4 ms on 1 worker and 6-10 ms on 8
+4. **One worker for updates, many for the first full run** (under load only: quiet, 20:12Z, 8 workers update edit 2 in
+   29 ms vs 59 on 1). Small updates are 1.4 ms on 1 worker and 6-10 ms on 8
    (MinIO edit 1); edit 2's update is 71 ms on 1 and ~540 ms on 8. The full run is 1.8x faster on 8. A relinker
    would want the full build wide and the edit loop narrow; timely fixes the worker count per process.

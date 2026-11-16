@@ -11,7 +11,8 @@ edit, how much of a relink's work must be redone?** Full details and every numbe
 - **Deleting one call kills 12,320 live ids (the console UI, 21.5 MB of image) and the update is slower than
   recomputing in C**: 65 ms (1 worker) vs p2 49 ms / p2par 19 ms (8). Retraction through the 45-round loop is
   DD's costly case.
-- **8 workers make updates slower**, sometimes 8x (edit 2: 526-555 ms median on 8 vs 65 on 1); full runs get
+- **8 workers make updates slower under load**, sometimes 8x (edit 2: 526-555 ms median on 8 vs 65 on 1, load 4.4-5.6;
+  on a quiet machine, 20:12Z, 29 ms on 8 vs 59 on 1: results/c-incremental.md); full runs get
   1.8-2.2x faster on 8. Per-round coordination dominates small, many-round updates.
 - **The first obstacle is the ids, not the engine.** Ids are positional; edit 1 adds 3 slots to one object and
   shifts every id after it. Identity had to be rebuilt by name/hash matching plus a Myers alignment for unnamed

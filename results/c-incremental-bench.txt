@@ -1,0 +1,40 @@
+start 2026-11-16T20:12:47Z  20:12:47 up  4:57,  0 user,  load average: 0.69, 0.77, 2.01
+  counts order minio-edit: update A->B	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+  counts order minio-edit: update B->A	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+  counts plain minio-edit: update A->B	over-deleted 2 live, rederived 3 directly, set 3, edges read 0, reverse entries 17, support checks 0
+  counts plain minio-edit: update B->A	over-deleted 7 live, rederived 6 directly, set 6, edges read 8, reverse entries 25, support checks 0
+  counts order minio-edit2: update A->B	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+  counts order minio-edit2: update B->A	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+  counts plain minio-edit2: update A->B	over-deleted 594148 live, rederived 137584 directly, set 581838, edges read 3890503, reverse entries 4621812, support checks 0
+  counts plain minio-edit2: update B->A	over-deleted 578494 live, rederived 135890 directly, set 590804, edges read 3868288, reverse entries 4524205, support checks 0
+end 2026-11-16T20:14:57Z  20:14:57 up  4:59,  0 user,  load average: 1.68, 1.11, 1.97
+C p2 minio-edit recompute (flood)	1 thr	min 40.700	med 44.900	max 48.700	ms (n=5)
+C p2 minio-edit2 recompute (flood)	1 thr	min 35.700	med 42.600	max 51.100	ms (n=5)
+C p2par minio-edit recompute (best of 5)	1 thr	min 26.500	med 27.600	max 29.700	ms (n=5)
+C p2par minio-edit recompute (best of 5)	8 thr	min 15.500	med 17.300	max 19.800	ms (n=5)
+C p2par minio-edit2 recompute (best of 5)	1 thr	min 25.600	med 27.600	max 28.100	ms (n=5)
+C p2par minio-edit2 recompute (best of 5)	8 thr	min 13.000	med 14.200	max 18.300	ms (n=5)
+DD minio-edit A->B update	1 thr	min 1.360	med 1.430	max 1.810	ms (n=25)
+DD minio-edit A->B update	8 thr	min 1.790	med 2.100	max 3.620	ms (n=25)
+DD minio-edit B->A update	1 thr	min 1.340	med 1.380	max 2.730	ms (n=25)
+DD minio-edit B->A update	8 thr	min 1.720	med 2.060	max 3.170	ms (n=25)
+DD minio-edit2 A->B update	1 thr	min 54.160	med 58.620	max 83.930	ms (n=25)
+DD minio-edit2 A->B update	8 thr	min 25.400	med 29.140	max 80.520	ms (n=25)
+DD minio-edit2 B->A update	1 thr	min 50.390	med 56.980	max 79.280	ms (n=25)
+DD minio-edit2 B->A update	8 thr	min 23.530	med 30.260	max 56.040	ms (n=25)
+p2inc order minio-edit A->B first update	1 thr	min 0.036	med 0.038	max 0.047	ms (n=5)
+p2inc order minio-edit A->B later updates (4 per process)	1 thr	min 0.002	med 0.003	max 0.004	ms (n=20)
+p2inc order minio-edit B->A first update	1 thr	min 0.005	med 0.005	max 0.006	ms (n=5)
+p2inc order minio-edit B->A later updates (4 per process)	1 thr	min 0.003	med 0.004	max 0.006	ms (n=20)
+p2inc order minio-edit2 A->B first update	1 thr	min 18.033	med 18.701	max 21.116	ms (n=5)
+p2inc order minio-edit2 A->B later updates (4 per process)	1 thr	min 9.237	med 9.463	max 16.566	ms (n=20)
+p2inc order minio-edit2 B->A first update	1 thr	min 5.198	med 5.504	max 7.350	ms (n=5)
+p2inc order minio-edit2 B->A later updates (4 per process)	1 thr	min 5.044	med 5.233	max 10.110	ms (n=20)
+p2inc plain minio-edit A->B first update	1 thr	min 0.037	med 0.038	max 0.070	ms (n=5)
+p2inc plain minio-edit A->B later updates (4 per process)	1 thr	min 0.002	med 0.003	max 0.011	ms (n=20)
+p2inc plain minio-edit B->A first update	1 thr	min 0.010	med 0.011	max 0.017	ms (n=5)
+p2inc plain minio-edit B->A later updates (4 per process)	1 thr	min 0.004	med 0.005	max 0.011	ms (n=20)
+p2inc plain minio-edit2 A->B first update	1 thr	min 125.928	med 129.448	max 143.986	ms (n=5)
+p2inc plain minio-edit2 A->B later updates (4 per process)	1 thr	min 116.495	med 122.727	max 129.804	ms (n=20)
+p2inc plain minio-edit2 B->A first update	1 thr	min 116.690	med 123.401	max 127.418	ms (n=5)
+p2inc plain minio-edit2 B->A later updates (4 per process)	1 thr	min 114.653	med 120.756	max 136.976	ms (n=20)
