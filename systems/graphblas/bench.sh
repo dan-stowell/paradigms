@@ -1,4 +1,5 @@
 #!/bin/bash
+# (build first: ./build.sh; the -jit binaries are the tuned ones, their kernels cached in ~/.SuiteSparse)
 # Rerun every GraphBLAS cell's timings next to the tuned C references, interleaved in one window.
 #   systems/graphblas/bench.sh [DATA]     R=5 rounds, REPS=10 in-process repetitions per warm run
 # warm: per process, the best of REPS in-process solves (compute only, inputs already in GraphBLAS objects / memory);
@@ -9,6 +10,7 @@ cd "$(dirname "$0")"
 D=${1:-/home/exedev/paradigms/data/minio}
 R=${R:-5}
 REPS=${REPS:-10}
+REPS1=${REPS1:-5}  # P1 in-process repetitions (a P1 solve is seconds)
 C=${C:-/home/exedev/paradigms/build}
 T=$(mktemp -d)
 export OMP_WAIT_POLICY=passive
@@ -18,14 +20,16 @@ date -u +%Y-%m-%dT%H:%M:%SZ; uptime
 for r in $(seq "$R"); do
 	for t in 1 8; do
 		export GB_THREADS=$t OMP_NUM_THREADS=$t
-		run ./p2gb "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*with rule join (S) best \([0-9.]*\) ms.*/P2-flood $t warm \1\nP2-flood+rulejoins $t warm \2/p" >>"$T/x"
+		run ./p2gb-jit "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*with rule join (S) best \([0-9.]*\) ms.*/P2-flood $t warm \1\nP2-flood+rulejoins $t warm \2/p" >>"$T/x"
 		run "$C/p2par" "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*/C-p2par $t warm \1/p" >>"$T/x"
 		run "$C/p2lazy" "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*/C-p2lazy $t warm \1/p" >>"$T/x"
-		run ./p1gb "$D" "$REPS" | sed -n "s/.*1a \([0-9.]*\) ms, 1b \([0-9.]*\) ms, 1c \([0-9.]*\) ms, all \([0-9.]*\) ms.*/P1a $t warm \1\nP1b $t warm \2\nP1c $t warm \3\nP1-all $t warm \4/p" >>"$T/x"
-		run "$C/p1par" "$D" "$REPS" | sed -n "s/.*best [0-9.]* ms = join by name \([0-9.]*\) + relocation targets \([0-9.]*\).*/C-p1par-1a $t warm \1\nC-p1par-1b $t warm \2/p; s/.*content-hash join \([0-9.]*\) ms.*/C-p1par-1c $t warm \1/p" >>"$T/x"
-		GB_NOGUARD=1 run ./p1gb "$D" "$REPS" | sed -n "s/.*1a \([0-9.]*\) ms.*1c \([0-9.]*\) ms, all \([0-9.]*\) ms.*/P1a-noguard $t warm \1\nP1c-noguard $t warm \2/p" >>"$T/x"
-		echo "P2 $t e2e $(wall run ./p2gb "$D" 1)" >>"$T/x"
-		echo "P1-all $t e2e $(wall run ./p1gb "$D" 1)" >>"$T/x"
+		run ./p1gb-jit "$D" "$REPS1" | sed -n "s/.*1a \([0-9.]*\) ms, 1b \([0-9.]*\) ms, 1c \([0-9.]*\) ms, all \([0-9.]*\) ms.*/P1a $t warm \1\nP1b $t warm \2\nP1c $t warm \3\nP1-all $t warm \4/p" >>"$T/x"
+		run "$C/p1par" "$D" "$REPS1" | sed -n "s/.*best [0-9.]* ms = join by name \([0-9.]*\) + relocation targets \([0-9.]*\).*/C-p1par-1a $t warm \1\nC-p1par-1b $t warm \2/p; s/.*content-hash join \([0-9.]*\) ms.*/C-p1par-1c $t warm \1/p" >>"$T/x"
+		GB_NOGUARD=1 run ./p1gb-jit "$D" "$REPS1" | sed -n "s/.*1a \([0-9.]*\) ms.*1c \([0-9.]*\) ms, all \([0-9.]*\) ms.*/P1a-noguard $t warm \1\nP1c-noguard $t warm \2/p" >>"$T/x"
+		run ./p2gb "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*/P2-flood-nojit $t warm \1/p" >>"$T/x"
+		GB_NOGUARD=1 run ./p1gb "$D" "$REPS1" | sed -n "s/.*all \([0-9.]*\) ms.*/P1-all-noguard-nojit $t warm \1/p" >>"$T/x"
+		echo "P2 $t e2e $(wall run ./p2gb-jit "$D" 1)" >>"$T/x"
+		echo "P1-all $t e2e $(wall run ./p1gb-jit "$D" 1)" >>"$T/x"
 		echo "C-p2par $t e2e $(wall run "$C/p2par" "$D" 1)" >>"$T/x"
 	done
 done

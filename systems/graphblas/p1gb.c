@@ -10,6 +10,12 @@
 #include "gb.h"
 
 static GrB_Vector V(GrB_Type t, ix n) { GrB_Vector v; OK(GrB_Vector_new(&v, t, n)); return v; }
+// a vector held sparse (a select of a full vector is otherwise kept as an O(n) bitmap)
+static GrB_Vector SV(GrB_Type t, ix n) {
+	GrB_Vector v = V(t, n);
+	if (!getenv("GB_BITMAP_OK")) OK(GrB_Vector_set_INT32(v, GxB_SPARSE | GxB_HYPERSPARSE, GxB_SPARSITY_CONTROL));
+	return v;
+}
 // a read-only full vector over a mapped flat file (no copy)
 static GrB_Vector load(GrB_Type t, const void *p, ix n, size_t esz) {
 	GrB_Vector v = V(t, n);
@@ -25,7 +31,7 @@ static long collisions;
 
 // the 128-bit key (k1, k2) as a 60-bit index: ((k1 ^ k2 * C2) * C1) >> 4
 static GrB_Vector keyIndex(GrB_Vector k1, GrB_Vector k2, ix n) {
-	GrB_Vector t = V(GrB_UINT64, n), h = V(GrB_UINT64, n);
+	GrB_Vector t = SV(GrB_UINT64, n), h = SV(GrB_UINT64, n);
 	AP2(t, NULL, GrB_TIMES_UINT64, k2, 0x9E3779B97F4A7C15ull, UINT64, NULL);
 	OK(GrB_eWiseMult(t, NULL, NULL, GrB_BXOR_UINT64, k1, t, NULL));
 	AP2(t, NULL, GrB_TIMES_UINT64, t, 0xBF58476D1CE4E5B9ull, UINT64, NULL);
@@ -51,7 +57,7 @@ static GrB_Vector groupMax(GrB_Vector h, GrB_Vector x, GrB_Vector k1, GrB_Vector
 		for (int j = 0; j < 2; j++) {
 			if (!ks[j]) continue;
 			ix n; OK(GrB_Vector_size(&n, h));
-			GrB_Vector kx = V(GrB_UINT64, n), lo = V(GrB_UINT64, KEYS), hi = V(GrB_UINT64, KEYS);
+			GrB_Vector kx = SV(GrB_UINT64, n), lo = V(GrB_UINT64, KEYS), hi = V(GrB_UINT64, KEYS);
 			OK(GrB_eWiseMult(kx, NULL, NULL, GrB_SECOND_UINT64, h, ks[j], NULL)); // the key word on h's pattern
 			OK(GxB_Vector_build_Vector(lo, h, kx, GrB_MIN_UINT64, NULL));
 			OK(GxB_Vector_build_Vector(hi, h, kx, GrB_MAX_UINT64, NULL));
@@ -68,7 +74,7 @@ static GrB_Vector groupMax(GrB_Vector h, GrB_Vector x, GrB_Vector k1, GrB_Vector
 //   extract: the gather w(h) (a lookup per member in the hypersparse w), scattered back by h's indices
 //   mxv:     an incidence matrix G(key, member) and c = w any.first G: a merge of w with G's sorted rows
 static GrB_Vector joinBack(GrB_Vector w, GrB_Vector h, ix n) {
-	GrB_Vector c = V(GrB_UINT64, n);
+	GrB_Vector c = SV(GrB_UINT64, n);
 	if (getenv("GB_JOIN") && !strcmp(getenv("GB_JOIN"), "extract")) {
 		ix k = nv(h);
 		GrB_Vector p = V(GrB_UINT64, k);
@@ -129,23 +135,29 @@ int main(int argc, char **argv) {
 		// ---------------- 1a: the join by name ----------------
 		GrB_Vector kind = load(GrB_UINT8, kindp, N, 1), flags = load(GrB_UINT8, flagp, N, 1);
 		GrB_Vector rank = load(GrB_UINT32, rankp, N, 4), kk = load(GrB_UINT64, keyp, 2 * N, 8);
-		GrB_Vector k1 = half(kk, N, 0), k2 = half(kk, N, 1), h = keyIndex(k1, k2, N);
-		GrB_Vector keyed = V(GrB_BOOL, N), id = V(GrB_UINT64, N), val = V(GrB_UINT64, N), t = V(GrB_UINT64, N);
-		SEL(keyed, NULL, GrB_VALUENE_UINT64, k1, 0, UINT64, NULL);
+		GrB_Vector k1 = half(kk, N, 0), k2 = half(kk, N, 1);
+		// the keyed slots (k1 != 0), sparse from here on: every later step touches only them
+		GrB_Vector k1s = SV(GrB_UINT64, N), k2s = SV(GrB_UINT64, N), kindk = SV(GrB_UINT8, N);
+		SEL(k1s, NULL, GrB_VALUENE_UINT64, k1, 0, UINT64, NULL);
+		OK(GrB_eWiseMult(k2s, NULL, NULL, GrB_SECOND_UINT64, k1s, k2, NULL));
+		OK(GrB_eWiseMult(kindk, NULL, NULL, GrB_SECOND_UINT8, k1s, kind, NULL));
+		GrB_Vector h = keyIndex(k1s, k2s, N);
+		GrB_Vector id = V(GrB_UINT64, N), val = SV(GrB_UINT64, N), t = V(GrB_UINT64, N);
 		OK(GrB_Vector_apply_IndexOp_INT64(id, NULL, NULL, GrB_ROWINDEX_INT64, kind, 0, NULL));
-		AP2(val, NULL, GrB_TIMES_UINT64, rank, 1ull << 32, UINT64, NULL);           // rank << 32
 		AP1(t, NULL, GrB_MINUS_UINT64, 0xFFFFFFFFull, id, UINT64, NULL);           // ~id
-		OK(GrB_eWiseAdd(val, NULL, NULL, GrB_PLUS_UINT64, val, t, NULL));
-		GrB_Vector m45 = V(GrB_BOOL, N), m1 = V(GrB_BOOL, N), m23 = V(GrB_BOOL, N), h45 = V(GrB_UINT64, N);
-		GrB_Vector hc = V(GrB_UINT64, N), hall = V(GrB_UINT64, N), x = V(GrB_UINT64, N);
-		SEL(m45, NULL, GrB_VALUEGE_UINT8, kind, 4, UINT8, NULL);
-		SEL(m1, NULL, GrB_VALUEEQ_UINT8, kind, 1, UINT8, NULL);
+		OK(GrB_eWiseMult(val, NULL, NULL, GrB_SECOND_UINT64, k1s, rank, NULL));
+		AP2(val, NULL, GrB_TIMES_UINT64, val, 1ull << 32, UINT64, NULL);           // rank << 32
+		OK(GrB_eWiseMult(val, NULL, NULL, GrB_PLUS_UINT64, val, t, NULL));         // | ~id
+		GrB_Vector m45 = SV(GrB_BOOL, N), m1 = SV(GrB_BOOL, N), m23 = SV(GrB_BOOL, N), h45 = SV(GrB_UINT64, N);
+		GrB_Vector hc = SV(GrB_UINT64, N), hall = SV(GrB_UINT64, N), x = SV(GrB_UINT64, N);
+		SEL(m45, NULL, GrB_VALUEGE_UINT8, kindk, 4, UINT8, NULL);
+		SEL(m1, NULL, GrB_VALUEEQ_UINT8, kindk, 1, UINT8, NULL);
 		{ GrB_Vector ge2 = V(GrB_BOOL, N); // kinds 2..3: the content-addressed slots
-		  SEL(ge2, NULL, GrB_VALUEGE_UINT8, kind, 2, UINT8, NULL);
-		  SEL(m23, ge2, GrB_VALUELE_UINT8, kind, 3, UINT8, GrB_DESC_RS); GrB_free(&ge2); }
-		OK(GrB_eWiseMult(h45, m45, NULL, GrB_FIRST_UINT64, h, keyed, GrB_DESC_RS));   // kinds 4, 5 with a key
-		OK(GrB_eWiseMult(hc, m1, NULL, GrB_FIRST_UINT64, h, keyed, GrB_DESC_RS));     // kind-1 candidates
-		OK(GrB_eWiseMult(hall, m23, NULL, GrB_FIRST_UINT64, h, keyed, GrB_DESC_RSC)); // every keyed slot but 2, 3
+		  SEL(ge2, NULL, GrB_VALUEGE_UINT8, kindk, 2, UINT8, NULL);
+		  SEL(m23, ge2, GrB_VALUELE_UINT8, kindk, 3, UINT8, GrB_DESC_RS); GrB_free(&ge2); }
+		OK(GrB_Vector_apply(h45, m45, NULL, GrB_IDENTITY_UINT64, h, GrB_DESC_RS));   // kinds 4, 5 with a key
+		OK(GrB_Vector_apply(hc, m1, NULL, GrB_IDENTITY_UINT64, h, GrB_DESC_RS));     // kind-1 candidates
+		OK(GrB_Vector_apply(hall, m23, NULL, GrB_IDENTITY_UINT64, h, GrB_DESC_RSC)); // every keyed slot but 2, 3
 		OK(GrB_eWiseMult(x, NULL, NULL, GrB_SECOND_UINT64, h45, val, NULL));
 		GrB_Vector w = groupMax(h45, x, k1, k2, guard);
 		// the linker's wanted names: members with value 0 and no slot
@@ -159,7 +171,7 @@ int main(int argc, char **argv) {
 		GrB_Vector wc = groupMax(hc, x, k1, k2, guard);
 		OK(GrB_eWiseAdd(w, w, NULL, GrB_MAX_UINT64, w, wc, GrB_DESC_S));
 		// every member's canonical id: the gather w(h(member)), scattered back to the member's slot
-		GrB_Vector cw = joinBack(w, hall, N), cid = V(GrB_UINT32, N);
+		GrB_Vector cw = joinBack(w, hall, N), cid = SV(GrB_UINT32, N);
 		lowId(cid, NULL, cw, NULL);
 		canon = V(GrB_UINT32, N);
 		OK(GrB_Vector_apply(canon, NULL, NULL, GrB_IDENTITY_UINT32, id, NULL));
@@ -224,31 +236,38 @@ int main(int argc, char **argv) {
 		// ---------------- 1c: the content-hash join ----------------
 		GrB_Vector mark = load(GrB_UINT8, markp, N, 1), hk = load(GrB_UINT64, hkeyp, 2 * N, 8);
 		GrB_Vector c1 = half(hk, N, 0), c2 = half(hk, N, 1);
-		GrB_Vector mk = V(GrB_UINT8, N), m1c = V(GrB_BOOL, N);
-		OK(GrB_eWiseMult(mk, m23, NULL, GrB_FIRST_UINT8, mark, kind, GrB_DESC_RS)); // kinds 2, 3 ...
-		SEL(mk, NULL, GrB_VALUENE_UINT8, mk, 0, UINT8, NULL);                       // ... with mark 1 or 2
+		GrB_Vector mk = SV(GrB_UINT8, N), m1c = SV(GrB_BOOL, N);
+		SEL(mk, NULL, GrB_VALUENE_UINT8, mark, 0, UINT8, NULL);                     // the marked copies (sparse)
 		SEL(m1c, NULL, GrB_VALUEEQ_UINT8, mk, 1, UINT8, NULL);
+		GrB_Vector kindm = SV(GrB_UINT8, N), c1m = SV(GrB_UINT64, N), c2m = SV(GrB_UINT64, N);
+		OK(GrB_eWiseMult(kindm, NULL, NULL, GrB_SECOND_UINT8, mk, kind, NULL));
+		OK(GrB_eWiseMult(c1m, NULL, NULL, GrB_SECOND_UINT64, mk, c1, NULL));
+		OK(GrB_eWiseMult(c2m, NULL, NULL, GrB_SECOND_UINT64, mk, c2, NULL));
 		OK(GrB_Vector_dup(&canon2, canon));
 		for (int kd = 2; kd <= 3; kd++) {
-			GrB_Vector mkd = V(GrB_BOOL, N), hx = V(GrB_UINT64, N), vx = V(GrB_UINT64, N), zk = V(GrB_UINT64, N);
-			SEL(mkd, mk, GrB_VALUEEQ_UINT8, kind, kd, UINT8, GrB_DESC_S);
+			GrB_Vector mkd = SV(GrB_BOOL, N), hx = SV(GrB_UINT64, N), vx = SV(GrB_UINT64, N), zk = SV(GrB_UINT64, N);
+			SEL(mkd, NULL, GrB_VALUEEQ_UINT8, kindm, kd, UINT8, NULL);
 			// kind 2 groups by k1 alone, kind 3 by (k1, k2)
-			OK(GrB_Vector_assign_UINT64(zk, NULL, NULL, 0, GrB_ALL, N, NULL));
-			GrB_Vector hh = keyIndex(c1, kd == 3 ? c2 : zk, N);
-			OK(GrB_Vector_apply(hx, mkd, NULL, GrB_IDENTITY_UINT64, hh, GrB_DESC_S));
+			OK(GrB_Vector_apply(zk, mkd, NULL, GrB_IDENTITY_UINT64, c1m, GrB_DESC_RS)); // k1 of this kind
+			GrB_Vector k2d = SV(GrB_UINT64, N);
+			if (kd == 3) OK(GrB_eWiseMult(k2d, NULL, NULL, GrB_SECOND_UINT64, zk, c2m, NULL));
+			else OK(GrB_Vector_apply_BinaryOp2nd_UINT64(k2d, NULL, NULL, GrB_TIMES_UINT64, zk, 0, NULL));
+			GrB_Vector hh = keyIndex(zk, k2d, N);
+			OK(GrB_Vector_apply(hx, NULL, NULL, GrB_IDENTITY_UINT64, hh, NULL));
+			GrB_free(&k2d);
 			// value: mark 1 << 63 | (kind 2: size << 32) | ~id; the maximum wins
-			AP2(vx, mkd, GrB_TIMES_UINT64, c2, kd == 2 ? 1ull << 32 : 0, UINT64, GrB_DESC_S);
+			AP2(vx, mkd, GrB_TIMES_UINT64, c2m, kd == 2 ? 1ull << 32 : 0, UINT64, GrB_DESC_RS);
 			OK(GrB_eWiseMult(vx, NULL, NULL, GrB_PLUS_UINT64, vx, t, NULL));
 			if (kd == 2) { // sizes must fit in 31 bits for the value encoding
 				GrB_Vector big = V(GrB_UINT64, N);
-				SEL(big, mkd, GrB_VALUEGT_UINT64, c2, 0x7FFFFFFFull, UINT64, GrB_DESC_S);
+				SEL(big, mkd, GrB_VALUEGT_UINT64, c2m, 0x7FFFFFFFull, UINT64, GrB_DESC_S);
 				collisions += nv(big); GrB_free(&big); }
 			AP2(vx, m1c, GrB_PLUS_UINT64, vx, 1ull << 63, UINT64, GrB_DESC_S);   // (accumulates in place)
 			GrB_Vector wv = groupMax(hx, vx, c1, kd == 3 ? c2 : NULL, guard);
 			// drop groups whose winner was not reached (mark 2)
 			SEL(wv, NULL, GrB_VALUEGE_UINT64, wv, 1ull << 63, UINT64, NULL);
 			ix nx = N;
-			GrB_Vector cw2 = joinBack(wv, hx, N), cid2 = V(GrB_UINT32, nx), keep = V(GrB_BOOL, nx);
+			GrB_Vector cw2 = joinBack(wv, hx, N), cid2 = SV(GrB_UINT32, nx), keep = V(GrB_BOOL, nx);
 			lowId(cid2, NULL, cw2, NULL);
 			if (kd == 2) { // a mark-2 copy larger than the winner keeps itself
 				GrB_Vector vxp, ws = V(GrB_UINT64, nx), ms = V(GrB_UINT64, nx);
@@ -272,7 +291,7 @@ int main(int argc, char **argv) {
 		double t3 = now();
 		tg[0] = t1 - t0, tg[1] = t2 - t1, tg[2] = t3 - t2, tg[3] = t3 - t0;
 		for (int i = 0; i < 4; i++) if (tg[i] < best[i]) best[i] = tg[i];
-		GrB_Vector fr[] = {kind, flags, rank, kk, k1, k2, h, keyed, id, val, t, m45, m1, m23, h45, hc, hall, x, w, wk, wk1, wk2,
+		GrB_Vector fr[] = {kind, flags, rank, kk, k1, k2, k1s, k2s, kindk, kindm, c1m, c2m, h, id, val, t, m45, m1, m23, h45, hc, hall, x, w, wk, wk1, wk2,
 			hw, zero, ww, wc, cw, cid, dbg, bk, bk1, bk2, hb, bw, bdef, rs, rp, ri, so, po, pk, o, a, np, sp, tt, ok, base, xx,
 			sm, lim, bi, bx, okb, bz, s1, mark, hk, c1, c2, mk, m1c};
 		for (size_t i = 0; i < sizeof fr / sizeof *fr; i++) GrB_free(&fr[i]);
