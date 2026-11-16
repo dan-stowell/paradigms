@@ -202,3 +202,48 @@ three planted faults fail, independent recount/UBSan pass. User-mode perf and th
 no-store control point to metadata traversal/dispatch and memory traffic, not a 5.8 ns
 scalar-store cost. Counts, five interleaved rounds, preparation and counter scope:
 [results/codex-holes.md](results/codex-holes.md).
+
+## 5. Relink: after a small edit, maintain the answer instead of recomputing it; first make symbol identity stable
+
+**Problem.** Resolve (1) and reach (2) after a small source edit: every build today relinks from scratch.
+
+**Old shape.** A from-scratch join and flood over ~10 M facts on every link (C: p2 52 ms 1 core, p2par 17-20 ms on 8;
+p1 287 / p1par 22 ms).
+
+**Where the attack came from.** The Differential Dataflow column (added 2026-11-16, IDEAS wildcard 3), built to ask a
+question no other column can: how much of a relink's work does a small edit change? Two real edits of MinIO, rebuilt
+with the frozen toolchain and re-extracted ([results/ddflow-incremental.md](results/ddflow-incremental.md)).
+
+**Observation 1: the edit is tiny, the ids are not.** Edit 1 (a 5-line fallback added in one function) changes the
+facts of **31 symbols out of 9.7 M facts** (3.2e-6) and **3 live ids** of 663,630; edit 2 (16 lines deleted: the console
+UI start-up) changes 141 symbols and 234 edges but kills **12,320 live ids** (21.5 MB of image). But slot ids are
+positional (object base + index), so 3 added slots in object 109 renumber every slot in objects 110-1420: a raw diff
+is ~all facts. Recovering identity (pair objects, match by unique name/content key, Myers-align the unnamed DWARF
+remainder) takes **0.7-1.1 s**, outside the update times below. A "lowest id" tie-break churns 34 K resolve facts in
+edit 2 for 73 real changes.
+
+**Observation 2: an additive edit updates 35-400x faster than recompute; a retracting one does not.** DD, lead rebuilt
+and reran 19:55Z (edit 1, 1 worker: update 1.33-1.40 ms, P2 OK on both versions and from scratch). Bench 19:40Z, load
+4.4-5.6, medians: reach update edit 1 **1.4 ms (1 worker) vs C p2 52 / p2par 31 (1 thread), 9.0 (8 workers) vs p2par
+20.5**; resolve update edit 1 **0.7 ms vs p1 287 / p1par 22**. Edit 2: reach update **65 ms (1) / 555 ms (8): slower than
+C recompute**; retracting 12 K reachable ids withdraws each derivation round by round through 45 loop rounds. DD's own
+full run is 60-100x C (2.7 s / 1.6 s) and holds 2.7 GB of arrangements.
+
+**Attack.** (1) Give symbols a stable identity at extraction: (package path, name) or content hash, per-object
+order only as a last resort, and tie-breaks by name hash, not position; then the input diff of an edit is the edit's
+size (31 symbols), and nothing pays 0.7-1.1 s to find it. (2) Keep reach and resolve as maintained collections
+(semi-naive deltas, a grouped reduce per name key): additions propagate in ~1 ms. (3) For deletions, either accept
+recompute (the C flood is 20-50 ms) or keep per-symbol support counts / a dominator-style "who keeps this alive"
+index so a retraction does not replay every round. A hybrid policy is cheap to state: maintain on additions,
+recompute when the diff removes a live edge.
+
+**What it would take.** A stable-id extraction (hlink -dumpflat keyed by name, or a mapping table written once), a
+maintained flood in C with deltas (a worklist that only pushes new edges' targets: the additive case is a few
+hundred lines; DD shows the semantics), and a measured retraction strategy. Not measured yet: 1c, layout and
+relocate after an edit (layout shifts every address after the edited function, so 3a/3b are mostly recompute unless
+sections are padded per package).
+
+**What it says about the paradigms.** None of the five original columns can state "the answer after this change";
+Datalog engines have the same semi-naive deltas inside one evaluation but discard them. DD expresses the whole
+reach as 71 lines and the update as two `feed` calls, but it is not a from-scratch engine (60-100x C), its updates get
+slower with 8 workers (per-round coordination), and identity is something it assumes, not something it provides.
