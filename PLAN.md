@@ -62,7 +62,7 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T20:55Z): grid full (20/20), 5 ATTACKS backed (5 now has Obs 1-4). Merged today: unify.c, p2inc
+Now (2026-11-16T20:42Z): grid full (20/20), 5 ATTACKS backed (5 now has Obs 1-4). Merged today: unify.c, p2inc
 chain fuzz, p3inc relayout (Obs 4: addition 0.44 us, deletion ~ recompute). Running: (a) Codex `codex-relayout2` in
 /home/exedev/paradigms-c (holes/no compaction, typelink diagnosis, small slack + spare extent; wait on its PID: Codex
 output echoes EXIT lines); (b) Codex `codex-p2inc-witness` in /home/exedev/paradigms-w (fresh-state retraction cost);

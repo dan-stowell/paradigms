@@ -265,7 +265,7 @@ same quiet window corrects DD's 8-worker edit-2 update: 29 ms, not 555 (that was
 
 **Observation 4: layout must retain space as well as identities; package slack makes the addition local, not the
 deletion** ([results/c-relayout.md](results/c-relayout.md), `ref/flat/p3inc.c`, C, 1 core, 5 interleaved rounds 20:31Z,
-load 3.4-4.2; lead reran `ref/flat/check-p3inc.sh` 20:52Z: P3INC OK and P3INC INDEPENDENT OK on both edits). Today's
+load 3.4-4.2; lead reran `ref/flat/check-p3inc.sh` 20:41Z: P3INC OK and P3INC INDEPENDENT OK on both edits). Today's
 layout moves **261,723 / 352,863** common placed symbols after edits 1 / 2, changing **1.23 M / 1.82 M** relocation
 values and **35.1 / 76.7 MB** of produced image: even the 5-line addition is a full relink. Retained per-(bucket,
 package) arenas rounded up to the next 4 KB (one global typelink arena) cut that to **3 / 101,483** moved addresses,
