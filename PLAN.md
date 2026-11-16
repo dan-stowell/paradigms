@@ -62,10 +62,10 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T19:36Z): grid full (20/20). Running: Opus builders (worktrees) Differential Dataflow P2 exact +
-incremental relink after a real MinIO edit (branch worktree-agent-aa18026fc1e40ed2c, results/ddflow-incremental.md)
-and Halide P4 on the flattened stream (branch worktree-agent-ac1d106352ebc93ed, results/halide-p4flat.md); skeptic on
-5e179fe (reviews/inbox/*-codex-skeptic-full.md: triage into REVIEWS.md). On each finish: rebuild + rerun its check in
-main, merge, GRID/ATTACKS (DD: a new ATTACKS entry if the update beats recompute by orders of magnitude on a real
-edit). Then: quiet reruns of the 8-thread numbers once no builder runs (systems/*/bench.sh one at a time); then
-a fresh context.
+Now (2026-11-16T19:58Z): grid full; DD column merged, ATTACKS 5 (incremental relink) written. Running: the DD
+Opus builder (worktree-agent-aa18026fc1e40ed2c) on ref/flat/p2inc.c: a C maintained flood (additions by worklist,
+deletions by a justified strategy) over a stored unified diff (data/minio-edit{,2}/diff/), results/c-incremental.md;
+Codex in /home/exedev/paradigms-c (branch codex-review5, log codex-r5.log ending "EXIT n"): Halide P3a poisoned
+output, Goose P3b disjoint-file write, ATTACKS 2 TLB counters (results/codex-review5.md). On each: rebuild + rerun
+in main, merge, GRID/ATTACKS/REVIEWS. Then: layout + relocate after an edit (ATTACKS 5 open: per-package padding so
+3a/3b are local); quiet reruns of the 8-thread numbers when nothing runs; a fresh context (LOOP.md).
