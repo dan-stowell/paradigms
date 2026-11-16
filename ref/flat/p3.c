@@ -20,6 +20,33 @@ static int cmpTL(const void *a, const void *b) {
 	return psym[x] < psym[y] ? -1 : psym[x] > psym[y];
 }
 
+// Diagnostic sort pass only; timed repetitions use the unchanged comparator.
+static u64 comparisons, sortRead, sortString;
+static int cmpTLCount(const void *a, const void *b) {
+ u32 x = *(const u32 *)a, y = *(const u32 *)b;
+ u64 xo = soff[tlstr[x]], xn = soff[tlstr[x]+1]-xo;
+ u64 yo = soff[tlstr[y]], yn = soff[tlstr[y]+1]-yo;
+ u64 n = xn < yn ? xn : yn, used = 0;
+ while (used < n) { used++; if (sbin[xo+used-1] != sbin[yo+used-1]) break; }
+ comparisons++; sortRead += 48; sortString += used*2;
+ if (used == n && xn == yn && (!n || sbin[xo+n-1] == sbin[yo+n-1])) sortRead += 8;
+ return cmpTL(a,b);
+}
+
+// Model glibc's direct mergesort (4-byte elements). A merge leaves an untouched
+// right suffix in place; each moved element goes via temporary storage.
+static u64 sortMoves, mergeComparisons;
+static void countMerge(u32 *a, u32 n, u32 *tmp) {
+ if(n<2) return;
+ u32 left=n/2, right=n-left;
+ countMerge(a,left,tmp); countMerge(a+left,right,tmp);
+ u32 i=0,j=left,k=0;
+ while(i<left && j<n) { mergeComparisons++; tmp[k++]=cmpTL(a+i,a+j)<=0 ? a[i++] : a[j++]; }
+ while(i<left) tmp[k++]=a[i++];
+ sortMoves += 8ull*k;
+ memcpy(a,tmp,4ull*k);
+}
+
 #ifdef _OPENMP
 #include <omp.h>
 static int nthreads(void) { return omp_get_max_threads(); }
@@ -28,6 +55,7 @@ static int nthreads(void) { return 1; }
 #endif
 int main(int argc, char **argv) {
 	flatDir = argc > 1 ? argv[1] : "data/minio";
+	int layoutOnly = argc > 2 && strcmp(argv[2], "--layout") == 0;
 	int pipeline = argc > 2 && strcmp(argv[2], "--pipeline") == 0;
 	const char *output = argc > 2 + pipeline ? argv[2 + pipeline] : NULL;
 	u32 L = (u32)metaGet("p3_placed"), nunits = (u32)metaGet("nunits"), minFunc = (u32)metaGet("minFunc");
@@ -41,19 +69,24 @@ int main(int argc, char **argv) {
 	const u32 *bstart = FMAP(u32, "p3_bucket_start.u32", NULL), *bmin = FMAP(u32, "p3_bucket_minalign.u32", NULL);
 
 	// ---- 3a. addresses
-	double t0 = now();
-	u32 *addr = calloc(L, 4);
+	u32 *addr = NULL, ntl = 0, iterations = 0;
+	double phase[6] = {0}, elapsed = 0; u64 topReads = 0;
+	for (;;) {
+	double t0 = now(), mark = t0;
+	addr = calloc(L, 4);
 	// bytes per (unit, bucket, class), then each unit's block of each bucket in unit order, classes from the largest
 	// alignment down; inside a class the symbols in list order
 	u32 *csize = calloc((size_t)nunits * nBuckets * nClasses, 4);
 #define CS(u, b, c) csize[((size_t)(u) * nBuckets + (b)) * nClasses + (c)]
 	u32 *occ = malloc(4 * (size_t)L);
+	phase[0] += now()-mark; mark = now();
 	for (u32 i = 0; i < L; i++) {
 		u32 s = psize[i], b = pb[i];
 		if ((b == bText || b == bTextFIPS) && s < minFunc) s = minFunc;
 		occ[i] = rnd(s, 1u << pcl[i]);
 		if (b != bTypelink) CS(punit[i], b, pcl[i]) += occ[i];
 	}
+	phase[1] += now()-mark; mark = now();
 	for (u32 b = 1; b < nBuckets; b++) {
 		if (b == bTypelink) continue;
 		u32 va = bstart[b];
@@ -69,14 +102,16 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	u32 ntl = 0;
+	phase[2] += now()-mark; mark = now();	ntl = 0;
 	u32 *tl = malloc(4 * (size_t)L);
 	for (u32 i = 0; i < L; i++) {
 		if (pb[i] == bTypelink) { tl[ntl++] = i; continue; }
 		addr[i] = CS(punit[i], pb[i], pcl[i]);
 		CS(punit[i], pb[i], pcl[i]) += occ[i];
 	}
+	phase[3] += now()-mark; mark = now();
 	qsort(tl, ntl, 4, cmpTL);
+	phase[4] += now()-mark; mark = now();
 	u32 va = bstart[bTypelink];
 	for (u32 k = 0; k < ntl; k++) {
 		u32 i = tl[k];
@@ -84,8 +119,41 @@ int main(int argc, char **argv) {
 		addr[i] = va;
 		va += psize[i];
 	}
-	double t1 = now();
-	printf("p3a (1 core): layout %.1f ms (%u symbols, %u sorted by type string)\n", (t1 - t0) * 1e3, L, ntl);
+	double t1 = now(); phase[5] += t1-mark; elapsed += t1-t0; iterations++;
+
+ if (layoutOnly && elapsed >= 1.0) {
+  // Reconstruct unsorted typelinks for one untimed diagnostic sort.
+  ntl = 0;
+  for (u32 i=0;i<L;i++) if (pb[i]==bTypelink) tl[ntl++]=i;
+  qsort(tl, ntl, 4, cmpTLCount);
+  ntl=0; for(u32 i=0;i<L;i++) if(pb[i]==bTypelink) tl[ntl++]=i;
+  u32 *tmp=malloc(4ull*ntl); countMerge(tl,ntl,tmp); free(tmp);
+  if (mergeComparisons != comparisons) { fputs("qsort differs from traffic model\n",stderr); return 2; }
+  // Reconstruct the pre-prefix sizes to count logical top-search loads exactly.
+  memset(csize, 0, (size_t)nunits*nBuckets*nClasses*4);
+  for(u32 i=0;i<L;i++) if(pb[i]!=bTypelink) CS(punit[i],pb[i],pcl[i]) += occ[i];
+  for(u32 b=1;b<nBuckets;b++) if(b!=bTypelink)
+   for(u32 u=0;u<nunits;u++) for(int c=nClasses-1;c>=0;c--) {
+    topReads++; if(CS(u,b,c)) break;
+   }
+ }
+ free(csize); free(occ); free(tl);
+ if (!layoutOnly || elapsed >= 1.0) break;
+ free(addr);
+ }
+ printf("p3a (1 core): layout %.6f ms (%u symbols, %u sorted by type string), reps %u total %.6f s\n",
+        elapsed*1e3/iterations,L,ntl,iterations,elapsed);
+ if(layoutOnly) {
+  const char *names[]={"allocate","classify","bucket_prefix","scatter","sort","typelink_walk"};
+  u64 normal=L-ntl, cells=(u64)nunits*14*nClasses;
+  u64 rd[]={0,6ull*L+8*normal,4*(topReads+cells),L+13*normal,sortRead+sortString+sortMoves,9ull*ntl};
+  u64 wr[]={4ull*L+4ull*nunits*nBuckets*nClasses,4ull*L+4*normal,4*cells,8*normal+4ull*ntl,sortMoves,4ull*ntl};
+  for(int j=0;j<6;j++) printf("phase %s ms %.6f read %llu write %llu\n",names[j],phase[j]*1e3/iterations,
+     (unsigned long long)rd[j],(unsigned long long)wr[j]);
+  printf("sort comparisons %llu string_prefix_bytes %llu merge_read_and_write_each %llu\n",(unsigned long long)comparisons,(unsigned long long)sortString,(unsigned long long)sortMoves);
+  long bad=check32("addr",addr,L,"oracle/p3_addr.u32");
+  puts(bad ? "P3a FAIL" : "P3a OK"); return bad!=0;
+ }
 	long bad = 0;
 
 	// ---- 3b. isolated oracle addresses, or our layout propagated through final 1c canon.

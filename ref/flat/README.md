@@ -197,3 +197,16 @@ Both reach programs report mean/total kernel time and final-repetition item
 counts in addition to best time. See `results/codex-g.md` for the interleaved
 measurements and the distinction between identical live sets and variable pops.
 `check.sh` defaults to `build-g/`; set `BUILD_DIR` to override it.
+
+### Tuned C layout (3a only)
+
+`p3a_par.c` lays out unit-local bucket/class runs in parallel, scans bucket bases,
+then sorts typelinks with an MSD byte radix sort and assigns their addresses.
+It reads no `p3_addr_all.u32`; its only oracle access is the final address check.
+Build with `gcc -O3 -march=native -fopenmp -o build-i/p3a_par ref/flat/p3a_par.c`.
+Run `OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 build-i/p3a_par data/minio 1`;
+the last argument is minimum total timed seconds (default 1). All layout and sort
+work repeats, with scratch allocation and input mapping outside timing.
+`build-i/p3 data/minio --layout` profiles the original serial layout for >=1 second,
+then counts sort comparisons and logical array traffic in an untimed diagnostic pass.
+`ref/flat/bench-3a.py` reproduces the interleaved results in `results/codex-i.md`.
