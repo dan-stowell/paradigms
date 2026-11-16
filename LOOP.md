@@ -103,6 +103,10 @@ a context of about 30k tokens. Also take a fresh context after each milestone.
 
 ## VM safety
 
+- Claude Code stops for a person on an `rm` it can't rule out as dangerous (a glob or a
+  variable it can't trace, in a compound command), even in bypass mode, and nobody is watching.
+  Delete with literal paths in a command of its own (`rm -rf -- out` and then `mkdir out`), or
+  guard variables (`rm -rf -- "${D:?}/out"`).
 - 31 GiB RAM, no swap, and a runaway child OOM-kills this whole session. Cap fuzzers and
   anything with data-dependent allocation: `prlimit --as=8G`, `timeout`, or
   `systemd-run --user --scope -p MemoryMax=8G`.
