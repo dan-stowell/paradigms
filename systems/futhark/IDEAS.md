@@ -137,3 +137,13 @@ Common kill-test conventions: "grid" = MinIO columns (5.2 M slots, 9.4 M relocs,
   not below 111 x 0.9 ms.
 - **I17. The I1 idea (expand-based BFS) does not carry the lazy decode cheaply.** Lazy (decode inside the flood)
   165-200 ms vs eager flood 97-119 ms at 1 core in Futhark, the reverse of C (52.6 vs 108.7 incl. decode).
+- **I18. Copy runs of bytes as a map over output blocks with a sequential loop of slice updates inside.** P4: the
+  60.7 MB copy ~20-35 ms CPU (blocks of 1/64 of the image, `row with [a:a+m] = xs[f:f+m]` = memcpy) vs ~110 ms as
+  32-byte (index, byte) rows scattered (1 core, 17:56Z); the whole entry 411 -> 348 ms min (1 core), 220 -> 189
+  (8). Kill test for 3b: the same shape for its 109 MB image copy; dead if 3b's copy part (`3b_copy`) does not drop
+  below half. The block needs its first item (one binary search per block) and clipping at the edges.
+- **I19. Expand is the residual cost of irregular scatter in Futhark.** After I18, P4's remaining ~3x over C is
+  mostly four expands (6.33 M patched holes, 1.35 M reloc holes, 0.34 M glue relocs, 0.1 M markers), each a scan +
+  scatter + max-scan + map with its tuples materialized, plus the hole tables. Kill test: relocations per block too
+  (count per block, exscan, each block writes its own range, sequentially); dead if the entry is not below 2x C.
+  (Moving only the patch into the block loop, `4bf`, changed nothing measurable: 326-357 vs `4b` 348 ms min, 1 core.)

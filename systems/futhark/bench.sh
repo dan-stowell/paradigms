@@ -1,8 +1,9 @@
 #!/bin/bash
 # bench.sh: rerun every Futhark cell's timings; one line per (cell, cores, warm/e2e) with min / median / max.
 #   systems/futhark/bench.sh [DATADIR [P4DATADIR]]       (builds first: YIELD=1 build.sh)
-#   CELLS="4 4g" bench.sh: only those cells. Problem 4 reads P4DATADIR; after each P4 cell the plain C reference
-#   (ref/p4/p4.c, 1 core, lay out + emit) runs 5 times, so the two are interleaved in the same window.
+#   CELLS="4 4bf" bench.sh: only those cells. Problem 4 reads P4DATADIR; after each P4 cell the C references
+#   (ref/p4/p4.c 1 core, ref/p4/p4par.c 8 threads; best lay out + emit of 10 warm reps) run 5 times each, so the
+#   two are interleaved in the same window. P4 at 1 thread of the multicore backend: CFGS=multicore:1:1mc.
 # 1 core = the sequential `c` backend; 8 cores = the `multicore` backend, both the stock runtime ("spin": its
 # join loops and scan look-backs busy-wait) and the patched one ("yield": sched_yield() in those loops, build.sh).
 # warm: the entry alone, inputs resident, repeated in one process until a run is >= ~1 s (REPS below);
@@ -29,7 +30,9 @@ cells="1a p1 20 40
 3b p3 6 20
 4 p4 5 10
 4g p4 5 10
-4f p4 3 6"
+4f p4 3 6
+4b p4 5 10
+4bf p4 5 10"
 echo "# ${HUGE:+HUGE=1 }$(date -u +%FT%TZ) load $(cut -d' ' -f1-3 /proc/loadavg) data $D"
 echo "$cells" | while read cell p r1 r8; do
 	[ -n "$CELLS" ] && ! echo " $CELLS " | grep -q " $cell " && continue

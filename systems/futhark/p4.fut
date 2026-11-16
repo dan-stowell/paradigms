@@ -1,7 +1,8 @@
 -- p4.fut: problem 4, code generation by shape (ref/p4/README.md): every function body fc wrote, rebuilt from
--- byte templates + operands + glue. Lengths by a map, places by a scan, the bytes by a copy shaped as a scatter
--- (or a gather), the holes by a flattened map over (item, hole) pairs scattered into the image, the jumps by
--- gathering at[v], the relocations by a filter and two expands. The C driver (p4.c) only loads and checks.
+-- byte templates + operands + glue. Lengths by a map, places by an exclusive scan, the bytes by a copy (five
+-- shapes, `how` in emit), the holes by a flattened map over (node, hole) pairs scattered into the image, the jumps
+-- by gathering at[v], the relocations by three expands (reloc holes, glue relocations, markers) concatenated.
+-- The C driver (p4.c) only loads the flat files and checks the outputs.
 import "lib/segmented/segmented"
 
 def exscan [n] (xs: [n]i64) : [n]i64 = map2 (-) (scan (+) 0 xs) xs
