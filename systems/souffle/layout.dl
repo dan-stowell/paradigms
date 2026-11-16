@@ -10,8 +10,8 @@
 .input id(IO=flat, index="true", cols="p3_sym.u32")
 .decl tlstr(i: unsigned, s: unsigned)
 .input tlstr(IO=flat, index="true", cols="p3_tlstr.u32")
-.decl str(s: unsigned, t: symbol)
-.input str(IO=flat, index="true", cols="p3_str.str")
+.decl str(s: unsigned, k: unsigned, t: symbol)         // a type string: its first 8 bytes as a number, itself
+.input str(IO=flat, index="true", cols="p3_str.key8,p3_str.str")
 .decl bstart(b: unsigned, a: unsigned)
 .input bstart(IO=flat, index="true", cols="p3_bucket_start.u32")
 .decl bmin(b: unsigned, a: unsigned)
@@ -48,15 +48,19 @@ addr(i, x + y) :- occ(b, c, u, i, _), cbase(b, c, u, x), y = sum o : { occ(b, c,
 
 // typelinks: sorted by type string, then id; va = round_up(va, 2^class), then += size. Every typelink here has
 // the same class and a size that is a multiple of it, so the address is the rounded start plus the sizes of
-// the typelinks before it (checked: `tlcheck` must be empty)
-.decl tl(i: unsigned, t: symbol, g: unsigned, size: unsigned, c: unsigned)
-tl(i, t, g, z, c) :- sym(i, 6, c, z, _), tlstr(i, s), str(s, t), id(i, g).
+// the typelinks before it (checked: `tlcheck` must be empty). "Before": a smaller 8-byte prefix (a numeric range
+// of an index), or the same prefix and a smaller string (symbols compare as strings), or the same string and a
+// smaller id. (Comparing the symbols alone, 33 K x 33 K string compares, took 4.6 s on 8 threads.)
+.decl tl(i: unsigned, k: unsigned, t: symbol, g: unsigned, size: unsigned, c: unsigned)
+tl(i, k, t, g, z, c) :- sym(i, 6, c, z, _), tlstr(i, s), str(s, k, t), id(i, g).
 .decl tlcheck(i: unsigned)
-tlcheck(i) :- tl(i, _, _, z, c), (tl(_, _, _, _, c2), c2 != c ; z band ((1 bshl c) - 1) != 0).
+tlcheck(i) :- tl(i, _, _, _, z, c), (tl(_, _, _, _, _, c2), c2 != c ; z band ((1 bshl c) - 1) != 0).
 .decl tlstart(a: unsigned)
-tlstart(RND(a, 1 bshl c)) :- bstart(6, a), tl(_, _, _, _, c).
-addr(i, x + y1 + y2) :- tl(i, t, g, _, _), tlstart(x), y1 = sum z : { tl(_, t2, _, z, _), t2 < t },
-                        y2 = sum z : { tl(_, t, g2, z, _), g2 < g }.
+tlstart(RND(a, 1 bshl c)) :- bstart(6, a), tl(_, _, _, _, _, c).
+addr(i, x + y1 + y2 + y3) :- tl(i, k, t, g, _, _), tlstart(x),
+                             y1 = sum z : { tl(_, k2, _, _, z, _), k2 < k },
+                             y2 = sum z : { tl(_, k, t2, _, z, _), t2 < t },
+                             y3 = sum z : { tl(_, k, t, g2, z, _), g2 < g }.
 
 .output tlcheck(IO=flat, cols="layout_tlcheck.u32", exitafter="2")
 .output addr(IO=flat, cols="-,p3_addr.u32", exitafter="2")

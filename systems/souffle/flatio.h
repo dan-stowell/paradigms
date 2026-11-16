@@ -98,6 +98,26 @@ inline Col openStrings(const std::string& dir, const std::string& name, SymbolTa
 	return c;
 }
 
+// "P.key8": per string id of the table P, its first 8 bytes as a big-endian number (zero-padded), so that numeric
+// order is bytewise order on the 8-byte prefixes
+inline Col openPrefixKeys(const std::string& dir, const std::string& name) {
+	std::string base = name.substr(0, name.size() - 5);
+	size_t ob, bb;
+	const uint64_t* off = (const uint64_t*)mapFile(dir + "/" + base + ".off.u64", ob);
+	const uint8_t* bin = mapFile(dir + "/" + base + ".bin", bb);
+	static std::vector<std::vector<int64_t>> keep;
+	keep.emplace_back(ob / 8 - 1);
+	auto& k = keep.back();
+	for (size_t i = 0; i < k.size(); i++) {
+		uint64_t v = 0;
+		for (size_t j = 0; j < 8; j++) v = v << 8 | (off[i] + j < off[i + 1] ? bin[off[i] + j] : 0);
+		k[i] = (int64_t)v;
+	}
+	Col c;
+	c.p = (const uint8_t*)k.data(), c.n = k.size(), c.size = 8;
+	return c;
+}
+
 inline Col openCol(const std::string& dir, const std::string& name) {
 	Col c;
 	size_t bytes;
@@ -216,7 +236,10 @@ void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable&
 	std::vector<Col> cols;
 	size_t nv = 0;
 	for (auto& f : split(opt(d, "cols")))
-		cols.push_back(f.size() > 4 && f.substr(f.size() - 4) == ".str" ? openStrings(dir, f, st) : openCol(dir, f)), nv += cols.back().width;
+		cols.push_back(f.size() > 4 && f.substr(f.size() - 4) == ".str" ? openStrings(dir, f, st)
+		               : f.size() > 5 && f.substr(f.size() - 5) == ".key8" ? openPrefixKeys(dir, f)
+		                                                                    : openCol(dir, f)),
+		    nv += cols.back().width;
 	// leading columns: the CSR row; then the element's position (index=true) or its position in its row (pos=true)
 	std::string csr = opt(d, "csr");
 	bool byRow = !csr.empty(), byIndex = opt(d, "index") == "true", byPos = opt(d, "pos") == "true";
