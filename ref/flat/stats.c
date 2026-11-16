@@ -1,22 +1,23 @@
-// Single-threaded flat-file statistics. Build/run commands are in the request;
+// gcc -O2 -march=native -o build/stats ref/flat/stats.c
+// build/stats /home/exedev/paradigms/data/minio
 // BFS uses FIFO level boundaries, retaining p2.c's interface revisits and method rounds.
 #include "flat.h"
 
 enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16 };
 
 static u8 *live, *iface, *ifaceDone;
-static u32 *stack;
+static u32 *queue;
 static size_t sp;
 static inline void mark(u32 c) {
 	if (c && !live[c]) {
 		live[c] = 1;
-		stack[sp++] = c;
+		queue[sp++] = c;
 	}
 }
 static inline void setIface(u32 c) {
 	if (c && !iface[c]) {
 		iface[c] = 1;
-		if (live[c]) stack[sp++] = c;
+		if (live[c]) queue[sp++] = c;
 	}
 }
 
@@ -35,7 +36,7 @@ static int reach(void) {
 
 	u64 levels[6] = {0}, symbols[6] = {0}, total = 0;
 	live = calloc(N, 1), iface = calloc(N, 1), ifaceDone = calloc(N, 1);
-	stack = malloc(4 * (size_t)N * 3);
+	queue = malloc(4 * (size_t)N * 3);
 	for (u32 g = 1; g <= nsl; g++) iface[g] = (fl[g] & fIface) != 0;
 	u8 *sigSeen = calloc(nsig, 1), *named = calloc(nstr + 1, 1);
 	// sig ids are (name, type) pairs; a method's (name, mtyp) is looked up in a hash of the live sigs
@@ -54,50 +55,49 @@ static int reach(void) {
 			int b = width == 1 ? 0 : width < 16 ? 1 : width < 256 ? 2 : width < 4096 ? 3 : width < 65536 ? 4 : 5;
 			levels[b]++, symbols[b] += width, depth++, total++;
 			while (head < end) {
-			u32 c = stack[head++];
-			if (c > nsl || !(fl[c] & fDef)) continue;
-			if (fl[c] & fReflect) reflectSeen = 1;
-			int uii = (fl[c] & fGoType) && iface[c];
-			if (uii) {
-				if (ifaceDone[c]) continue;
-				ifaceDone[c] = 1;
-			}
-			for (u32 e = eoff[c]; e < eoff[c + 1]; e++) {
-				u32 t = ed[e];
-				switch (ek[e]) {
-				case 0:
-					if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !iface[t]) {
-						iface[t] = 1;
-						if (live[t]) stack[sp++] = t;
-					}
-					mark(t);
-					break;
-				case 1: setIface(t); break;
-				case 2:
-					if (!sigSeen[t]) {
-						sigSeen[t] = 1;
-						u64 k = (u64)sigName[t] << 32 | sigType[t];
-						for (u64 h = mix64(k) & (hs - 1);; h = (h + 1) & (hs - 1)) {
-							if (sigTab[h] == 0) { sigTab[h] = k + 1; break; }
-							if (sigTab[h] == k + 1) break;
+				u32 c = queue[head++];
+				if (c > nsl || !(fl[c] & fDef)) continue;
+				if (fl[c] & fReflect) reflectSeen = 1;
+				int uii = (fl[c] & fGoType) && iface[c];
+				if (uii) {
+					if (ifaceDone[c]) continue;
+					ifaceDone[c] = 1;
+				}
+				for (u32 e = eoff[c]; e < eoff[c + 1]; e++) {
+					u32 t = ed[e];
+					switch (ek[e]) {
+					case 0:
+						if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !iface[t]) {
+							iface[t] = 1;
+							if (live[t]) queue[sp++] = t;
 						}
+						mark(t);
+						break;
+					case 1: setIface(t); break;
+					case 2:
+						if (!sigSeen[t]) {
+							sigSeen[t] = 1;
+							u64 k = (u64)sigName[t] << 32 | sigType[t];
+							for (u64 h = mix64(k) & (hs - 1);; h = (h + 1) & (hs - 1)) {
+								if (sigTab[h] == 0) { sigTab[h] = k + 1; break; }
+								if (sigTab[h] == k + 1) break;
+							}
+						}
+						break;
+					case 3: named[t] = 1; break;
 					}
-					break;
-				case 3: named[t] = 1; break;
 				}
+				if (uii)
+					for (u32 m = moff[c]; m < moff[c + 1]; m++) {
+						setIface(mTyp[m]);
+						markable[nm++] = m;
+					}
 			}
-			if (uii)
-				for (u32 m = moff[c]; m < moff[c + 1]; m++) {
-					setIface(mTyp[m]);
-					markable[nm++] = m;
-				}
-		}
 		}
 		printf("round %d: %u levels\n", rounds, depth);
 		sp = 0;
 		// the methods something can now call
 		u32 keep = 0;
-		size_t before = sp;
 		for (u32 i = 0; i < nm; i++) {
 			u32 m = markable[i];
 			int call = (reflectSeen && mExp[m]) || named[mName[m]];
@@ -115,7 +115,7 @@ static int reach(void) {
 			}
 		}
 		nm = keep;
-		if (sp == before && sp == 0) break;
+		if (sp == 0) break;
 	}
 
 	size_t nlive = 0;
@@ -130,6 +130,8 @@ static int reach(void) {
 		printf("%s %llu %llu\n", labels[b], (unsigned long long)levels[b], (unsigned long long)symbols[b]);
 	long bad = check32("live", list, nlive, "oracle/p2_live.u32");
 	printf(bad ? "P2 FAIL\n" : "P2 OK\n");
+	free(live); free(iface); free(ifaceDone); free(queue);
+	free(sigSeen); free(named); free(sigTab); free(markable); free(list);
 	return bad != 0;
 }
 
