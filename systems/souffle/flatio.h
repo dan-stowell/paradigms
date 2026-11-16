@@ -250,7 +250,7 @@ void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable
 	stats.lastWrite = msSince(stats.start);
 	static int written = 0;
 	written++;
-	if (!opt(d, "exitafter").empty() && written >= std::stoi(opt(d, "exitafter"))) { // the last output: exit, do not free every relation
+	if (!getenv("FLATIO_NOEXIT") && !opt(d, "exitafter").empty() && written >= std::stoi(opt(d, "exitafter"))) { // the last output: exit, do not free every relation
 		stats.report();
 		fflush(stdout);
 		_exit(0);

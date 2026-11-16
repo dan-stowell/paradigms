@@ -1,0 +1,31 @@
+// Problem 1c, second shape: no copy relations; the rules read the slot columns directly, so Soufflé answers each
+// group's aggregate with a range scan of an index of `slot` that the loader bulk-builds (see resolve_c.dl).
+
+.type id = unsigned
+
+.decl slot(g: id, kind: unsigned, mark: unsigned, k1: unsigned, k2: unsigned)
+.input slot(IO=flat, index="true", cols="p1_kind.u8,p1c_mark.u8,p1_hashkey.u64x2")
+.decl canon(g: id, c: id)
+.input canon(IO=flat, index="true", cols="oracle/p1_canon.u32")
+
+.decl group2(k1: unsigned)
+group2(k1) :- slot(_, 2, 1, k1, _).
+.decl size2(k1: unsigned, s: unsigned)
+size2(k1, s) :- group2(k1), s = max ss : { slot(_, 2, 1, k1, ss) }.
+.decl win2(k1: unsigned, w: id, s: unsigned)
+win2(k1, w, s) :- size2(k1, s), w = min g : { slot(g, 2, 1, k1, s) }.
+.decl group3(k1: unsigned, k2: unsigned)
+group3(k1, k2) :- slot(_, 3, 1, k1, k2).
+.decl win3(k1: unsigned, k2: unsigned, w: id)
+win3(k1, k2, w) :- group3(k1, k2), w = min g : { slot(g, 3, 1, k1, k2) }.
+
+.decl moved(g: id, w: id)
+moved(g, w) :- win2(k1, w, _), slot(g, 2, 1, k1, _), g != w.
+moved(g, w) :- win2(k1, w, ws), slot(g, 2, 2, k1, s), s <= ws.
+moved(g, w) :- win3(k1, k2, w), slot(g, 3, m, k1, k2), m != 0, g != w.
+
+.decl final(g: id, c: id)
+final(g, w) :- moved(g, w).
+final(g, c) :- canon(g, c), !moved(g, _).
+
+.output final(IO=flat, cols="-,p1c_canon.u32", exitafter="1")
