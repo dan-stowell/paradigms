@@ -165,7 +165,10 @@ rerun): precomputing each of the 2.38 M items as a flat blob with its holes reba
 emits in **48.3/48.5/48.9 ms vs p4's 88.9/98.4/98.6** (2x); merging pieces 2.3x (A: hole-free neighbours) or 17.4x
 (B: one run per function) then adds only 1.08-1.10x (A 44.0, B 44.7 ms). On 8 threads: p4par 16.1/18.4/22.2, D 13.7,
 A 11.9, B 12.3 ms median. **The cost is the indirection per piece** (item -> template -> segment -> hole range), not
-the copies. (c) The typed shape does not fix the bytes (74.6% of nodes in the top 4,096 *byte* templates); one
+the copies. The paradigm cells' top-K curves give the same split from the other side (Halide, Goose: keep
+the commonest K templates, the rest as glue): copying all 60.7 MB as 136 K hole-free runs takes 12.8 ms (1 thread) /
+4.8 (8); each hole costs ~5.8 ns (8.0 M holes ~ 46 ms) and each template piece ~40 ns. So once the stream is flat, the
+**holes** are most of what is left: C's B variant (one run per function) at 44.7 ms is almost exactly its 8 M holes. (c) The typed shape does not fix the bytes (74.6% of nodes in the top 4,096 *byte* templates); one
 splitter is purely mechanical: disp8 exactly when the operand fits in int8, **0 exceptions in 4,864,669 holes**.
 
 **Attack.** Two independent steps. (1) Flatten the emit stream: resolve item -> template -> segment -> holes once
