@@ -9,5 +9,6 @@ gcc -O2 -march=native -fopenmp -o "$here/build/p3par" "$here/ref/flat/p3.c"
 ok=0
 export OMP_WAIT_POLICY=${OMP_WAIT_POLICY:-passive} # spinning barriers collapse ~100x when the 8 cores are shared (JOURNAL 16:20Z)
 for p in p1 p2 p3 p1par p2par p2pipe p2lazy p3par; do "$here/build/$p" "$d" || ok=1; done
+"$here/build/p2lazy" "$d" 1 --aux | tail -1 || ok=1
 "$here/build/p3" "$d" --pipeline | tail -1 || ok=1
 exit $ok

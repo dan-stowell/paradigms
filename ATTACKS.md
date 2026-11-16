@@ -40,8 +40,10 @@ all of it is 133-139 ms; a lazy one should be a fraction). The columnar relocati
 produced, i.e. a cost hlink does not pay (it reads the object files in place); what the measurement shows is that
 the *layout* of the references matters more than pre-decoding them.
 
-**What it would take / next.** (a) Decode aux and the interface kinds lazily too, from columns, to make the hlink
-comparison exact. (b) Dedup per source: measured 16:09Z, a deduped CSR (8.32 M -> 5.28 M edges) floods in 23.9-29.1 ms vs 26.2-32.5 on 1 thread (~8%; 8-thread runs swamped at load 6): duplicates hit cache lines already loaded, so not worth a pass. (c) Ask the paradigms: a lazy decode inside a flood is
+**What it would take / next.** (a) Done for aux (codex-e, results/codex-e.md; `build/p2lazy <data> N --aux` decodes the
+1.48 M raw funcdata aux records from new `aux_*` columns inside the flood): +6.9 ms MinIO / +9.3 ms kube on 1 thread
+(59.9 -> 66.8, 77.2 -> 86.5 best of 5, 16:12Z), so the lazy flood *with its own aux decode* still beats the eager pipeline
+*without* one by 1.6x. Kinds 1-3 and method tables remain precomputed; the hlink comparison stays withdrawn. (b) Dedup per source: measured 16:09Z, a deduped CSR (8.32 M -> 5.28 M edges) floods in 23.9-29.1 ms vs 26.2-32.5 on 1 thread (~8%; 8-thread runs swamped at load 6): duplicates hit cache lines already loaded, so not worth a pass. (c) Ask the paradigms: a lazy decode inside a flood is
 a gather inside a fixpoint. Futhark/Halide want the edge list materialized (the eager shape that loses here);
 Soufflé's rule `live(t) <- live(s), rel(s, r), target(r, t)` evaluated semi-naively is exactly the lazy shape,
 if its join on `rel` runs over the columns rather than a B-tree. That is the kill test for each paradigm's P2 cell:

@@ -119,6 +119,8 @@ static void dumpFlat(void) {
 	u64 *nkey = calloc(2 * (size_t)(N + 1), 8), *hkey = calloc(2 * (size_t)(N + 1), 8);
 	u32 *rank = calloc(N + 1, 4);
 	u32 *slotRel = calloc(N + 2, 4);
+	u32 *auxStart = calloc(N + 2, 4);
+	vecu32 auxPkg = {0}, auxIdx = {0};
 	VEC(i32) relOff = {0};
 	vecu8 relSiz = {0};
 	VEC(u16) relType = {0};
@@ -138,6 +140,7 @@ static void dumpFlat(void) {
 			u32 g = o->base + j;
 			const u8 *s = osym(o, j);
 			slotRel[g] = (u32)relOff.n;
+			auxStart[g] = (u32)auxPkg.n;
 			u8 k = j < h64Lo ? 1 : j < hLo ? 2 : j < npLo ? 3 : j < o->nalldef ? 4 : 5;
 			kind[g] = k;
 			bool dwarf = isDwarfKind(symType(s));
@@ -167,6 +170,15 @@ static void dumpFlat(void) {
 				hmark[g] = (f & hashedFlags) ? 1 : (f & flRef) ? 2 : 0;
 			}
 			if (j < o->nalldef) {
+				u32 na;
+				auxp as = oAuxs(o, j, &na);
+				for (u32 a = 0; a < na; a++) {
+					auxp ax = AUX(as, a);
+					if (aType(ax) == AuxFuncdata) {
+						VPUSH(auxPkg, aPkg(ax));
+						VPUSH(auxIdx, aIdx(ax));
+					}
+				}
 				u32 nr;
 				relocp rs = oRelocs(o, j, &nr);
 				for (u32 r = 0; r < nr; r++) {
@@ -185,6 +197,10 @@ static void dumpFlat(void) {
 	}
 	objPkgOff[nobjs] = (u32)objPkg.n;
 	slotRel[N + 1] = (u32)relOff.n;
+	auxStart[N + 1] = (u32)auxPkg.n;
+	wfile("aux_start.u32", auxStart, 4 * (size_t)(N + 2));
+	WVEC("aux_pkg.u32", auxPkg);
+	WVEC("aux_idx.u32", auxIdx);
 	slotRel[0] = 0;
 	meta("nrel", relOff.n);
 	meta("p1_named", (u64)nNamed);
@@ -542,6 +558,7 @@ static void dumpFlat(void) {
 	u32 rend = (u32)rOffv.n;
 	VPUSH(prel, rend);
 	meta("p3_placed", psym.n);
+	size_t nFixed;
 	// Relocation targets that the linker places outside 3a's buckets (its own symbols: runtime.firstmoduledata,
 	// runtime.buildVersion, ...): their addresses are a given input of 3b, like the bucket starts are of 3a.
 	{
@@ -558,7 +575,7 @@ static void dumpFlat(void) {
 				VPUSH(fid, c);
 				VPUSH(fad, a_);
 			}
-		meta("p3_fixed", fid.n);
+		nFixed = fid.n;
 		WVEC("p3_fixed_id.u32", fid);
 		WVEC("p3_fixed_addr.u32", fad);
 		free(isPlaced);
@@ -604,6 +621,7 @@ static void dumpFlat(void) {
 	WVEC("oracle/p3_addr.u32", paddr);
 	wfile("oracle/p3_image.bin", out, (size_t)outSize);
 	meta("image_bytes", (u64)outSize);
+	meta("p3_fixed", nFixed); // preserve the existing datasets' appended metadata order
 	fclose(metaF);
 	fprintf(stderr, "dumpflat: wrote %s\n", flatDir);
 }
