@@ -1,0 +1,50 @@
+// Problem 2, reach, attempt 1: README.md's rules written literally (reach.dl is the tuned version).
+
+.type id = unsigned           // a symbol id (canonical slot id; 0 = none)
+.type str = unsigned          // a method name (string id)
+
+// ---- the graph (flat files; flatio.h reads them)
+.decl root(s: id)
+.input root(IO=flat, cols="p2_roots.u32")
+.decl flag(s: id, f: unsigned)                       // 1 def, 4 reflect, 8 gotype, 16 iface
+.input flag(IO=flat, index="true", cols="p2_flags.u8")
+.decl edge(s: id, t: unsigned, kind: unsigned)       // kind 0 plain, 1 useiface, 2 ifacemethod, 3 namedmethod
+.input edge(IO=flat, csr="p2_edge_off.u32", cols="p2_edge_dst.u32,p2_edge_kind.u8")
+.decl sigdef(x: unsigned, name: str, typ: id)         // an interface method signature
+.input sigdef(IO=flat, index="true", cols="p2_sig_name.u32,p2_sig_type.u32")
+.decl method(t: id, name: str, mtyp: id, ifn: id, tfn: id, exported: unsigned)   // a type's methods
+.input method(IO=flat, csr="p2_meth_off.u32", cols="p2_meth_name.u32,p2_meth_mtyp.u32,p2_meth_ifn.u32,p2_meth_tfn.u32,p2_meth_exported.u8")
+
+.decl def(s: id) inline
+def(s) :- flag(s, f), f band 1 != 0.
+.decl gotype(s: id) inline
+gotype(s) :- flag(s, f), f band 9 = 9.               // a defined type descriptor
+.decl plain(s: id, t: id) inline
+plain(s, t) :- edge(s, t, 0).
+
+// ---- the flood
+.decl live(s: id)
+.decl iface(t: id)                                   // a type converted to an interface
+.decl sig(name: str, typ: id)                        // an interface method some live code may call
+.decl named(name: str)                               // a method name called by reflection-like code
+.decl reflect()                                      // some live code calls reflect's Method
+.decl cand(name: str, mtyp: id, ifn: id, tfn: id, exported: unsigned)  // a method of a live iface type
+
+live(r)    :- root(r).
+live(t)    :- live(s), plain(s, t).
+iface(t)   :- flag(t, f), f band 16 != 0.
+iface(t)   :- live(s), edge(s, t, 1).
+iface(t)   :- live(s), iface(s), gotype(s), plain(s, t), gotype(t).
+sig(n, ty) :- live(s), edge(s, x, 2), sigdef(x, n, ty).
+named(n)   :- live(s), edge(s, n, 3).
+reflect()  :- live(s), flag(s, f), f band 5 = 5.
+
+iface(mt), cand(n, mt, ifn, tfn, ex) :- live(s), iface(s), gotype(s), method(s, n, mt, ifn, tfn, ex).
+
+.decl called(mtyp: id, ifn: id, tfn: id)
+called(mt, ifn, tfn) :- cand(_, mt, ifn, tfn, 1), reflect().
+called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), sig(n, mt).
+called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), named(n).
+live(x) :- (called(x, _, _) ; called(_, x, _) ; called(_, _, x)), x != 0.
+
+.output live(IO=flat, cols="p2_live.u32", last="true")

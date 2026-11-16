@@ -1,0 +1,261 @@
+// flatio.h: binary column input/output for compiled Soufflé programs (the flat files of ref/flat/README.md).
+//
+// A .dl file names its inputs and outputs with IO=flat directives, for example
+//   .input  edge(IO=flat, csr="p2_edge_off.u32", cols="p2_edge_dst.u32,p2_edge_kind.u8")
+//   .input  flag(IO=flat, index=true, cols="p2_flags.u8")
+//   .output live(IO=flat, cols="live.u32")
+// Input tuples: [row (csr) | position (index=true)] then one value per column (a .u64x2 file gives two).
+// Output: column j of the relation (in its first index's order) goes to the j-th file ("-" skips it).
+//
+// Soufflé's own reader interface is one virtual call and one heap tuple per row, then an unhinted insert;
+// so build.sh rewrites the generated code's `getReader(...)->readAll(*rel)` into `flatio::readAll(..., *rel)`,
+// which has the relation's concrete type: it builds the tuples from the mmap'd columns in parallel, sorts them
+// in each index's order and bulk-loads every B-tree index (btree_set::load, linear time). Relations that are
+// not B-trees (brie, eqrel) get a parallel hinted insert. Non-flat IO falls through to Soufflé's IOSystem.
+#pragma once
+#include <fcntl.h>
+#include <omp.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <chrono>
+#include <cstdio>
+#include <cstring>
+#include <parallel/algorithm>
+#include <string>
+#include <vector>
+
+namespace flatio {
+using namespace souffle;
+using Clock = std::chrono::steady_clock;
+inline double msSince(Clock::time_point a) { return std::chrono::duration<double, std::milli>(Clock::now() - a).count(); }
+
+struct Stats {
+	Clock::time_point start = Clock::now();
+	double load = 0, write = 0, lastWrite = 0; // lastWrite: ms from start to the end of the last output
+	size_t tuples = 0;
+	// compute = everything up to the last output that is not reading or writing; teardown = freeing the relations
+	~Stats() { report(); }
+	void report() {
+		double total = msSince(start);
+		if (getenv("FLATIO_QUIET")) return;
+		fprintf(stderr, "flatio: load %.1f ms (%zu tuples), compute %.1f ms, write %.1f ms, teardown %.1f ms, threads %d\n", load,
+		        tuples, lastWrite - load - write, write, total - lastWrite, omp_get_max_threads());
+	}
+};
+inline Stats stats;
+
+struct Col {
+	const uint8_t* p = nullptr;
+	size_t n = 0;     // elements
+	int size = 4;     // bytes per element
+	int width = 1;    // values per element (2 for .u64x2)
+	bool sgn = false; // signed
+	RamDomain get(size_t i, int j) const {
+		const uint8_t* q = p + (i * width + j) * size;
+		switch (size) {
+		case 1: return *q;
+		case 2: { uint16_t v; memcpy(&v, q, 2); return v; }
+		case 4: {
+			if (sgn) { int32_t v; memcpy(&v, q, 4); return v; }
+			uint32_t v; memcpy(&v, q, 4); return v;
+		}
+		default: { int64_t v; memcpy(&v, q, 8); return v; }
+		}
+	}
+};
+
+inline const uint8_t* mapFile(const std::string& path, size_t& bytes) {
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd < 0) throw std::runtime_error("flatio: cannot open " + path);
+	struct stat st;
+	fstat(fd, &st);
+	bytes = st.st_size;
+	void* m = bytes ? mmap(nullptr, bytes, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0) : nullptr;
+	close(fd);
+	if (m == MAP_FAILED) throw std::runtime_error("flatio: cannot map " + path);
+	return (const uint8_t*)m;
+}
+
+inline Col openCol(const std::string& dir, const std::string& name) {
+	Col c;
+	size_t bytes;
+	c.p = mapFile(dir + "/" + name, bytes);
+	std::string sfx = name.substr(name.rfind('.') + 1);
+	if (sfx == "u8") c.size = 1;
+	else if (sfx == "u16") c.size = 2;
+	else if (sfx == "u32") c.size = 4;
+	else if (sfx == "i32") c.size = 4, c.sgn = true;
+	else if (sfx == "i64" || sfx == "u64") c.size = 8;
+	else if (sfx == "u64x2") c.size = 8, c.width = 2;
+	else throw std::runtime_error("flatio: unknown column type " + name);
+	c.n = bytes / (c.size * c.width);
+	return c;
+}
+
+inline std::vector<std::string> split(const std::string& s) {
+	std::vector<std::string> out;
+	size_t a = 0;
+	while (a <= s.size()) {
+		size_t b = s.find(',', a);
+		if (b == std::string::npos) b = s.size();
+		if (b > a) out.push_back(s.substr(a, b - a));
+		a = b + 1;
+	}
+	return out;
+}
+inline std::string opt(const std::map<std::string, std::string>& d, const std::string& k) {
+	auto it = d.find(k);
+	return it == d.end() ? "" : it->second;
+}
+
+// the comparator of a B-tree index type, if it is one
+template <class T>
+struct btreeOf { static constexpr bool ok = false; };
+template <class K, class C, class A, unsigned B, class S, class W, class U>
+struct btreeOf<btree_set<K, C, A, B, S, W, U>> { static constexpr bool ok = true; using cmp = C; };
+template <class K, class C, class A, unsigned B, class S, class W, class U>
+struct btreeOf<btree_multiset<K, C, A, B, S, W, U>> { static constexpr bool ok = true; using cmp = C; };
+
+// does relation type R have index member ind_k? (C++17: Soufflé's headers need make_span, gone in C++20)
+#define FLATIO_HAS(k)                                                                         \
+	template <class R, class = void>                                                          \
+	struct has_ind_##k : std::false_type {};                                                  \
+	template <class R>                                                                        \
+	struct has_ind_##k<R, std::void_t<decltype(std::declval<R&>().ind_##k)>> : std::true_type {};
+FLATIO_HAS(0) FLATIO_HAS(1) FLATIO_HAS(2) FLATIO_HAS(3) FLATIO_HAS(4) FLATIO_HAS(5) FLATIO_HAS(6) FLATIO_HAS(7) FLATIO_HAS(8)
+#undef FLATIO_HAS
+template <class T>
+using bare = std::remove_cv_t<std::remove_reference_t<T>>;
+
+// sort a copy of v in the index's order and bulk-load it
+template <class Ind, class V>
+void loadIndex(Ind& ind, const V& v, bool sorted) {
+	using C = typename btreeOf<Ind>::cmp;
+	C c;
+	if (sorted) {
+		Ind t = Ind::load(v.begin(), v.end());
+		ind.swap(t);
+		return;
+	}
+	if (std::is_sorted(v.begin(), v.end(), [&](const auto& a, const auto& b) { return c.less(a, b); })) {
+		Ind t = Ind::load(v.begin(), v.end());
+		ind.swap(t);
+		return;
+	}
+	V w(v);
+	__gnu_parallel::sort(w.begin(), w.end(), [&](const auto& a, const auto& b) { return c.less(a, b); });
+	Ind t = Ind::load(w.begin(), w.end());
+	ind.swap(t);
+}
+
+template <class R, class V>
+void bulkLoad(R& rel, V& v) {
+	if constexpr (has_ind_0<R>::value) {
+		static_assert(btreeOf<bare<decltype(rel.ind_0)>>::ok, "flatio: non-btree index");
+		using C0 = typename btreeOf<bare<decltype(rel.ind_0)>>::cmp;
+		C0 c0;
+		// set semantics: sort in the first index's order and drop duplicates; then every index from that
+		auto lt0 = [&](const auto& a, const auto& b) { return c0.less(a, b); };
+		if (!std::is_sorted(v.begin(), v.end(), lt0)) __gnu_parallel::sort(v.begin(), v.end(), lt0);
+		v.erase(std::unique(v.begin(), v.end(), [&](const auto& a, const auto& b) { return c0.equal(a, b); }), v.end());
+		loadIndex(rel.ind_0, v, true);
+#define FLATIO_IND(k)                                                                                    \
+	if constexpr (has_ind_##k<R>::value) {                                                              \
+		static_assert(btreeOf<bare<decltype(rel.ind_##k)>>::ok, "flatio: non-btree index");               \
+		loadIndex(rel.ind_##k, v, false);                                                               \
+	}
+		FLATIO_IND(1) FLATIO_IND(2) FLATIO_IND(3) FLATIO_IND(4) FLATIO_IND(5) FLATIO_IND(6) FLATIO_IND(7)
+		static_assert(!has_ind_8<R>::value, "flatio: more than 8 indexes");
+#undef FLATIO_IND
+	} else {
+#pragma omp parallel
+		{
+			auto h = rel.createContext();
+#pragma omp for schedule(static)
+			for (size_t i = 0; i < v.size(); i++) rel.insert(v[i], h);
+		}
+	}
+}
+
+template <class R>
+void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable& rt, R& rel) {
+	if (opt(d, "IO") != "flat") {
+		IOSystem::getInstance().getReader(d, st, rt)->readAll(rel);
+		return;
+	}
+	auto t0 = Clock::now();
+	using T = typename R::t_tuple;
+	constexpr size_t arity = std::tuple_size<T>::value;
+	std::string dir = opt(d, "fact-dir");
+	std::vector<Col> cols;
+	size_t nv = 0;
+	for (auto& f : split(opt(d, "cols"))) cols.push_back(openCol(dir, f)), nv += cols.back().width;
+	std::string csr = opt(d, "csr");
+	bool lead = !csr.empty() || opt(d, "index") == "true";
+	if (nv + lead != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": columns do not match arity");
+	size_t n = cols.empty() ? 0 : cols[0].n;
+	for (auto& c : cols)
+		if (c.n != n) throw std::runtime_error("flatio: " + opt(d, "name") + ": columns differ in length");
+	std::vector<T> v(n);
+	auto fill = [&](size_t i, RamDomain row) {
+		T& t = v[i];
+		size_t k = 0;
+		if (lead) t[k++] = row;
+		for (auto& c : cols)
+			for (int j = 0; j < c.width; j++) t[k++] = c.get(i, j);
+	};
+	if (!csr.empty()) {
+		Col off = openCol(dir, csr);
+		if (off.get(off.n - 1, 0) != (RamDomain)n) throw std::runtime_error("flatio: " + csr + " does not cover the columns");
+#pragma omp parallel for schedule(dynamic, 4096)
+		for (size_t r = 0; r < off.n - 1; r++)
+			for (size_t i = off.get(r, 0), e = off.get(r + 1, 0); i < e; i++) fill(i, r);
+	} else {
+#pragma omp parallel for schedule(static)
+		for (size_t i = 0; i < n; i++) fill(i, i);
+	}
+	bulkLoad(rel, v);
+	stats.tuples += v.size();
+	stats.load += msSince(t0);
+	if (getenv("FLATIO_VERBOSE")) fprintf(stderr, "flatio: %s %zu tuples %.1f ms\n", opt(d, "name").c_str(), v.size(), msSince(t0));
+}
+
+template <class R>
+void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable& rt, const R& rel) {
+	if (opt(d, "IO") != "flat") {
+		IOSystem::getInstance().getWriter(d, st, rt)->writeAll(rel);
+		return;
+	}
+	auto t0 = Clock::now();
+	using T = typename R::t_tuple;
+	constexpr size_t arity = std::tuple_size<T>::value;
+	std::string dir = opt(d, "output-dir");
+	if (dir.empty()) dir = ".";
+	auto names = split(opt(d, "cols"));
+	if (names.size() != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": output columns do not match arity");
+	std::vector<T> all(rel.begin(), rel.end());
+	for (size_t j = 0; j < arity; j++) {
+		if (names[j] == "-") continue;
+		Col c = {};
+		std::string sfx = names[j].substr(names[j].rfind('.') + 1);
+		c.size = sfx == "u8" ? 1 : sfx == "u16" ? 2 : sfx == "u32" || sfx == "i32" ? 4 : 8;
+		std::vector<uint8_t> buf(all.size() * c.size);
+		for (size_t i = 0; i < all.size(); i++) memcpy(&buf[i * c.size], &all[i][j], c.size); // little-endian
+		std::string path = dir + "/" + names[j];
+		FILE* f = fopen(path.c_str(), "wb");
+		if (!f) throw std::runtime_error("flatio: cannot write " + path);
+		fwrite(buf.data(), 1, buf.size(), f);
+		fclose(f);
+	}
+	stats.write += msSince(t0);
+	stats.lastWrite = msSince(stats.start);
+	if (opt(d, "last") == "true") { // the program's last output: exit without freeing every relation
+		stats.report();
+		fflush(stdout);
+		_exit(0);
+	}
+}
+} // namespace flatio
