@@ -31,7 +31,7 @@ enum Item { Glue { g: u32 }, Piece { n: u32, s: u32 } }    // a glue run, or seg
 struct Op { v: i64, a: i64 }
 struct GRel { off: u32, siz: u8, rtype: u16, sym: u32, add: i64 }
 struct Rel { off: i64, add: i64, sym: u32, rtype: u16, siz: u8 }
-var items: Item[>..] = [];
+var items: Item[>..<] = [];
 var fitem: i64[>..] = [];       // per function: its first item (local), and one past the last
 var ntmpl: u32[>..] = [];       // per node: its template
 var nop: i64[>..] = [];         // per node: its first operand (local)
@@ -43,7 +43,7 @@ var grels: GRel[>..] = [];
 var fmark: i64[>..] = [];       // per function: its markers in marks
 var marks: GRel[>..] = [];
 var item0 = 0;                  // this worker's first item, function, glue run, node
-var at: i64[>..] = [];          // per item: where it goes (local)
+var at: i64[>..<] = [];         // per item: where it goes (local)
 var code: u8[>..] = [];
 var rels: Rel[>..<] = [];
 
@@ -161,6 +161,37 @@ fn put(P: i64, v: i64, w: u8) {
 }
 
 // ---- 2. emit: copy each item's bytes, patch the holes of node segments
+inline fn emit_item(i: i64) -> i64 {
+    let p = at[i];
+    var nerr = 0;
+    match items[i] {
+        Glue x => {
+            code[p..at[i + 1]].move_from(gbin[goff[x.g]..goff[x.g + 1]]);
+            for k in grel0[x.g]..grel0[x.g + 1] {
+                let r = grels[k];
+                rels.push(Rel { off: p + r.off, add: r.add, sym: r.sym, rtype: r.rtype, siz: r.siz });
+            }
+        },
+        Piece x => {
+            let sg = segs[tseg0[ntmpl[x.n]] + x.s];
+            code[p..p + sg.len].move_from(tbin[sg.bin..sg.bin + sg.len]);
+            let o = nop[x.n] - sg.o0;        // operand of hole h: o + h
+            for h in sg.h0..sg.h1 {
+                let hl = holes[h];
+                let op = ops[o + h];
+                let P = p + hl.at;
+                match hl.enc {
+                    encInt => put(P, op.v, hl.w),
+                    encRel32 => put(P, at[op.v - item0] + op.a - (P + 4), 4),
+                    encReloc => rels.push(Rel { off: P, add: op.a, sym: op.v as! u32, rtype: hl.rtype, siz: hl.w }),
+                    _ => { nerr++; },
+                }
+            }
+        },
+    }
+    return nerr;
+}
+
 fn emit() -> i64 {
     rels.clear();
     var nerr = 0;
@@ -170,42 +201,81 @@ fn emit() -> i64 {
             let r = marks[m];
             rels.push(Rel { off: fstart + r.off, add: r.add, sym: r.sym, rtype: r.rtype, siz: 0 });
         }
-        for i in fitem[f]..fitem[f + 1] {
-            let p = at[i];
-            match items[i] {
-                Glue x => {
-                    code[p..at[i + 1]].move_from(gbin[goff[x.g]..goff[x.g + 1]]);
-                    for k in grel0[x.g]..grel0[x.g + 1] {
-                        let r = grels[k];
-                        rels.push(Rel { off: p + r.off, add: r.add, sym: r.sym, rtype: r.rtype, siz: r.siz });
-                    }
-                },
-                Piece x => {
-                    let sg = segs[tseg0[ntmpl[x.n]] + x.s];
-                    code[p..p + sg.len].move_from(tbin[sg.bin..sg.bin + sg.len]);
-                    let o = nop[x.n] - sg.o0;        // operand of hole h: o + h
-                    for h in sg.h0..sg.h1 {
-                        let hl = holes[h];
-                        let op = ops[o + h];
-                        let P = p + hl.at;
-                        match hl.enc {
-                            encInt => put(P, op.v, hl.w),
-                            encRel32 => put(P, at[op.v - item0] + op.a - (P + 4), 4),
-                            encReloc => rels.push(Rel { off: P, add: op.a, sym: op.v as! u32, rtype: hl.rtype, siz: hl.w }),
-                            _ => { nerr++; },
-                        }
-                    }
-                },
-            }
-        }
+        for i in fitem[f]..fitem[f + 1] { nerr += emit_item(i); }
     }
     return nerr;
+}
+
+// ---- the variant "commonest K templates only, the rest as glue" (README): every node of another template
+// becomes glue, merged with the glue around it into one run per stretch of its function. The runs are cut from a
+// full emit (the bytes a fallback generator would give), so jumps inside a run are already patched; jumps out of
+// the kept nodes are pointed at (new item, offset in it).
+fn keep_set(K: i64) -> u8[>..] {
+    let nt = load_u32("node_tmpl.u32");
+    var cnt: i64[>..] = [];
+    cnt.resize(tseg0.len, 0);
+    for t in nt { cnt[t] += 1; }
+    var ids: u32[>..] = [];
+    for t in cnt.len { ids.push(t as! u32); }
+    sort(ids) { x, y => cnt[x] > cnt[y] || (cnt[x] == cnt[y] && x < y) };
+    var keep: u8[>..] = [];
+    keep.resize(cnt.len, 0);
+    for r in min(K, ids.len) { keep[ids[r]] = 1; }
+    return keep;
+}
+
+fn kept(i: i64, keep: u8[:]) -> bool {
+    return match items[i] { Glue x => false, Piece x => keep[ntmpl[x.n]] != 0 };
+}
+
+fn glue_rare(K: i64) {
+    let keep = keep_set(K);
+    var newid: i64[>..] = [];       // per old item: the new item it falls in, and its offset there
+    var delta: i64[>..] = [];
+    var nitems: Item[>..] = [];
+    for f in fitem.len - 1 {
+        let i1 = fitem[f + 1];
+        fitem[f] = nitems.len;
+        var i = newid.len;
+        while i < i1 {
+            if kept(i, keep) { newid.push(nitems.len); delta.push(0); nitems.push(items[i]); i++; continue; }
+            let start = i;
+            rels.clear();
+            while i < i1 && !kept(i, keep) { newid.push(nitems.len); delta.push(at[i] - at[start]); emit_item(i); i++; }
+            gbin.append(code[at[start]..at[i]]);
+            goff.push(gbin.len);
+            for r in rels { grels.push(GRel { off: (r.off - at[start]) as u32, siz: r.siz, rtype: r.rtype, sym: r.sym, add: r.add }); }
+            grel0.push(grels.len);
+            nitems.push(Item.Glue { g: (goff.len - 2) as u32 });
+        }
+    }
+    fitem[fitem.len - 1] = nitems.len;
+    for i in items.len {
+        guard kept(i, keep) else { continue; }
+        match items[i] {
+            Glue x => {},
+            Piece x => {
+                let sg = segs[tseg0[ntmpl[x.n]] + x.s];
+                let o = nop[x.n] - sg.o0;
+                for h in sg.h0..sg.h1 {
+                    if holes[h].enc != encRel32 { continue; }
+                    let op = ops[o + h];
+                    let v = op.v - item0;
+                    ops[o + h] = Op { v: newid[v] + item0, a: op.a + delta[v] };
+                }
+            },
+        }
+    }
+    items.clear();
+    items.append(nitems);
+    at.clear();
+    at.resize(items.len + 1, 0);
 }
 
 // ---- messages
 struct Ready { k: i64 }
 struct Go { go: bool }
-struct Done { k: i64, layout: f64, emit: f64, bytes: i64, nerr: i64 }
+struct Done { k: i64, layout: f64, emit: f64, bytes: i64, pieces: i64, nerr: i64 }
 struct Out { k: i64, code: u8[], rels: Rel[] }
 
 fn run<T>(k: i64, W: i64, f0: i64, f1: i64, tag: T) {
@@ -216,6 +286,11 @@ fn run<T>(k: i64, W: i64, f0: i64, f1: i64, tag: T) {
     let n = layout();
     let hb = fresh_pages(code, n, huge);
     code.resize(n, 0);
+    if env_set("P4_K") {
+        emit();
+        glue_rare(env_int("P4_K", 0));
+        guard layout() == n else { abort("the glued layout differs"); }
+    }
     qput(Ready { k: k });
     let reps = env_int("P4_REPS", 1);
     for rep in reps + 1 {
@@ -225,7 +300,7 @@ fn run<T>(k: i64, W: i64, f0: i64, f1: i64, tag: T) {
         let t1 = clock();
         let nerr = emit();
         let t2 = clock();
-        qput(Done { k: k, layout: ms(t0, t1), emit: ms(t1, t2), bytes: bytes, nerr: nerr });
+        qput(Done { k: k, layout: ms(t0, t1), emit: ms(t1, t2), bytes: bytes, pieces: items.len, nerr: nerr });
     }
     let g = qget<Mail<T, Go>>();
     qput(Out { k: k, code: code[..], rels: rels[..] });
@@ -277,6 +352,7 @@ fn main() {
     var emt: f64[>..] = [];
     var size: i64[>..] = [];
     size.resize(W, 0);
+    var pieces = 0;
     var nerr = 0;
     for rep in reps + 1 {
         let ta = clock();
@@ -284,12 +360,14 @@ fn main() {
         var lmax = 0.0;
         var emax = 0.0;
         nerr = 0;
+        pieces = 0;
         for j in W {
             let d = qget<Done>();
             lmax = max(lmax, d.layout);
             emax = max(emax, d.emit);
             size[d.k] = d.bytes;
             nerr += d.nerr;
+            pieces = pieces + d.pieces;
         }
         let tb = clock();
         if rep > 0 { wall.push(ms(ta, tb)); lay.push(lmax); emt.push(emax); }
@@ -353,7 +431,7 @@ fn main() {
     spread(note, "layout", lay);
     spread(note, "emit", emt);
     report(note, "join", t2, t3);
-    format(note, img.len, " bytes, ", rel.len, " relocations (", rbad, " differ); ");
+    format(note, img.len, " bytes, ", pieces, " pieces, ", rel.len, " relocations (", rbad, " differ); ");
     report(note, "check sort", ts, clock());
     print(note);
     print(if bad == 0 { "P4 OK" } else { "P4 FAIL" });
