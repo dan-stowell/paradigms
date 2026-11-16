@@ -20,7 +20,7 @@ static GrB_Vector load(GrB_Type t, const void *p, ix n, size_t esz) {
 #define AP2(w, m, op, u, s, T, d) OK(GrB_Vector_apply_BinaryOp2nd_##T(w, m, NULL, op, u, s, d))
 #define AP1(w, m, op, s, u, T, d) OK(GrB_Vector_apply_BinaryOp1st_##T(w, m, NULL, op, s, u, d))
 #define SEL(w, m, op, u, s, T, d) OK(GrB_Vector_select_##T(w, m, NULL, op, u, s, d))
-static GrB_Descriptor useIdx; // GrB_Vector index lists: use the vector's indices, not its values
+static GrB_Descriptor useIdx, useJ; // GrB_Vector index lists: use the vector's indices, not its values
 static long collisions;
 
 // the 128-bit key (k1, k2) as a 60-bit index: ((k1 ^ k2 * C2) * C1) >> 4
@@ -64,6 +64,26 @@ static GrB_Vector groupMax(GrB_Vector h, GrB_Vector x, GrB_Vector k1, GrB_Vector
 	}
 	return w;
 }
+// the join back to the members: c(i) = w(h(i)) for every entry i of h (where w has that key). Two forms:
+//   extract: the gather w(h) (a lookup per member in the hypersparse w), scattered back by h's indices
+//   mxv:     an incidence matrix G(key, member) and c = w any.first G: a merge of w with G's sorted rows
+static GrB_Vector joinBack(GrB_Vector w, GrB_Vector h, ix n) {
+	GrB_Vector c = V(GrB_UINT64, n);
+	if (getenv("GB_JOIN") && !strcmp(getenv("GB_JOIN"), "extract")) {
+		ix k = nv(h);
+		GrB_Vector p = V(GrB_UINT64, k);
+		OK(GxB_Vector_extract_Vector(p, NULL, NULL, w, h, NULL));
+		OK(GxB_Vector_assign_Vector(c, NULL, NULL, p, h, useIdx));
+		GrB_free(&p);
+		return c;
+	}
+	GrB_Matrix G;
+	OK(GrB_Matrix_new(&G, GrB_BOOL, (ix)1 << 60, n));
+	OK(GxB_Matrix_build_Scalar_Vector(G, h, h, TRUE_, useJ));
+	OK(GrB_vxm(c, NULL, NULL, GxB_ANY_FIRST_UINT64, w, G, NULL));
+	GrB_free(&G);
+	return c;
+}
 // ~(u32)v: the id in the low half of rank << 32 | ~id
 static void lowId(GrB_Vector out, GrB_Vector mask, GrB_Vector v, GrB_Descriptor d) {
 	ix n; OK(GrB_Vector_size(&n, v));
@@ -92,6 +112,8 @@ int main(int argc, char **argv) {
 	gbInit();
 	OK(GrB_Descriptor_new(&useIdx));
 	OK(GrB_Descriptor_set_INT32(useIdx, GxB_USE_INDICES, GxB_ROWINDEX_LIST));
+	OK(GrB_Descriptor_new(&useJ)); // build G(h(i), i): rows from h's values, columns from its indices
+	OK(GrB_Descriptor_set_INT32(useJ, GxB_USE_INDICES, GxB_COLINDEX_LIST));
 	// loading: the relocations' source slot (slot_rel's CSR rows expanded: the only plain loop)
 	u32 *relSlotp = malloc(4 * nrel);
 	for (ix g = 1; g <= ns; g++)
@@ -137,9 +159,7 @@ int main(int argc, char **argv) {
 		GrB_Vector wc = groupMax(hc, x, k1, k2, guard);
 		OK(GrB_eWiseAdd(w, w, NULL, GrB_MAX_UINT64, w, wc, GrB_DESC_S));
 		// every member's canonical id: the gather w(h(member)), scattered back to the member's slot
-		ix nall = nv(hall);
-		GrB_Vector cw = V(GrB_UINT64, nall), cid = V(GrB_UINT32, nall);
-		OK(GxB_Vector_extract_Vector(cw, NULL, NULL, w, hall, NULL));
+		GrB_Vector cw = joinBack(w, hall, N), cid = V(GrB_UINT32, N);
 		lowId(cid, NULL, cw, NULL);
 		canon = V(GrB_UINT32, N);
 		OK(GrB_Vector_apply(canon, NULL, NULL, GrB_IDENTITY_UINT32, id, NULL));
@@ -147,7 +167,7 @@ int main(int argc, char **argv) {
 		AP2(dbg, NULL, GrB_BAND_UINT8, flags, 2, UINT8, NULL);
 		SEL(dbg, NULL, GrB_VALUENE_UINT8, dbg, 0, UINT8, NULL);
 		OK(GrB_Vector_assign_UINT32(canon, dbg, NULL, 0, GrB_ALL, N, GrB_DESC_S));   // debug-only references: 0
-		OK(GxB_Vector_assign_Vector(canon, NULL, GrB_SECOND_UINT32, cid, hall, useIdx));
+		OK(GrB_eWiseAdd(canon, NULL, NULL, GrB_SECOND_UINT32, canon, cid, NULL));
 		// builtins: the winner if it is a definition (rank bit 29 = value bit 61)
 		GrB_Vector bk = load(GrB_UINT64, bkeyp, 2 * nb, 8), bk1 = half(bk, nb, 0), bk2 = half(bk, nb, 1);
 		GrB_Vector hb = keyIndex(bk1, bk2, nb), bw = V(GrB_UINT64, nb), bdef = V(GrB_UINT64, nb);
@@ -227,13 +247,12 @@ int main(int argc, char **argv) {
 			GrB_Vector wv = groupMax(hx, vx, c1, kd == 3 ? c2 : NULL, guard);
 			// drop groups whose winner was not reached (mark 2)
 			SEL(wv, NULL, GrB_VALUEGE_UINT64, wv, 1ull << 63, UINT64, NULL);
-			ix nx = nv(hx);
-			GrB_Vector cw2 = V(GrB_UINT64, nx), cid2 = V(GrB_UINT32, nx), keep = V(GrB_BOOL, nx);
-			OK(GxB_Vector_extract_Vector(cw2, NULL, NULL, wv, hx, NULL));
+			ix nx = N;
+			GrB_Vector cw2 = joinBack(wv, hx, N), cid2 = V(GrB_UINT32, nx), keep = V(GrB_BOOL, nx);
 			lowId(cid2, NULL, cw2, NULL);
 			if (kd == 2) { // a mark-2 copy larger than the winner keeps itself
-				GrB_Vector vxp = V(GrB_UINT64, nx), ws = V(GrB_UINT64, nx), ms = V(GrB_UINT64, nx);
-				OK(GxB_Vector_extract_Vector(vxp, NULL, NULL, vx, hx, useIdx)); // each member's own value, in order
+				GrB_Vector vxp, ws = V(GrB_UINT64, nx), ms = V(GrB_UINT64, nx);
+				OK(GrB_Vector_dup(&vxp, vx)); // each member's own value
 				AP2(ws, NULL, GrB_BAND_UINT64, cw2, 0x7FFFFFFF00000000ull, UINT64, NULL);  // winner's size
 				AP2(ms, NULL, GrB_BAND_UINT64, vxp, 0x7FFFFFFF00000000ull, UINT64, NULL);  // member's size
 				GrB_Vector big = V(GrB_BOOL, nx);
@@ -245,7 +264,7 @@ int main(int argc, char **argv) {
 				OK(GrB_Vector_apply(cid2, big, NULL, GrB_IDENTITY_UINT32, cid2, GrB_DESC_RSC));
 				GrB_free(&vxp), GrB_free(&ws), GrB_free(&ms), GrB_free(&big), GrB_free(&m2);
 			}
-			OK(GxB_Vector_assign_Vector(canon2, NULL, GrB_SECOND_UINT32, cid2, hx, useIdx));
+			OK(GrB_eWiseAdd(canon2, NULL, NULL, GrB_SECOND_UINT32, canon2, cid2, NULL));
 			GrB_free(&mkd), GrB_free(&hx), GrB_free(&vx), GrB_free(&zk), GrB_free(&hh), GrB_free(&wv);
 			GrB_free(&cw2), GrB_free(&cid2), GrB_free(&keep);
 		}
