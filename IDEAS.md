@@ -18,11 +18,11 @@ abstracts or memory and say so: check before citing):
 | idea | source | test | status |
 |---|---|---|---|
 | Winner rule as one max-reduce over a packed key `rank<<32 \| ~id` | resolve-reach 4, futhark I5 | every 1a cell uses it; the plain C reference does | alive: P1 OK in plain C |
-| Method rule as a monotone Datalog program evaluated as one rule set | resolve-reach 11, souffle | Soufflé P2 cell: same live set, time vs 41-46 ms plain C | open |
-| Frontier BFS with level synchronisation: cost tied to level count (110 levels in hlink) | resolve-reach 9, futhark I1 | Futhark/Halide P2: time per level x levels | open |
-| Layout as a scan with an associative "round up then add" operator | layout-codegen L2, futhark I8 | Futhark 3a: scan form vs sequential walk | open |
-| Halide algorithm/schedule split on gather/scatter (relocate) | halide I4-I6 | Halide 3b: schedules tried, ms each | open |
-| Share-nothing threads: a flood partitioned by id range, cross edges as messages | goose 10 | Goose P2 at 8 workers vs 1 | open |
+| Method rule as a monotone Datalog program evaluated as one rule set | resolve-reach 11, souffle | Soufflé P2 cell: same live set, time vs 41-46 ms plain C | **measured** (GRID): correct, 1227-1467 / 431 ms (1/8 thr), ~30x C; methods forced into stratified rounds |
+| Frontier BFS with level synchronisation: cost tied to level count (110 levels in hlink) | resolve-reach 9, futhark I1 | Futhark/Halide P2: time per level x levels | **killed for Futhark** (results/levelfree.md: 45 -> 15 levels within noise; passes per level are the cost); Halide batched-level test running (results/halide-levelfree.md) |
+| Layout as a scan with an associative "round up then add" operator | layout-codegen L2, futhark I8 | Futhark 3a: scan form vs sequential walk | **killed**: scan 22 / 10 vs loop 14 / 7.3 ms (1/8; GRID) |
+| Halide algorithm/schedule split on gather/scatter (relocate) | halide I4-I6 | Halide 3b: schedules tried, ms each | **measured** (systems/halide/CELLS.md): 24.9-27 on 8, 4-5x C; byte-at-a-time copy is the cost |
+| Share-nothing threads: a flood partitioned by id range, cross edges as messages | goose 10 | Goose P2 at 8 workers vs 1 | **measured**: 1.7x at 8 (supersteps); async 1.3-1.5x better (ATTACKS 3) |
 
 | Per-source edge dedup before the flood (25% of read edges repeat) | lead, reachfacts.py | p2par on a deduped CSR, 1 thread | killed: ~8% (23.9-29.1 vs 26.2-32.5 ms), 16:09Z |
 | Reach over the eager CSR is the wrong shape; decode in the flood | lead, ATTACKS 1 | p2lazy vs p2pipe | alive: 52.6 / 13.6 vs 108.7 / 30.1 ms |
@@ -35,9 +35,9 @@ abstracts or memory and say so: check before citing):
 
 | system | why | source | status |
 |---|---|---|---|
-| SuiteSparse:GraphBLAS | reach as masked BFS over a boolean semiring; the natural sparse-linear-algebra form | wildcard top 1, resolve-reach 10 | open: after M2 |
+| SuiteSparse:GraphBLAS | reach as masked BFS over a boolean semiring; the natural sparse-linear-algebra form | wildcard top 1, resolve-reach 10 | **added M3** (P1, P2) |
 | GraphIt | a schedule language for graph algorithms: Halide's axis on the problem Halide strains at | halide headline | open: after M2 |
-| DuckDB | already on the VM; resolve as SQL join + group-by, layout as window functions | wildcard top 2 | open: after M2 |
+| DuckDB | already on the VM; resolve as SQL join + group-by, layout as window functions | wildcard top 2 | **added 15:58Z** (P1-P3) |
 | Differential Dataflow | incremental relink as a new axis | wildcard top 3 | open: needs Rust |
 
 ## Cheap measurements to run first (from the readers)
@@ -48,4 +48,4 @@ abstracts or memory and say so: check before citing):
 | CP1 width-relaxed templates (ideas/copy-and-patch.md) | Sonnet reader, verified premise | codex-cp (`ref/p4/check-cp.sh`, lead rerun 17:52Z P4 OK) | **split**: count alive (66,046 templates vs 108,833; top 4,096 cover 82.3% of nodes vs 74.6%); layout killed: deriving lengths from operands makes the scan 6.3x slower (reads 7.68 M operands instead of 2.38 M lengths). Merge the table, keep per-node lengths precomputed |
 | CP4 generated emitter for the top 4,096 templates | Deegen | codex-cp, P4 OK | **killed at its threshold**: covered-segment emit 1.67x faster (median) but ranges overlap; 26% fewer instructions; hot templates are only 36% of emitted bytes (glue 29%, cold templates 35%), so whole-emit gain is capped; 2.9 MB of generated C, 52-63 s to compile |
 | relocation-kind histogram of the 2.05 M live relocations | layout-codegen | **done 17:40Z** (results/relkinds.txt, `python3 -I results/relkinds.py data/minio`): 8 (kind, width) pairs only; call+pcrel rel32 56%, addr64 19%, addroff/methodoff 24%; 454 K distinct targets but the top 100 take 30% of relocations, 92% have addend 0. So 3b's T-gather is mostly cache-hot, and per-kind branches are few: a branch-free table of 8 formulas fits SIMD |
-| shape-coverage recount for problem 4 | layout-codegen | open (M4) |
+| shape-coverage recount for problem 4 | layout-codegen | **done** (ref/p4/NOTES.md): typed shape does not fix the bytes; top 4,096 byte templates cover 74.6% of nodes (82.3% width-relaxed) |
