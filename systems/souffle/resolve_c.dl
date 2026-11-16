@@ -1,0 +1,39 @@
+// Problem 1c, resolve: the content-hash join over the copies the flood reached (ref/flat/README.md).
+// Starts from 1a's canonical ids (the oracle's, so 1c does not depend on 1a).
+
+.type id = unsigned
+
+.decl kind(g: id, k: unsigned)
+.input kind(IO=flat, index="true", cols="p1_kind.u8")
+.decl hashkey(g: id, k1: unsigned, k2: unsigned)      // kind 2: (8 hash bytes, size); kind 3: (hash 0-7, 8-11)
+.input hashkey(IO=flat, index="true", cols="p1_hashkey.u64x2")
+.decl mark(g: id, m: unsigned)                        // 1 reached by the flood, 2 only named, 0 neither
+.input mark(IO=flat, index="true", cols="p1c_mark.u8")
+.decl canon(g: id, c: id)
+.input canon(IO=flat, index="true", cols="oracle/p1_canon.u32")
+
+// a copy: its group (kind 2 by k1; kind 3 by (k1, k2)), its mark and its size (kind 3: 0, it does not count)
+.decl copy(kd: unsigned, a: unsigned, b: unsigned, g: id, m: unsigned, size: unsigned)
+copy(2, k1, 0, g, m, k2) :- kind(g, 2), mark(g, m), m != 0, hashkey(g, k1, k2).
+copy(3, k1, k2, g, m, 0) :- kind(g, 3), mark(g, m), m != 0, hashkey(g, k1, k2).
+
+// the winner: a reached copy beats a named one; then the largest; then the lowest id
+.decl group(kd: unsigned, a: unsigned, b: unsigned)
+group(kd, a, b) :- copy(kd, a, b, _, _, _).
+.decl bestmark(kd: unsigned, a: unsigned, b: unsigned, m: unsigned)
+bestmark(kd, a, b, m) :- group(kd, a, b), m = min mm : { copy(kd, a, b, _, mm, _) }.
+.decl bestsize(kd: unsigned, a: unsigned, b: unsigned, m: unsigned, s: unsigned)
+bestsize(kd, a, b, m, s) :- bestmark(kd, a, b, m), s = max ss : { copy(kd, a, b, _, m, ss) }.
+.decl winner(kd: unsigned, a: unsigned, b: unsigned, w: id, size: unsigned)
+winner(kd, a, b, w, s) :- bestsize(kd, a, b, 1, s), w = min g : { copy(kd, a, b, g, 1, s) }.
+// (a group whose winner is only named is not in the output: no winner, nothing changes)
+
+// every copy goes to the winner, except a named short-hash copy larger than the winner (it keeps itself)
+.decl moved(g: id, w: id)
+moved(g, w) :- copy(kd, a, b, g, m, s), winner(kd, a, b, w, ws), g != w, (kd = 3 ; m = 1 ; s <= ws).
+
+.decl final(g: id, c: id)
+final(g, w) :- moved(g, w).
+final(g, c) :- canon(g, c), !moved(g, _).
+
+.output final(IO=flat, cols="-,p1c_canon.u32", exitafter="1")
