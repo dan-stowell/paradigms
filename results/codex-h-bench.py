@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run from repo root after building build-h/{p1par,p1compact}."""
+"""Run from repo root after building all four variants and both phase copies in build-h/."""
 import datetime, json, math, os, pathlib, re, subprocess, time
 out=pathlib.Path('results/codex-h-raw'); out.mkdir(exist_ok=True)
 def uptime(): return subprocess.check_output(['prlimit','--as=8589934592','uptime'],text=True).strip()

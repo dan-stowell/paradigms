@@ -65,3 +65,18 @@ below full join time, and instrumentation adds many clock calls to compact.
 Report phase timings as diagnostic measurements and compare their sum to the
 instrumented join, rather than asserting exact equality or counter-derived
 cache-miss/DRAM attribution.
+
+## Final report verification
+
+Independently recomputed every join-table and phase-table min/median/max from
+`codex-h-raw/measurements.json`; all formatted cells match. Confirmed 80 main
+runs (five per configuration), 20 diagnostic runs, and 100 raw stdout files,
+each with P1 OK and four zero-difference oracle comparisons. Main kernel range
+is 1.009364–11.507046 seconds. All verdict range-overlap claims hold, including
+B beating A at one thread on both datasets, B/compact overlap at one thread,
+and B's MinIO eight-thread overlap with baseline. Recomputed speedup ratios,
+96%/73% B capture and 54%/46% A capture, and all combined-phase medians; the
+report rounds them correctly. Diagnostic phase-sum gaps and >=1-second duration
+claims were checked from raw stdout. The locality/ownership verdict is supported
+as an implementation-package finding, with causal/cache-counter limitations
+appropriately stated. No new benchmark was run for this review.

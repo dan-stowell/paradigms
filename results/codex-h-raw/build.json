@@ -1,0 +1,13 @@
+{
+  "flags": "-O2 -march=native -fopenmp",
+  "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "sources": {
+    "ref/flat/p1par.c": "ce58af6a29544e481000cff982a608cf979eda374076f52530bc6f9bc4ccc752",
+    "ref/flat/p1onlyA.c": "0e2e28d584ed9465f58caffce83f8c26cb3208ad7d92678fdd6063d34034855c",
+    "ref/flat/p1onlyB.c": "96b46d7eadb5347412ba57056c53eac0fb55e87ccb9508ae283ae1ecf8c2ce93",
+    "ref/flat/p1compact.c": "293d73dceb3f40ce0ac38d655fbc925e868add7af9a130dc482feac03ebed741",
+    "ref/flat/flat.h": "2cb5eb2ae2de89ef9bf2ef0051761b389bb7555b84302a66e1912e675fbf296d",
+    "ref/flat/p1c.h": "673a4ff57cf5f0ddb403a2cdf42a0224942da41508656cfc45e9234b11d9ec12",
+    "results/codex-h-phases.py": "db327b23a99341d400c1f25fd8da72d70d5298e06bbb317ce143a51b34b24709"
+  }
+}

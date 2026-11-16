@@ -1,0 +1,8 @@
+p1onlyA (1 threads): best 138.6 ms = join by name 79.1 + relocation targets 59.4
+p1onlyA mean: join 86.076594 ms total 149.135803 ms (64 reps, 9.544691 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 85.2 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
