@@ -81,3 +81,14 @@ writer: relocations are fc's own list, with symbol names interned. Jumps fc took
 instruction, `place` in gen.go) are gone from the bytes and from the nodes. Which template a node gets is
 given: fc chose it (registers, encodings, whether a value was spilled); a system that picks templates itself
 from `(shape, mode)` and operand classes is the next problem, and NOTES.md says how far apart the two are.
+
+## Prepared runs (CP7)
+
+`p4runs.c DATA A|B|C|D` prepares a run representation once, times that preparation
+separately, then times repeated emission with `P4_REPS`. A absorbs hole-free
+neighbours; B makes one zeroed-hole blob per function; C deduplicates B by template
+sequence and byte/hole shape; D keeps the original item boundaries as a prepared
+control. These trade additional prepared input for less runtime lookup work.
+`check-runs.sh DATA` checks bytes, every function offset and sorted relocations;
+`bench-runs.sh DATA` compares them with p4/p4par in five interleaved rounds at 1/8
+threads. Counts, input sizes, timing scope and conclusions: `results/codex-cp7.md`.

@@ -149,7 +149,7 @@ under load is part of the speed. **Next:** a quiet-machine run (does async lose 
 and whether a level-free flood also cuts Futhark's/Goose's cost (fewer, larger rounds: e.g. expand several levels per
 superstep, a "delta-stepping" of the flood).
 
-## 4. Code generation by shape: the emit costs pieces, not bytes; merge templates by width
+## 4. Code generation by shape: the emit costs indirection per piece, not pieces or bytes; flatten the stream, merge templates by width
 
 **Problem.** Code generation by shape (4): emit fc's 60.7 MB of MinIO function bodies from 108,833 byte templates,
 7.68 M operands and 17.6 MB of glue (ref/p4/README.md).
@@ -158,23 +158,29 @@ superstep, a "delta-stepping" of the flood).
 template table plus a patch pass; speed is bandwidth, and the table should be keyed by typed shape (SHAPES.md: 4,096
 shapes cover 96.7% of nodes).
 
-**Observation.** (a) The plain C emit runs at **0.42 GB/s** (1 core, 145 ms median for 60.7 MB), 60x below this VM's
-read bandwidth, and patching holes is only **7.6%** of it (codex-p4par, P4_NOPATCH split): the cost is 2.38 M
-pieces of ~25 bytes, each a lookup, a variable-length copy and a branch. 8 threads give 2.2x (51/66/68 ms, load ~20).
-(b) The typed shape does not fix the bytes (ref/p4/NOTES.md: 74.6% of nodes in the top 4,096 *byte* templates).
-One splitter is purely mechanical: a displacement is disp8 exactly when the operand fits in int8, **0 exceptions in
-4,864,669 holes** (lead, results/cp1check.py).
+**Observation.** (a) The plain C emit runs at **0.42-0.62 GB/s** (1 core, 98-145 ms medians across windows), 40-60x
+below this VM's read bandwidth, and patching holes is only **7.6%** of it (codex-p4par, P4_NOPATCH split). (b) It is
+not the number of pieces either (codex-cp7, results/codex-cp7.md, 5 interleaved runs, quiet machine, all P4 OK, lead
+rerun): precomputing each of the 2.38 M items as a flat blob with its holes rebased (control D, same piece count)
+emits in **48.3/48.5/48.9 ms vs p4's 88.9/98.4/98.6** (2x); merging pieces 2.3x (A: hole-free neighbours) or 17.4x
+(B: one run per function) then adds only 1.08-1.10x (A 44.0, B 44.7 ms). On 8 threads: p4par 16.1/18.4/22.2, D 13.7,
+A 11.9, B 12.3 ms median. **The cost is the indirection per piece** (item -> template -> segment -> hole range), not
+the copies. (c) The typed shape does not fix the bytes (74.6% of nodes in the top 4,096 *byte* templates); one
+splitter is purely mechanical: disp8 exactly when the operand fits in int8, **0 exceptions in 4,864,669 holes**.
 
-**Attack.** Key templates with the displacement width relaxed (store disp32, shrink when the operand fits): **108,833
--> 66,046 templates; the top 4,096 cover 82.3% of nodes instead of 74.6%**, and the emitter reproduces the oracle byte for
-byte (codex-cp, `ref/p4/check-cp.sh`, lead rerun P4 OK). But keep each node's length precomputed: deriving lengths
-from operands at layout time made the scan 6.3x slower (7.68 M operand reads instead of 2.38 M lengths). Specialising
-the hot templates into straight-line C (Deegen's method) cut instructions 26% and the covered segments' emit 1.67x
-(median), but ranges overlap and those templates are only 36% of the emitted bytes; 2.9 MB of generated C.
+**Attack.** Two independent steps. (1) Flatten the emit stream: resolve item -> template -> segment -> holes once
+(an extraction-time "decode", like ATTACKS 1's lazy decode in reverse: here the eager form wins because the emit is
+the hot loop), so the emit is a sequential read of (blob, holes) runs: 2x on 1 core, 1.3x on 8 over p4par. The price
+is input size (416 MB of columns vs 217 MB; dedupe of per-function runs, C, finds 55,389 distinct of 136,634, 49 MB).
+(2) Key templates with the displacement width relaxed: **108,833 -> 66,046 templates; the top 4,096 cover 82.3% of
+nodes instead of 74.6%**, oracle reproduced byte for byte (codex-cp, `ref/p4/check-cp.sh`, lead rerun), but keep each
+node's length precomputed (deriving it from operands made the scan 6.3x slower). Specialising hot templates into
+straight-line C (Deegen's method) cut instructions 26% and the covered segments' emit 1.67x (median), but ranges
+overlap; 2.9 MB of generated C.
 
 **What it says about the paradigms.** Futhark expresses the whole problem in 159 lines (lengths by map, places by
-scan, holes as a flat map, rel32 by gather, relocations by expand) and is correct on the first shapes, at 3.2x C on 1
-core; what it had to force is the copy itself (a map cannot memcpy into a slice; a sequential slice-update loop inside
-a map over 64 blocks can, 3-5x cheaper than scattering bytes). **Next:** fewer, larger pieces: fuse a node's segments
-with hole-free neighbours and glue into one run at extraction (CP7 supernodes), counted as pieces per byte, and the
-Halide cell (running).
+scan, holes as a flat map, rel32 by gather, relocations by expand) at 3.2x C on 1 core; what it had to force is the
+copy itself (a map cannot memcpy into a slice; a sequential slice-update loop inside a map over 64 blocks can, 3-5x
+cheaper than scattering bytes, and the same trick made its 3b relocate 2.7-3.6x faster). The flattened stream (1) is
+exactly the shape a data-parallel language wants (no nested lookups), so it should help Futhark and Halide more than C:
+**next**, a Futhark or Halide cell reading D's representation.

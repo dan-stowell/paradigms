@@ -102,3 +102,12 @@ All numbers are over the 1,122,309 nodes of `data/minio-p4`; method: `python3 -I
 - No source gives a measured count of how many distinct stencils per opcode survive filtering; only the totals above. The ratio of total stencils to stencil generators (98,831 / 25, about 3,950 each) is the only handle.
 - Variable-width x86 encodings are not addressed in C&P or Deegen except by avoiding them (disp32 always, immediate 32-bit via `R_X86_64_32S`) and by CPython's relax-at-patch GOT trick. I found no paper that merges disp8 and disp32 templates; CP1 is ours to test.
 - Deegen's emission-speed claim (1.62 GiB/s) is for a bytecode-per-bytecode stream with constant-size stencils and no variable-length encodings; it is an upper bound for what we can expect, not a prediction.
+
+### CP7 run-fusion experiment (2026-11-16)
+The requested A/B/C limit experiment, plus an unmerged prepared control, is complete:
+`results/codex-cp7.md`. A removes 56.6% of copies; B removes 94.3%, but B is only
+1.08× faster than the same prepared representation without merging (one thread).
+Preparation itself gives the large benefit; all oracle checks pass. C deduplicates
+136,634 function runs to 55,389 shapes / 49.0 MB, a 19.3% blob-byte saving. This is
+not the original top-4,096 parent/child-pair selection, so that library-size kill
+test remains open. Fewer pieces alone are not a proportional emit-cost model.
