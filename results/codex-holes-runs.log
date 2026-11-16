@@ -1,0 +1,482 @@
+ROUND 1 threads 1 variant p4par taskset 6
+2026-11-16T18:53:09Z
+ 18:53:09 up  3:37,  0 user,  load average: 4.72, 2.14, 3.04
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 7.194 ms, emit 94.942 ms (60733909 bytes, 2381252 items), sort relocations 127.154 ms (1780281); 0 errors; reps 256 total 28.879 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 1 variant B taskset 6
+2026-11-16T18:53:39Z
+ 18:53:39 up  3:38,  0 user,  load average: 4.20, 2.28, 3.06
+prep B: construct 325.670 ms, dedupe 0.000 ms, total 325.670 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 44.302 ms; GB/s 1.370896; reps 256 total 11.750 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 1 variant H1 taskset 6
+2026-11-16T18:53:51Z
+ 18:53:51 up  3:38,  0 user,  load average: 3.79, 2.26, 3.04
+prep H1: construct 321.070 ms transform 46.040 ms total 367.111 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 28.667 ms; GB/s 2.118632; reps 256 total 7.596 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 1 variant H2 taskset 6
+2026-11-16T18:54:00Z
+ 18:54:00 up  3:38,  0 user,  load average: 3.51, 2.25, 3.03
+prep H2: construct 335.112 ms transform 37.083 ms total 372.195 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 41.275 ms; GB/s 1.471451; reps 256 total 11.532 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 1 variant H0 taskset 6
+2026-11-16T18:54:12Z
+ 18:54:12 up  3:38,  0 user,  load average: 3.43, 2.27, 3.03
+prep H0: construct 337.332 ms transform 44.902 ms total 382.234 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 39.980 ms; GB/s 1.519104; reps 256 total 11.176 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 8 variant p4par taskset 0-7
+2026-11-16T18:54:24Z
+ 18:54:24 up  3:38,  0 user,  load average: 3.73, 2.40, 3.06
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 1.196 ms, emit 16.470 ms (60733909 bytes, 2381252 items), sort relocations 117.137 ms (1780281); 0 errors; reps 256 total 9.101 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 8 variant B taskset 0-7
+2026-11-16T18:54:33Z
+ 18:54:33 up  3:39,  0 user,  load average: 4.56, 2.60, 3.12
+prep B: construct 339.794 ms, dedupe 0.000 ms, total 339.794 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 9.041 ms; GB/s 6.717510; reps 256 total 3.975 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 8 variant H1 taskset 0-7
+2026-11-16T18:54:38Z
+ 18:54:38 up  3:39,  0 user,  load average: 4.35, 2.59, 3.11
+prep H1: construct 377.050 ms transform 47.488 ms total 424.538 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 8.183 ms; GB/s 7.421959; reps 256 total 7.046 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 8 variant H2 taskset 0-7
+2026-11-16T18:54:46Z
+ 18:54:46 up  3:39,  0 user,  load average: 5.55, 2.90, 3.21
+prep H2: construct 933.178 ms transform 81.447 ms total 1014.625 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 22.201 ms; GB/s 2.735588; reps 256 total 9.629 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 1 threads 8 variant H0 taskset 0-7
+2026-11-16T18:54:58Z
+ 18:54:58 up  3:39,  0 user,  load average: 6.83, 3.26, 3.32
+prep H0: construct 424.722 ms transform 46.516 ms total 471.238 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 24.020 ms; GB/s 2.528423; reps 256 total 10.074 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 1 variant B taskset 6
+2026-11-16T18:55:09Z
+ 18:55:09 up  3:39,  0 user,  load average: 8.53, 3.82, 3.50
+prep B: construct 659.004 ms, dedupe 0.000 ms, total 659.004 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 49.454 ms; GB/s 1.228077; reps 256 total 23.296 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 1 variant H1 taskset 6
+2026-11-16T18:55:34Z
+ 18:55:34 up  3:40,  0 user,  load average: 10.22, 4.59, 3.77
+prep H1: construct 803.092 ms transform 105.255 ms total 908.347 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 31.321 ms; GB/s 1.939100; reps 256 total 13.969 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 1 variant H2 taskset 6
+2026-11-16T18:55:49Z
+ 18:55:49 up  3:40,  0 user,  load average: 10.37, 4.91, 3.88
+prep H2: construct 421.559 ms transform 39.842 ms total 461.402 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 44.688 ms; GB/s 1.359055; reps 256 total 19.598 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 1 variant H0 taskset 6
+2026-11-16T18:56:10Z
+ 18:56:10 up  3:40,  0 user,  load average: 11.13, 5.45, 4.08
+prep H0: construct 996.228 ms transform 89.924 ms total 1086.152 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 43.529 ms; GB/s 1.395257; reps 256 total 17.736 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 1 variant p4par taskset 6
+2026-11-16T18:56:30Z
+ 18:56:30 up  3:40,  0 user,  load average: 11.99, 5.99, 4.29
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 7.098 ms, emit 92.241 ms (60733909 bytes, 2381252 items), sort relocations 117.196 ms (1780281); 0 errors; reps 256 total 37.170 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 8 variant B taskset 0-7
+2026-11-16T18:57:08Z
+ 18:57:08 up  3:41,  0 user,  load average: 10.77, 6.40, 4.50
+prep B: construct 347.743 ms, dedupe 0.000 ms, total 347.743 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 10.121 ms; GB/s 6.000969; reps 256 total 5.791 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 8 variant H1 taskset 0-7
+2026-11-16T18:57:15Z
+ 18:57:15 up  3:41,  0 user,  load average: 10.95, 6.59, 4.58
+prep H1: construct 436.929 ms transform 44.988 ms total 481.917 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 5.571 ms; GB/s 10.901460; reps 256 total 4.128 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 8 variant H2 taskset 0-7
+2026-11-16T18:57:20Z
+ 18:57:20 up  3:41,  0 user,  load average: 10.48, 6.56, 4.58
+prep H2: construct 331.834 ms transform 36.639 ms total 368.473 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 10.912 ms; GB/s 5.566003; reps 256 total 5.117 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 8 variant H0 taskset 0-7
+2026-11-16T18:57:26Z
+ 18:57:26 up  3:41,  0 user,  load average: 9.88, 6.50, 4.57
+prep H0: construct 365.152 ms transform 45.295 ms total 410.447 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 12.626 ms; GB/s 4.810258; reps 256 total 5.315 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 2 threads 8 variant p4par taskset 0-7
+2026-11-16T18:57:32Z
+ 18:57:32 up  3:41,  0 user,  load average: 9.81, 6.54, 4.60
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 1.527 ms, emit 17.685 ms (60733909 bytes, 2381252 items), sort relocations 115.598 ms (1780281); 0 errors; reps 256 total 9.881 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 1 variant H1 taskset 6
+2026-11-16T18:57:42Z
+ 18:57:42 up  3:42,  0 user,  load average: 9.35, 6.56, 4.62
+prep H1: construct 336.119 ms transform 47.948 ms total 384.067 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 28.344 ms; GB/s 2.142732; reps 256 total 7.568 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 1 variant H2 taskset 6
+2026-11-16T18:57:50Z
+ 18:57:50 up  3:42,  0 user,  load average: 8.45, 6.46, 4.61
+prep H2: construct 339.951 ms transform 39.070 ms total 379.021 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 41.128 ms; GB/s 1.476708; reps 256 total 10.855 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 1 variant H0 taskset 6
+2026-11-16T18:58:02Z
+ 18:58:02 up  3:42,  0 user,  load average: 7.61, 6.34, 4.59
+prep H0: construct 334.008 ms transform 44.330 ms total 378.338 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 41.559 ms; GB/s 1.461407; reps 256 total 19.062 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 1 variant p4par taskset 6
+2026-11-16T18:58:22Z
+ 18:58:22 up  3:42,  0 user,  load average: 8.76, 6.69, 4.75
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 8.219 ms, emit 115.164 ms (60733909 bytes, 2381252 items), sort relocations 283.495 ms (1780281); 0 errors; reps 256 total 56.799 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 1 variant B taskset 6
+2026-11-16T18:59:20Z
+ 18:59:20 up  3:43,  0 user,  load average: 11.70, 7.82, 5.25
+prep B: construct 802.347 ms, dedupe 0.000 ms, total 802.348 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 49.599 ms; GB/s 1.224510; reps 256 total 20.775 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 8 variant H1 taskset 0-7
+2026-11-16T18:59:42Z
+ 18:59:42 up  3:44,  0 user,  load average: 13.35, 8.45, 5.51
+prep H1: construct 365.746 ms transform 46.014 ms total 411.760 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 6.337 ms; GB/s 9.583706; reps 256 total 4.043 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 8 variant H2 taskset 0-7
+2026-11-16T18:59:47Z
+ 18:59:47 up  3:44,  0 user,  load average: 12.76, 8.41, 5.52
+prep H2: construct 354.284 ms transform 39.527 ms total 393.811 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 11.377 ms; GB/s 5.338296; reps 256 total 4.514 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 8 variant H0 taskset 0-7
+2026-11-16T18:59:52Z
+ 18:59:52 up  3:44,  0 user,  load average: 12.78, 8.48, 5.56
+prep H0: construct 365.954 ms transform 45.417 ms total 411.371 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 13.566 ms; GB/s 4.476933; reps 256 total 6.082 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 8 variant p4par taskset 0-7
+2026-11-16T18:59:59Z
+ 18:59:59 up  3:44,  0 user,  load average: 13.21, 8.72, 5.66
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 2.009 ms, emit 28.034 ms (60733909 bytes, 2381252 items), sort relocations 272.694 ms (1780281); 0 errors; reps 256 total 14.690 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 3 threads 8 variant B taskset 0-7
+2026-11-16T19:00:15Z
+ 19:00:15 up  3:44,  0 user,  load average: 12.11, 8.68, 5.70
+prep B: construct 467.570 ms, dedupe 0.001 ms, total 467.571 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 12.890 ms; GB/s 4.711786; reps 256 total 8.721 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 1 variant H2 taskset 6
+2026-11-16T19:00:25Z
+ 19:00:25 up  3:44,  0 user,  load average: 12.38, 8.86, 5.79
+prep H2: construct 517.954 ms transform 36.734 ms total 554.688 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 42.469 ms; GB/s 1.430073; reps 256 total 14.271 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 1 variant H0 taskset 6
+2026-11-16T19:00:40Z
+ 19:00:40 up  3:45,  0 user,  load average: 11.89, 8.93, 5.86
+prep H0: construct 404.414 ms transform 52.413 ms total 456.827 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 41.751 ms; GB/s 1.454664; reps 256 total 12.988 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 1 variant p4par taskset 6
+2026-11-16T19:00:54Z
+ 19:00:54 up  3:45,  0 user,  load average: 11.91, 9.08, 5.96
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 6.861 ms, emit 97.932 ms (60733909 bytes, 2381252 items), sort relocations 140.064 ms (1780281); 0 errors; reps 256 total 41.123 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 1 variant B taskset 6
+2026-11-16T19:01:36Z
+ 19:01:36 up  3:46,  0 user,  load average: 9.87, 8.91, 6.04
+prep B: construct 353.553 ms, dedupe 0.000 ms, total 353.553 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 44.173 ms; GB/s 1.374925; reps 256 total 16.207 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 1 variant H1 taskset 6
+2026-11-16T19:01:53Z
+ 19:01:53 up  3:46,  0 user,  load average: 9.65, 8.90, 6.08
+prep H1: construct 346.745 ms transform 45.099 ms total 391.844 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 28.757 ms; GB/s 2.111953; reps 256 total 8.168 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 8 variant H2 taskset 0-7
+2026-11-16T19:02:02Z
+ 19:02:02 up  3:46,  0 user,  load average: 8.78, 8.74, 6.06
+prep H2: construct 355.416 ms transform 78.746 ms total 434.162 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 15.149 ms; GB/s 4.009192; reps 256 total 11.521 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 8 variant H0 taskset 0-7
+2026-11-16T19:02:14Z
+ 19:02:14 up  3:46,  0 user,  load average: 8.61, 8.70, 6.09
+prep H0: construct 376.063 ms transform 47.210 ms total 423.272 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 17.130 ms; GB/s 3.545562; reps 256 total 10.180 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 8 variant p4par taskset 0-7
+2026-11-16T19:02:25Z
+ 19:02:25 up  3:46,  0 user,  load average: 8.67, 8.71, 6.12
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 2.537 ms, emit 32.403 ms (60733909 bytes, 2381252 items), sort relocations 117.951 ms (1780281); 0 errors; reps 256 total 19.037 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 8 variant B taskset 0-7
+2026-11-16T19:02:45Z
+ 19:02:45 up  3:47,  0 user,  load average: 7.34, 8.41, 6.07
+prep B: construct 334.099 ms, dedupe 0.000 ms, total 334.099 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 16.917 ms; GB/s 3.590197; reps 256 total 11.187 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 4 threads 8 variant H1 taskset 0-7
+2026-11-16T19:02:57Z
+ 19:02:57 up  3:47,  0 user,  load average: 7.98, 8.51, 6.13
+prep H1: construct 342.006 ms transform 45.796 ms total 387.802 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 12.583 ms; GB/s 4.826556; reps 256 total 8.197 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 1 variant H0 taskset 6
+2026-11-16T19:03:06Z
+ 19:03:06 up  3:47,  0 user,  load average: 8.16, 8.53, 6.16
+prep H0: construct 354.723 ms transform 45.283 ms total 400.006 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 39.984 ms; GB/s 1.518936; reps 256 total 10.989 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 1 variant p4par taskset 6
+2026-11-16T19:03:17Z
+ 19:03:17 up  3:47,  0 user,  load average: 7.52, 8.38, 6.14
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 7.075 ms, emit 90.510 ms (60733909 bytes, 2381252 items), sort relocations 115.288 ms (1780281); 0 errors; reps 256 total 30.289 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 1 variant B taskset 6
+2026-11-16T19:03:48Z
+ 19:03:48 up  3:48,  0 user,  load average: 6.38, 8.02, 6.09
+prep B: construct 327.808 ms, dedupe 0.000 ms, total 327.808 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 44.495 ms; GB/s 1.364964; reps 256 total 11.986 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 1 variant H1 taskset 6
+2026-11-16T19:04:01Z
+ 19:04:01 up  3:48,  0 user,  load average: 5.78, 7.81, 6.05
+prep H1: construct 334.198 ms transform 47.298 ms total 381.496 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 28.976 ms; GB/s 2.096016; reps 256 total 7.881 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 1 variant H2 taskset 6
+2026-11-16T19:04:10Z
+ 19:04:10 up  3:48,  0 user,  load average: 5.35, 7.65, 6.02
+prep H2: construct 327.509 ms transform 37.285 ms total 364.795 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 41.196 ms; GB/s 1.474284; reps 256 total 10.887 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 8 variant H0 taskset 0-7
+2026-11-16T19:04:21Z
+ 19:04:21 up  3:48,  0 user,  load average: 4.99, 7.50, 5.99
+prep H0: construct 356.032 ms transform 44.701 ms total 400.732 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 13.158 ms; GB/s 4.615840; reps 256 total 9.594 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 8 variant p4par taskset 0-7
+2026-11-16T19:04:32Z
+ 19:04:32 up  3:48,  0 user,  load average: 5.00, 7.41, 5.97
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 3.897 ms, emit 29.361 ms (60733909 bytes, 2381252 items), sort relocations 120.614 ms (1780281); 0 errors; reps 256 total 17.811 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 8 variant B taskset 0-7
+2026-11-16T19:04:50Z
+ 19:04:50 up  3:49,  0 user,  load average: 5.39, 7.34, 5.98
+prep B: construct 318.962 ms, dedupe 0.000 ms, total 318.962 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 18.086 ms; GB/s 3.358127; reps 256 total 12.281 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 8 variant H1 taskset 0-7
+2026-11-16T19:05:03Z
+ 19:05:03 up  3:49,  0 user,  load average: 5.48, 7.29, 5.98
+prep H1: construct 454.695 ms transform 78.175 ms total 532.870 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 12.439 ms; GB/s 4.882538; reps 256 total 9.623 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+ROUND 5 threads 8 variant H2 taskset 0-7
+2026-11-16T19:05:14Z
+ 19:05:14 up  3:49,  0 user,  load average: 5.56, 7.25, 5.98
+prep H2: construct 361.310 ms transform 37.169 ms total 398.479 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 13.827 ms; GB/s 4.392567; reps 256 total 11.088 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+2026-11-16T19:05:26Z
+ 19:05:26 up  3:49,  0 user,  load average: 5.97, 7.26, 6.01

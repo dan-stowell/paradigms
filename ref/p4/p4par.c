@@ -229,6 +229,10 @@ int main(int argc, char **argv) {
 	size_t m;
 	const u8 *want = FMAP(u8, "oracle/p4_code.bin", &m);
 	const u64 *wfn = FMAP(u64, "oracle/p4_fn_off.u64", NULL);
+	long fbad = 0;
+	for (u32 f = 0; f <= nfn; f++) if (at[fnItem[f]] != wfn[f]) fbad++;
+	printf("function offsets: %u checked, %ld errors\n", nfn + 1, fbad);
+	bad += fbad;
 	if (m != pos || pos != ncode) {
 		printf("code: %llu bytes, oracle %zu\n", (unsigned long long)pos, m);
 		bad++;

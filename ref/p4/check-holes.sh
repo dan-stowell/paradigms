@@ -9,6 +9,8 @@ for src in p4holes p4runs p4par; do
     prlimit --as=12884901888 gcc -O2 -march=native -fopenmp -o "build/$src" "ref/p4/$src.c"
 done
 for t in 1 8; do
+    OMP_NUM_THREADS=$t prlimit --as=12884901888 build/p4par "$d"
+    OMP_NUM_THREADS=$t prlimit --as=12884901888 build/p4runs "$d" B
     for variant in H0 H1 H2; do
         OMP_NUM_THREADS=$t prlimit --as=12884901888 build/p4holes "$d" "$variant"
     done

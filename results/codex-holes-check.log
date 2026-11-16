@@ -1,70 +1,96 @@
-prep H0: construct 329.515 ms transform 45.920 ms total 375.435 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
 output: MAP_HUGETLB 2 MB
-p4holes H0 (1 threads): emit 40.333 ms; GB/s 1.505825; reps 1 total 0.040 s
+p4par (1 threads): lay out 12.241 ms, emit 192.328 ms (60733909 bytes, 2381252 items), sort relocations 172.282 ms (1780281); 0 errors; reps 1 total 0.205 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H1: construct 332.142 ms transform 48.363 ms total 380.505 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+prep B: construct 616.234 ms, dedupe 0.001 ms, total 616.234 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
 output: MAP_HUGETLB 2 MB
-p4holes H1 (1 threads): emit 29.620 ms; GB/s 2.050431; reps 1 total 0.030 s
+p4runs B (1 threads): emit 131.370 ms; GB/s 0.462312; reps 1 total 0.131 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H2: construct 330.502 ms transform 38.338 ms total 368.840 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+prep H0: construct 825.825 ms transform 61.416 ms total 887.240 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
 output: MAP_HUGETLB 2 MB
-p4holes H2 (1 threads): emit 42.065 ms; GB/s 1.443805; reps 1 total 0.042 s
+p4holes H0 (1 threads): emit 68.572 ms; GB/s 0.885697; reps 1 total 0.069 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H0: construct 347.380 ms transform 47.569 ms total 394.948 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+prep H1: construct 493.494 ms transform 52.365 ms total 545.859 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
 output: MAP_HUGETLB 2 MB
-p4holes H0 (8 threads): emit 26.002 ms; GB/s 2.335761; reps 1 total 0.026 s
+p4holes H1 (1 threads): emit 40.394 ms; GB/s 1.503528; reps 1 total 0.040 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H1: construct 342.216 ms transform 46.320 ms total 388.536 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+prep H2: construct 723.641 ms transform 99.952 ms total 823.593 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: MAP_HUGETLB 2 MB
-p4holes H1 (8 threads): emit 14.978 ms; GB/s 4.054918; reps 1 total 0.015 s
+p4holes H2 (1 threads): emit 59.639 ms; GB/s 1.018366; reps 1 total 0.060 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H2: construct 328.763 ms transform 36.933 ms total 365.696 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: MAP_HUGETLB 2 MB
-p4holes H2 (8 threads): emit 19.528 ms; GB/s 3.110091; reps 1 total 0.020 s
+p4par (8 threads): lay out 8.227 ms, emit 73.138 ms (60733909 bytes, 2381252 items), sort relocations 310.087 ms (1780281); 0 errors; reps 1 total 0.081 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H0: construct 410.836 ms transform 47.773 ms total 458.609 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+prep B: construct 347.221 ms, dedupe 0.000 ms, total 347.221 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (8 threads): emit 28.404 ms; GB/s 2.138254; reps 1 total 0.028 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H0: construct 345.179 ms transform 46.558 ms total 391.737 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (8 threads): emit 33.445 ms; GB/s 1.815946; reps 1 total 0.033 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H1: construct 473.172 ms transform 61.547 ms total 534.720 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (8 threads): emit 20.928 ms; GB/s 2.902049; reps 1 total 0.021 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H2: construct 443.391 ms transform 77.135 ms total 520.526 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (8 threads): emit 21.792 ms; GB/s 2.787012; reps 1 total 0.022 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H0: construct 418.370 ms transform 55.133 ms total 473.503 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
 output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
-p4holes H0 (2 threads): emit 28.279 ms; GB/s 2.147677; reps 1 total 0.028 s
+p4holes H0 (2 threads): emit 21.443 ms; GB/s 2.832313; reps 1 total 0.021 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H1: construct 339.560 ms transform 46.050 ms total 385.610 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+prep H1: construct 378.165 ms transform 58.735 ms total 436.900 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
 output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
-p4holes H1 (2 threads): emit 24.010 ms; GB/s 2.529565; reps 1 total 0.024 s
+p4holes H1 (2 threads): emit 21.212 ms; GB/s 2.863132; reps 1 total 0.021 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
-prep H2: construct 406.430 ms transform 40.135 ms total 446.564 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+prep H2: construct 340.193 ms transform 36.825 ms total 377.018 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
-p4holes H2 (2 threads): emit 43.672 ms; GB/s 1.390684; reps 1 total 0.044 s
+p4holes H2 (2 threads): emit 24.699 ms; GB/s 2.458984; reps 1 total 0.025 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 OK
 Caught planted byte fault
-prep H2: construct 451.795 ms transform 58.112 ms total 509.907 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+prep H2: construct 409.526 ms transform 37.128 ms total 446.654 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: MAP_HUGETLB 2 MB
-p4holes H2 (1 threads): emit 67.063 ms; GB/s 0.905628; reps 1 total 0.067 s
+p4holes H2 (1 threads): emit 44.899 ms; GB/s 1.352677; reps 1 total 0.045 s
 function offsets: 136635 checked, 0 errors
   function 0 differs
 code: 1 functions differ
@@ -72,17 +98,17 @@ code: 60733909 bytes in 136634 functions, NOT equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 FAIL
 Caught planted offset fault
-prep H2: construct 359.232 ms transform 42.043 ms total 401.275 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+prep H2: construct 399.963 ms transform 40.581 ms total 440.544 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: MAP_HUGETLB 2 MB
-p4holes H2 (1 threads): emit 44.060 ms; GB/s 1.378439; reps 1 total 0.044 s
+p4holes H2 (1 threads): emit 45.742 ms; GB/s 1.327759; reps 1 total 0.046 s
 function offsets: 136635 checked, 1 errors
 code: 60733909 bytes in 136634 functions, NOT equal to oracle/p4_code.bin
 relocations: 1780281, oracle 1780281, 0 differ
 P4 FAIL
 Caught planted relocation fault
-prep H2: construct 325.600 ms transform 37.171 ms total 362.771 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+prep H2: construct 373.078 ms transform 41.826 ms total 414.904 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
 output: MAP_HUGETLB 2 MB
-p4holes H2 (1 threads): emit 42.419 ms; GB/s 1.431758; reps 1 total 0.042 s
+p4holes H2 (1 threads): emit 50.014 ms; GB/s 1.214348; reps 1 total 0.050 s
 function offsets: 136635 checked, 0 errors
 code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
   relocation 0 differs (offset 14)
