@@ -5,6 +5,10 @@
 //   gcc -O2 -march=native -o build/p2inc ref/flat/p2inc.c && build/p2inc data/minio data/minio-edit [REPS] [plain]
 //   FUZZ=K build/p2inc ...: then K random diffs (up to 200 edges removed from live sources, 200 added, all kinds)
 //   on top of B, each checked against a from-scratch flood of the same graph, and reverted to B's oracle.
+//   CHAIN=1 FUZZ=240 SEED=1 CHAIN_EDIT=DATA_B2 ... DATA_A DATA_B1 0:
+//   keep every random edge/flag/root edit; fork isolated scratch checks after each step;
+//   interleave B1/B2 forward+reverse patches every 20 steps (new ID slots never coexist).
+//   FRESH_B=1: flood B facts before first timed B->A; EVICT=1: touch 1 GiB before each update.
 //
 // The rules are p2.c's (data/README.md). The state kept between links, all derived by the same rules: live, iface,
 // typeDone (live, iface, type descriptor: its type edges and methods have been applied), called (per method),
@@ -31,6 +35,7 @@
 // method call it may justify, and everything downstream of those); with stamps the cone is 26 K.
 // Method-table diffs are not supported (exit 3; neither edit has one).
 #include "flat.h"
+#include <sys/wait.h>
 
 enum { fDef = 1, fReflect = 4, fGoType = 8, fIface = 16 };
 #define ISTYPE(x) ((flags[x] & (fDef | fGoType)) == (fDef | fGoType))
@@ -71,10 +76,11 @@ static size_t nmsusp, msuspcap;
 // overlay: edges removed from A (hash set), edges added (per-source and per-target lists)
 typedef struct { u32 src; u8 kind, alive; u64 val; } remEnt;
 static remEnt *rem;
-static u64 rmask;
+static u64 rmask, rused;
 static u8 *maybeRem;
 typedef struct { u32 src, next, rnext; u8 kind, alive; u64 val; } addEnt;
 static addEnt *pool;
+static size_t poolcap;
 static u32 npool, *addHead, *raddHead;
 // worklist and counters
 enum { LIVE, IFACE, KL, KI };
@@ -100,12 +106,29 @@ static sigent *sig(u64 k) {
 	}
 }
 static remEnt *remFind(u32 s, u8 k, u64 v, int add) {
+	// Tombstones retain keys across updates, so grow on occupied slots, not
+	// just currently removed edges. Otherwise long chains can fill the table.
+	if (add && rused >= (rmask + 1) * 3 / 4) {
+		u64 oldmask = rmask;
+		remEnt *old = rem;
+		rmask = 2 * (oldmask + 1) - 1;
+		rem = malloc((rmask + 1) * sizeof(*rem));
+		if (!rem) { perror("rem growth"); exit(2); }
+		for (u64 h = 0; h <= rmask; h++) rem[h].alive = 0xff;
+		for (u64 i = 0; i <= oldmask; i++) if (old[i].alive != 0xff) {
+			u64 h = mix64(old[i].val * 31 + old[i].src * 7 + old[i].kind) & rmask;
+			while (rem[h].alive != 0xff) h = (h + 1) & rmask;
+			rem[h] = old[i];
+		}
+		free(old);
+	}
 	for (u64 h = mix64(v * 31 + s * 7 + k) & rmask;; h = (h + 1) & rmask) {
 		remEnt *e = &rem[h];
 		if (e->alive != 0xff && e->src == s && e->kind == k && e->val == v) return e;
 		if (e->alive == 0xff) {
 			if (!add) return NULL;
 			e->src = s, e->kind = k, e->val = v, e->alive = 0;
+			rused++;
 			return e;
 		}
 	}
@@ -379,7 +402,13 @@ static void edgeRemove(u32 s, u8 k, u64 v) {
 }
 static void edgeAdd(u32 s, u8 k, u64 v) {
 	if (inA(s, k, v)) { remFind(s, k, v, 1)->alive = 0; return; }
+	if ((size_t)npool + 1 >= poolcap) {
+		poolcap = poolcap ? 2 * poolcap : 16;
+		pool = realloc(pool, poolcap * sizeof(*pool));
+		if (!pool) { perror("overlay growth"); exit(2); }
+	}
 	addEnt *a = &pool[++npool];
+	memset(a, 0, sizeof(*a));
 	a->src = s, a->kind = k, a->val = v, a->alive = 1;
 	a->next = addHead[s], addHead[s] = npool;
 	if (k <= 1) a->rnext = raddHead[(u32)v], raddHead[(u32)v] = npool;
@@ -436,14 +465,49 @@ static void update(const side *mi, const side *pl) {
 
 static long checkLive(const char *what, const u32 *want, size_t nw) {
 	size_t k = 0, bad = 0;
-	for (u32 g = 1; g < N; g++)
+	for (u32 g = 1; g <= N; g++)
 		if (live[g]) { if (k >= nw || want[k] != g) bad++; else k++; }
 	bad += nw - k;
 	printf("check %s: %zu oracle entries, %zu differ -> %s\n", what, nw, bad, bad ? "FAIL" : "OK");
 	return (long)bad;
 }
 
+// Rebuild only in a forked child: the maintained parent's stamps, cursors,
+// aggregates and worklists are never replaced by the oracle's state.
+static void scratch(void) {
+	memset(live, 0, N+1); memset(iface, 0, N+1); memset(typeDone, 0, N+1);
+	memset(called, 0, nmeth); memset(namedCnt, 0, 4*(nstrU+1)); reflectCnt=0;
+	memset(ordL, 0, 4*(N+1)); memset(ordI, 0, 4*(N+1));
+	memset(ordT, 0, 4*(N+1)); memset(ordM, 0, 4*nmeth);
+	clk=0; wn=0; epoch++;
+	for (u64 h=0; h<=smask; h++) sigs[h].cnt=0;
+	for (u32 g=1; g<=N; g++) if (flags[g]&fIface) setIface(g);
+	for (u32 g=1; g<=N; g++) if (isRoot[g]) setLive(g);
+	drain();
+}
+static int scratchCheck(int step) {
+	fflush(NULL);
+	pid_t pid=fork();
+	if (pid<0) { perror("fork"); exit(2); }
+	if (!pid) {
+		u8 *saved=malloc(N+1); memcpy(saved,live,N+1); scratch();
+		size_t bad=0;
+		for(u32 g=0;g<=N;g++) if(saved[g]!=live[g]) {
+			if(bad++<8) printf("chain step %d id %u maintained %u scratch %u\n",step,g,saved[g],live[g]);
+		}
+		fflush(NULL); _exit(bad ? 1 : 0);
+	}
+	int status; if(waitpid(pid,&status,0)!=pid) exit(2);
+	return !WIFEXITED(status) || WEXITSTATUS(status)!=0;
+}
+static void evict(void) {
+	static volatile u8 *buf;
+	if(!buf) { buf=calloc(1,1UL<<30); if(!buf) exit(2); }
+	for(size_t i=0;i<(1UL<<30);i+=64) buf[i]++;
+}
+
 int main(int argc, char **argv) {
+	if(argc<3) { fprintf(stderr,"usage: p2inc DATA_A DATA_B [REPS] [plain]\n"); return 2; }
 	const char *da = argv[1], *db = argv[2];
 	int reps = argc > 3 ? atoi(argv[3]) : 5;
 	{
@@ -454,7 +518,14 @@ int main(int argc, char **argv) {
 		nstrU = (u32)metaGet("nstr_unified");
 		flatDir = strdup(db);
 	}
-	side mi = loadSide("minus"), pl = loadSide("plus");
+	side mi = loadSide("minus"), pl = loadSide("plus"), mi2={0}, pl2={0};
+	if(getenv("CHAIN_EDIT")) {
+		char path[4096]; snprintf(path,sizeof path,"%s/diff",getenv("CHAIN_EDIT")); flatDir=path;
+		u32 nn=metaGet("n_unified"), ns=metaGet("nstr_unified");
+		if(nn>N) N=nn; if(ns>nstrU) nstrU=ns;
+		flatDir=getenv("CHAIN_EDIT"); mi2=loadSide("minus"); pl2=loadSide("plus");
+		flatDir=db;
+	}
 	size_t nlb;
 	const u32 *liveB = FMAP(u32, "diff/live_b.u32", &nlb);
 	nlb /= 4;
@@ -601,7 +672,8 @@ int main(int argc, char **argv) {
 	rem = malloc((rmask + 1) * sizeof(remEnt));
 	for (u64 i = 0; i <= rmask; i++) rem[i].alive = 0xff;
 	maybeRem = calloc(N + 1, 1);
-	pool = calloc(1 + 4 * (mi.ne + pl.ne + 16) + (getenv("FUZZ") ? 256 * (size_t)atoi(getenv("FUZZ")) : 0), sizeof(addEnt));
+	poolcap = 1 + 4 * (mi.ne + pl.ne + 16);
+	pool = calloc(poolcap, sizeof(addEnt));
 	addHead = calloc(N + 1, 4), raddHead = calloc(N + 1, 4);
 	live = calloc(N + 1, 1), iface = calloc(N + 1, 1), typeDone = calloc(N + 1, 1), isRoot = calloc(N + 1, 1);
 	posL = calloc(N + 1, 4), posI = calloc(N + 1, 4);
@@ -621,9 +693,23 @@ int main(int argc, char **argv) {
 	       (unsigned long long)cEdges);
 	long bad = checkLive("A", liveA, nlA);
 	printf("diff: edges -%zu +%zu, flags -%zu +%zu, roots -%zu +%zu\n", mi.ne, pl.ne, mi.nf, pl.nf, mi.nr, pl.nr);
+	int freshB=getenv("FRESH_B")!=NULL;
+	if(freshB) {
+		// Install B's facts directly: no update has run, no retraction buffers or
+		// support history have been primed by A->B.
+		for(size_t i=0;i<mi.ne;i++) edgeRemove(mi.esrc[i],mi.ekind[i],mi.eval[i]);
+		for(size_t i=0;i<pl.ne;i++) edgeAdd(pl.esrc[i],pl.ekind[i],pl.eval[i]);
+		for(size_t i=0;i<mi.nf;i++) flags[mi.fid[i]]=0;
+		for(size_t i=0;i<pl.nf;i++) flags[pl.fid[i]]=pl.fval[i];
+		for(size_t i=0;i<mi.nr;i++) isRoot[mi.root[i]]=0;
+		for(size_t i=0;i<pl.nr;i++) isRoot[pl.root[i]]=1;
+		scratch(); bad+=checkLive("fresh B",liveB,nlb);
+	}
 	double best[2] = {1e9, 1e9};
 	for (int r = 0; r < reps; r++)
-		for (int dir = 0; dir < 2; dir++) {
+		for (int di = 0; di < 2; di++) {
+			int dir=di ^ freshB;
+			if(getenv("EVICT")) evict();
 			cEdges = cRev = cKilled = cRestored = cSet = cChecks = 0;
 			double t = now();
 			if (dir == 0) update(&mi, &pl); else update(&pl, &mi);
@@ -635,40 +721,75 @@ int main(int argc, char **argv) {
 			       (unsigned long long)cSet, (unsigned long long)cEdges, (unsigned long long)cRev, (unsigned long long)cChecks);
 			bad += dir ? checkLive("B->A vs A oracle", liveA, nlA) : checkLive("A->B vs B oracle (unified ids)", liveB, nlb);
 		}
-	printf("best update A->B %.3f ms, B->A %.3f ms\n", best[0] * 1e3, best[1] * 1e3);
+	if(reps) printf("best update A->B %.3f ms, B->A %.3f ms\n", best[0] * 1e3, best[1] * 1e3);
 	// FUZZ=K: K random diffs of random size (up to 200 edges removed from live sources, up to 200 added, all
 	// kinds), each applied as an update on top of B and checked against a from-scratch flood of the same
 	// graph by the same rules, then reverted and checked against B again
 	int fz = getenv("FUZZ") ? atoi(getenv("FUZZ")) : 0;
 	if (fz) {
-		update(&mi, &pl);
-		u64 rs = 88172645463325252ull;
+		int chain=getenv("CHAIN")!=NULL;
+		if(freshB) update(&pl,&mi);
+		if(!chain) update(&mi, &pl);
+		u64 rs = getenv("SEED") ? strtoull(getenv("SEED"),NULL,0) : 88172645463325252ull;
+		if(!rs) { fprintf(stderr,"SEED must be nonzero\n"); return 2; }
 #define RND() (rs ^= rs << 13, rs ^= rs >> 7, rs ^= rs << 17)
 		u8 *snap = malloc(N + 1);
+		// Keep random facts disjoint from the real patches, so their forward/reverse
+		// operations remain valid set diffs while random changes accumulate.
+		u8 *reserved=calloc(N+1,1);
+		const side *patches[4]={&mi,&pl,&mi2,&pl2};
+		for(int j=0;j<4;j++) {
+			const side *d=patches[j];
+			for(size_t i=0;i<d->ne;i++) reserved[d->esrc[i]]=1;
+			for(size_t i=0;i<d->nf;i++) reserved[d->fid[i]]=1;
+			for(size_t i=0;i<d->nr;i++) reserved[d->root[i]]=1;
+		}
 		long fbad = 0;
+		size_t rootAdds=0, rootRemoves=0, flagChanges[4]={0}, realSteps=0, completed=0;
 		for (int f = 0; f < fz; f++) {
+			if(chain && f%20==0) {
+				const side *rm=(f/20)%2 && getenv("CHAIN_EDIT") ? &mi2 : &mi;
+				const side *rp=rm==&mi2 ? &pl2 : &pl;
+				realSteps+=2;
+				update(rm,rp); if(scratchCheck(f)) { fbad++; break; }
+				update(rp,rm); if(scratchCheck(f)) { fbad++; break; }
+			}
 			size_t nr = RND() % 200, na = RND() % 200;
 			u32 *rsrc_ = malloc(4 * (nr + na)), *asrc = rsrc_ + nr;
 			u8 *rk = malloc(nr + na), *ak = rk + nr;
 			u64 *rv = malloc(8 * (nr + na)), *av = rv + nr;
 			size_t n1 = 0, n2 = 0;
-			while (n1 < nr) { // an existing A edge of a live source, not already removed
-				u32 sx = (u32)(RND() % nslA) + 1;
-				if (!live[sx] || eoff[sx] == eoff[sx + 1]) continue;
-				u32 e = eoff[sx] + (u32)(RND() % (eoff[sx + 1] - eoff[sx]));
-				if (removed(sx, ekind[e], eval[e])) continue;
-				int dup = 0;
-				for (size_t j = 0; j < n1; j++) dup |= rsrc_[j] == sx && rk[j] == ekind[e] && rv[j] == eval[e];
-				if (dup) continue;
-				rsrc_[n1] = sx, rk[n1] = ekind[e], rv[n1++] = eval[e];
+			while (n1 < nr) { // current base or overlay edge of a live source
+				u32 sx; u8 k; u64 v;
+				if(chain && npool && RND()%4==0) {
+					u32 a=1+RND()%npool;
+					if(!pool[a].alive) continue;
+					sx=pool[a].src; k=pool[a].kind; v=pool[a].val;
+				} else {
+					sx=1+RND()%nslA;
+					if(eoff[sx]==eoff[sx+1]) continue;
+					u32 e=eoff[sx]+RND()%(eoff[sx+1]-eoff[sx]);
+					k=ekind[e]; v=eval[e];
+					if(removed(sx,k,v)) continue;
+				}
+				if(reserved[sx] || !live[sx]) continue;
+				int dup=0;
+				for(size_t j=0;j<n1;j++) dup |= rsrc_[j]==sx && rk[j]==k && rv[j]==v;
+				if(dup) continue;
+				rsrc_[n1]=sx; rk[n1]=k; rv[n1++]=v;
 			}
 			while (n2 < na) { // a new edge from a random defined source to a random id, or a random existing payload
 				u32 sx = (u32)(RND() % nslA) + 1, sy = (u32)(RND() % nslA) + 1;
-				if (!(flags[sx] & fDef) || eoff[sy] == eoff[sy + 1]) continue;
+				if (reserved[sx] || !(flags[sx] & fDef) || eoff[sy] == eoff[sy + 1]) continue;
 				u32 e = eoff[sy] + (u32)(RND() % (eoff[sy + 1] - eoff[sy]));
 				u8 k = ekind[e];
 				u64 v = (k <= 1 && RND() % 2) ? (u64)(RND() % nslA) + 1 : eval[e];
-				if (inA(sx, k, v)) continue;
+				if(chain && RND()%4==0) {
+					remEnt *re=&rem[RND()&rmask];
+					if(re->alive!=1 || reserved[re->src]) continue;
+					sx=re->src; k=re->kind; v=re->val;
+				}
+				if (inA(sx, k, v) && !removed(sx,k,v)) continue;
 				int dup = 0;
 				for (size_t j = 0; j < n2; j++) dup |= asrc[j] == sx && ak[j] == k && av[j] == v;
 				for (u32 a = addHead[sx]; a; a = pool[a].next) dup |= pool[a].alive && pool[a].kind == k && pool[a].val == v;
@@ -676,7 +797,25 @@ int main(int argc, char **argv) {
 				asrc[n2] = sx, ak[n2] = k, av[n2++] = v;
 			}
 			side m2 = {nr, 0, 0, rsrc_, NULL, NULL, rk, NULL, rv}, p2 = {na, 0, 0, asrc, NULL, NULL, ak, NULL, av};
+			u32 fi=1+(RND()%nslA), rt=(RND()%2) ? roots[RND()%nroots] : 1+(RND()%nslA);
+			if(RND()%2) while(!live[fi] || reserved[fi]) fi=1+(RND()%nslA);
+			while(reserved[fi]) fi=1+(RND()%nslA);
+			while(reserved[rt]) rt=1+(RND()%nslA);
+			const u8 bits[4]={fDef,fReflect,fGoType,fIface};
+			unsigned bit=RND()%4;
+			u8 oldflag=flags[fi], newflag=oldflag ^ bits[bit];
+			if(chain) {
+				m2.nf=p2.nf=1; m2.fid=p2.fid=&fi; m2.fval=&oldflag; p2.fval=&newflag;
+				flagChanges[bit]++;
+				if(isRoot[rt]) {m2.nr=1;m2.root=&rt;rootRemoves++;} else {p2.nr=1;p2.root=&rt;rootAdds++;}
+			}
 			update(&m2, &p2);
+			if(chain) {
+				if(scratchCheck(f)) { printf("failing flag %u %u->%u root %u\n",fi,oldflag,newflag,rt); fbad++; break; }
+				completed++;
+				if(f%20==19) { printf("chain checked %d random steps\n",f+1); fflush(stdout); }
+				free(rsrc_); free(rk); free(rv); continue;
+			}
 			memcpy(snap, live, N + 1);
 			u8 *sI = getenv("FUZZV") ? malloc(N + 1) : NULL, *sT = sI ? malloc(N + 1) : NULL, *sC = sI ? malloc(nmeth) : NULL;
 			if (sI) memcpy(sI, iface, N + 1), memcpy(sT, typeDone, N + 1), memcpy(sC, called, nmeth);
@@ -706,7 +845,8 @@ int main(int argc, char **argv) {
 			if (checkLive("fuzz revert vs B oracle", liveB, nlb)) fbad++;
 			free(rsrc_), free(rk), free(rv);
 		}
-		printf("fuzz: %d random diffs, %ld failed\n", fz, fbad);
+		if(chain) printf("chain coverage: %zu completed, %zu real steps, roots +%zu -%zu; flags def/reflect/type/iface %zu/%zu/%zu/%zu\n",completed,realSteps,rootAdds,rootRemoves,flagChanges[0],flagChanges[1],flagChanges[2],flagChanges[3]);
+		printf("%s: %d random diffs seed %llu, %ld failed\n", chain ? "chain" : "fuzz", fz, (unsigned long long)(getenv("SEED") ? strtoull(getenv("SEED"),NULL,0) : 88172645463325252ull), fbad);
 		bad += fbad;
 	}
 	printf(bad ? "P2INC FAIL\n" : "P2INC OK\n");

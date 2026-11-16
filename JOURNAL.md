@@ -148,5 +148,11 @@ all (builder running), and a Halide cell on the flattened P4 stream tests whethe
 - 2026-11-16T20:18Z p2inc merged (C maintained flood, results/c-incremental.md): edit 1 update 3 us, edit 2 (12 K deaths) 5.5-9.5 ms vs 43-45 ms p2 recompute; lead rebuilt + reran both edits (P2INC OK) and 50 fuzz diffs (0 failed). Textbook DRed is 123 ms (3x recompute): the support stamps are the attack. DD's 555 ms 8-worker update was load (29 quiet).
 - 2026-11-16T20:19Z started codex-relayout (layout+relocate after an edit, slack layout, C incremental 3a+3b) and an Opus builder on stable identity in C (vs ddflow unify 0.7-1.1 s): the two open pieces of ATTACKS 5.
 - 2026-11-16T20:20Z started builders: GraphIt column (P2; the open new-column idea from Halide's reader) and maintained resolve in C (ATTACKS 5's unmeasured resolve half).
+<<<<<<< HEAD
 - 2026-11-16T20:23Z skeptic-inc triaged (5 accepted: ATTACKS 5 Obs 2/3 comparators and warm-repeat caveats fixed; Codex codex-p2inc-chain for chained fuzz, fresh-edit work, B->A baseline, method rows).
 - 2026-11-16T20:37Z unify.c merged (stable identity in C, results/c-unify.md): byte-identical to ddflow's idmap/strmap on both edits; lead rebuilt + --check OK, warm 34-36 / 50-52 ms vs ddflow 0.7-1.1 s; ATTACKS 5 Obs 1 updated.
+=======
+
+2026-11-16 skeptic-inc follow-up: isolated-child floods check 240 maintained random diffs plus 24 real steps per seed; grow persistent overlay storage after minimal hang/overflow regressions. Five fresh/repeat/cache-displaced rounds show history-dependent work and fresh edit-2 B->A slower than recompute A (105.433 vs 45.700 ms median); method tables independently unchanged. Details and commands: results/c-incremental.md.
+>>>>>>> 42fbec9d1d28d494b9a2975997c45edd0d2443d7
+- 2026-11-16T20:38Z codex-p2inc-chain merged: 792 chained steps OK, 2 storage bugs fixed; fresh edit-2 B->A 105 ms vs recompute 45.7 (lead reran 94-102 ms, 49 M reverse reads): ATTACKS 5 Obs 3 corrected — maintenance loses that direction from a fresh state.

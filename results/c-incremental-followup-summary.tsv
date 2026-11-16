@@ -1,0 +1,33 @@
+edit	direction	mode	n	ms min/median/max	retractions min/median/max	reverse reads min/median/max
+minio-edit	A->B	evicted toggles first	5	0.039/0.040/0.055	1.000/1.000/1.000	16.000/16.000/16.000
+minio-edit	A->B	evicted toggles repeat	20	0.011/0.013/0.015	1.000/1.000/1.000	14.000/14.000/14.000
+minio-edit	A->B	fresh A	5	0.035/0.038/0.049	1.000/1.000/1.000	16.000/16.000/16.000
+minio-edit	A->B	p2 destination	5	40.300/49.300/63.000	-	-
+minio-edit	A->B	p2par 1 threads best of 5	5	30.500/32.200/40.300	-	-
+minio-edit	A->B	p2par 8 threads best of 5	5	17.300/18.000/20.600	-	-
+minio-edit	A->B	toggles first	5	0.033/0.048/0.066	1.000/1.000/1.000	16.000/16.000/16.000
+minio-edit	A->B	toggles repeat	20	0.002/0.009/0.020	1.000/1.000/1.000	14.000/14.000/14.000
+minio-edit	B->A	evicted toggles first	5	0.015/0.018/0.034	2.000/2.000/2.000	7.000/7.000/7.000
+minio-edit	B->A	evicted toggles repeat	20	0.016/0.019/0.046	2.000/2.000/2.000	7.000/7.000/7.000
+minio-edit	B->A	fresh B	5	0.026/0.031/0.041	6.000/6.000/6.000	31.000/31.000/31.000
+minio-edit	B->A	p2 destination	5	40.600/44.100/57.900	-	-
+minio-edit	B->A	p2par 1 threads best of 5	5	26.900/36.400/45.900	-	-
+minio-edit	B->A	p2par 8 threads best of 5	5	18.200/20.800/22.700	-	-
+minio-edit	B->A	toggles first	5	0.005/0.015/0.020	2.000/2.000/2.000	7.000/7.000/7.000
+minio-edit	B->A	toggles repeat	20	0.004/0.012/0.022	2.000/2.000/2.000	7.000/7.000/7.000
+minio-edit2	A->B	evicted toggles first	5	21.316/28.821/52.401	32238.000/32238.000/32238.000	3049918.000/3049918.000/3049918.000
+minio-edit2	A->B	evicted toggles repeat	20	12.327/14.119/20.225	20412.000/20412.000/20412.000	2253023.000/2253023.000/2257483.000
+minio-edit2	A->B	fresh A	5	20.979/23.581/33.811	32238.000/32238.000/32238.000	3049918.000/3049918.000/3049918.000
+minio-edit2	A->B	p2 destination	5	40.400/45.200/56.400	-	-
+minio-edit2	A->B	p2par 1 threads best of 5	5	32.900/33.500/37.000	-	-
+minio-edit2	A->B	p2par 8 threads best of 5	5	16.700/21.500/26.200	-	-
+minio-edit2	A->B	toggles first	5	19.189/23.360/25.030	32238.000/32238.000/32238.000	3049918.000/3049918.000/3049918.000
+minio-edit2	A->B	toggles repeat	20	10.582/13.550/47.584	20412.000/20412.000/20412.000	2253023.000/2253023.000/2257483.000
+minio-edit2	B->A	evicted toggles first	5	7.291/9.943/15.860	8112.000/8112.000/8112.000	1088061.000/1088061.000/1088061.000
+minio-edit2	B->A	evicted toggles repeat	20	7.321/8.118/11.150	8102.000/8102.000/8102.000	1086132.000/1086132.000/1086145.000
+minio-edit2	B->A	fresh B	5	99.367/105.433/116.229	35378.000/35378.000/35378.000	49171996.000/49171996.000/49171996.000
+minio-edit2	B->A	p2 destination	5	40.100/45.700/55.600	-	-
+minio-edit2	B->A	p2par 1 threads best of 5	5	30.000/32.700/46.600	-	-
+minio-edit2	B->A	p2par 8 threads best of 5	5	15.800/17.000/23.600	-	-
+minio-edit2	B->A	toggles first	5	6.213/7.667/11.864	8112.000/8112.000/8112.000	1088061.000/1088061.000/1088061.000
+minio-edit2	B->A	toggles repeat	20	5.737/8.101/23.076	8102.000/8102.000/8102.000	1086132.000/1086132.000/1086145.000
