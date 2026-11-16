@@ -28,5 +28,5 @@ for t in 1 8; do
     e2e p1 $t $B/p1 $D e2e $v
     e2e p2-lazy $t $B/p2 $D e2e $([ $t = 1 ] && echo 0 || echo 1)
     e2e p2-eager $t $B/p2 $D e2e $([ $t = 1 ] && echo 2 || echo 3)
-    e2e p3 $t $B/p3 $D e2e 0 $([ $t = 1 ] && echo 0 || echo 2)
+    e2e p3 $t $B/p3 $D e2e 0 $([ $t = 1 ] && echo 0 || echo 3)
 done
