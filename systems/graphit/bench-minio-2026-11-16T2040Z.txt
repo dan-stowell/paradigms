@@ -1,0 +1,17 @@
+# start 2026-11-16T20:40:21Z load 2.43 2.28 2.04 data /home/exedev/paradigms/data/minio rounds 5
+# round 1 20:40:21 load 2.43 2.28 2.04
+# round 2 20:40:37 load 2.79 2.37 2.07
+# round 3 20:40:53 load 2.98 2.43 2.09
+# round 4 20:41:09 load 3.40 2.55 2.14
+# round 5 20:41:26 load 3.18 2.54 2.14
+gi-serial        1 thr  warm min 39.795 / med 44.95 / max 46.168 ms   e2e min 290 / med 295 / max 322 ms
+gi-push          1 thr  warm min 52.751 / med 57.282 / max 61.088 ms   e2e min 299 / med 315 / max 335 ms
+gi-hybrid_bv     1 thr  warm min 48.771 / med 56.294 / max 63.492 ms   e2e min 279 / med 285 / max 321 ms
+gi-push          8 thr  warm min 17.54 / med 29.448 / max 30.809 ms   e2e min 251 / med 285 / max 314 ms
+gi-push_sliding  8 thr  warm min 18.194 / med 25.936 / max 27.297 ms   e2e min 259 / med 267 / max 341 ms
+gi-hybrid_bv     8 thr  warm min 16.831 / med 24.159 / max 28.491 ms   e2e min 254 / med 278 / max 325 ms
+gi-densepush     8 thr  warm min 17.704 / med 24.266 / max 29.692 ms   e2e min 260 / med 274 / max 278 ms
+C-p2par          1 thr  warm min 27.6 / med 33.910 / max 34.817 ms   e2e min 77 / med 80 / max 93 ms
+C-p2par          8 thr  warm min 10.6 / med 15.889 / max 19.693 ms   e2e min 45 / med 48 / max 53 ms
+C-p2             1 thr  warm min 37.1 / med 42.3 / max 49.4 ms   e2e min 61 / med 68 / max 84 ms
+# end 2026-11-16T20:41:43Z load 2.92 2.51 2.14

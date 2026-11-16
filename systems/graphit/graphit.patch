@@ -1,0 +1,22 @@
+diff --git a/src/backend/gen_edge_apply_func_decl.cpp b/src/backend/gen_edge_apply_func_decl.cpp
+index 8343879..ee273f2 100644
+--- a/src/backend/gen_edge_apply_func_decl.cpp
++++ b/src/backend/gen_edge_apply_func_decl.cpp
+@@ -624,7 +624,7 @@ namespace graphit {
+             }
+ 
+             //printIndent();
+-            if (apply->is_parallel) {
++            if (apply->is_parallel && !numa_aware) {
+               oss_ << "ligra::parallel_for_lambda((NodeID)0, (NodeID)" << outer_end << ", [&] (NodeID " << iter << ") {" << std::endl;
+             } else {
+               oss_ << for_type << " ( NodeID " << iter << "=0; " << iter << " < " << outer_end << "; " << iter << "++) {" << std::endl;
+@@ -673,7 +673,7 @@ namespace graphit {
+             //end of outer for loop
+             dedent();
+             printIndent();
+-            if (apply->is_parallel) {
++            if (apply->is_parallel && !numa_aware) {
+               oss_ << "}); //end of outer for loop" << std::endl;
+             } else {
+               oss_ << "} //end of outer for loop" << std::endl;

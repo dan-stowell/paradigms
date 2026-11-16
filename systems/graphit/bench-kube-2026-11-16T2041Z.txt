@@ -1,0 +1,17 @@
+# start 2026-11-16T20:41:43Z load 2.92 2.51 2.14 data /home/exedev/paradigms/data/kube-apiserver rounds 5
+# round 1 20:41:43 load 2.92 2.51 2.14
+# round 2 20:42:08 load 2.93 2.55 2.16
+# round 3 20:42:34 load 2.89 2.58 2.19
+# round 4 20:42:58 load 2.76 2.57 2.19
+# round 5 20:43:22 load 2.71 2.57 2.20
+gi-serial        1 thr  warm min 53.569 / med 58 / max 59.729 ms   e2e min 571 / med 606 / max 649 ms
+gi-push          1 thr  warm min 58 / med 79.76 / max 83.266 ms   e2e min 556 / med 611 / max 633 ms
+gi-hybrid_bv     1 thr  warm min 58 / med 80.445 / max 86.051 ms   e2e min 590 / med 608 / max 633 ms
+gi-push          8 thr  warm min 23.288 / med 32.818 / max 44.424 ms   e2e min 486 / med 499 / max 507 ms
+gi-push_sliding  8 thr  warm min 23.83 / med 30.981 / max 36.197 ms   e2e min 457 / med 501 / max 508 ms
+gi-hybrid_bv     8 thr  warm min 23.499 / med 33.862 / max 36.665 ms   e2e min 505 / med 509 / max 524 ms
+gi-densepush     8 thr  warm min 23.382 / med 31.216 / max 37.053 ms   e2e min 464 / med 506 / max 570 ms
+C-p2par          1 thr  warm min 39.0 / med 44.616 / max 45.455 ms   e2e min 109 / med 130 / max 134 ms
+C-p2par          8 thr  warm min 15.1 / med 19.492 / max 20.352 ms   e2e min 91 / med 95 / max 112 ms
+C-p2             1 thr  warm min 61.9 / med 66.3 / max 79.5 ms   e2e min 96 / med 120 / max 137 ms
+# end 2026-11-16T20:43:46Z load 2.47 2.53 2.19

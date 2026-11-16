@@ -1,0 +1,56 @@
+% p2.gt: problem 2 (reach) in GraphIt. The rules are compiled into the graph by towsg.c (see its header): the
+% flood is one guarded BFS from vertex 0. An edge's weight is a guard vertex that must also be reached (an AND);
+% plain edges are guarded by vertex 0, reached first. Schedules live in sched/*.gt (label #s1#).
+%   p2 GRAPH.wsg DATA REPS
+element Vertex end
+element Edge end
+
+const edges : edgeset{Edge}(Vertex, Vertex, int) = load (argv[1]);
+const vertices : vertexset{Vertex} = edges.getVertices();
+const st : vector{Vertex}(int) = 1;  % 1 not reached, 0 reached
+
+extern func check(dir : string, reps : int) -> output : int;
+
+func notReached(v : Vertex) -> output : bool
+    % written "0 < st[v]", not "st[v] == 1" or "st[v] > 0": with st[v] on the left GraphIt's midend (atomics_op_lower)
+    % rewrites the min= below as CAS(st[dst], <the right-hand constant>, st[guard]), which is wrong (NOTES.md)
+    output = 0 < st[v];
+end
+
+func reach(src : Vertex, dst : Vertex, guard : int)
+    st[dst] min= st[guard];
+end
+
+func reset(v : Vertex)
+    st[v] = 1;
+end
+
+func main()
+    var reps : int = atoi(argv[3]);
+    var rounds : int = 0;
+    var pops : int = 0;
+    for rep in 0:reps
+        vertices.apply(reset);
+        startTimer();
+        var frontier : vertexset{Vertex} = new vertexset{Vertex}(0);
+        frontier.addVertex(0);
+        st[0] = 0;
+        rounds = 0;
+        pops = 0;
+        while (frontier.getVertexSetSize() != 0)
+            rounds = rounds + 1;
+            pops = pops + frontier.getVertexSetSize();
+            #s1# var output : vertexset{Vertex} = edges.from(frontier).to(notReached).applyModified(reach, st, true);
+            delete frontier;
+            frontier = output;
+        end
+        delete frontier;
+        var elapsed : float = stopTimer();
+        print elapsed * 1000.0;
+    end
+    print "rounds";
+    print rounds;
+    print "pops";
+    print pops;
+    var bad : int = check(argv[2], reps);
+end
