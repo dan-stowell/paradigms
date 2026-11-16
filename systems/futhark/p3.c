@@ -22,12 +22,16 @@ int main(int argc, char **argv) {
 		struct futhark_u64_1d *soff = LOAD(u64, "p3_str.off.u64");
 		SYNC();
 		printf("load %.1f ms\n", (now() - tl0) * 1e3);
-		int loopv = strcmp(cell, "3a_loop") == 0;
+		// 3a: radix sort + segmented scan; 3a_loop: sequential cursor loop; 3a_cells, 3a_tl, 3a_radix: pieces (no check)
+		typeof(futhark_entry_layout) *entry = futhark_entry_layout;
+		if (strcmp(cell, "3a_loop") == 0) entry = futhark_entry_layout_loop;
+		if (strcmp(cell, "3a_cells") == 0) entry = futhark_entry_piece_cells, check = 0;
+		if (strcmp(cell, "3a_tl") == 0) entry = futhark_entry_piece_typelinks, check = 0;
+		if (strcmp(cell, "3a_radix") == 0) entry = futhark_entry_piece_radix, check = 0;
 		struct futhark_u32_1d *out = NULL;
 		TIMEIT(cell, {
 			if (out) futhark_free_u32_1d(ctx, out);
-			fut_check((loopv ? futhark_entry_layout_loop : futhark_entry_layout)(ctx, &out, nunits, minFunc, bstart, bmin, bucket, cls,
-			                                                                     size, unit, sym, tlstr, soff, sbin), cell);
+			fut_check(entry(ctx, &out, nunits, minFunc, bstart, bmin, bucket, cls, size, unit, sym, tlstr, soff, sbin), cell);
 		});
 		u32 *addr = malloc(4 * (size_t)L);
 		futhark_values_u32_1d(ctx, out, addr);

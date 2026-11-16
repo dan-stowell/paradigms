@@ -1,7 +1,7 @@
 -- p3.fut: problem 3, lay out (3a) and relocate (3b), from the flat files (ref/flat/README.md).
 -- Entries take the flat columns as arrays; the C driver (p3.c) mmaps the files and calls them.
 import "lib/sorts/radix_sort"
-import "lib/sorts/merge_sort"
+import "msort"
 import "lib/segmented/segmented"
 
 def nb = 16i64          -- buckets
@@ -50,13 +50,15 @@ def cell_starts [L] (nunits: i64) (min_func: u32) (bstart: [nb]u32) (bminalign: 
   in (occ, cell, cstart)
 
 -- typelinks: sorted by type string (bytewise, then shorter first), then id; then align and add size
-def str_cmp (soff: []u64) (sbin: []u8) (x: u32) (y: u32) : i32 =
+-- compare strings x and y from byte k0 on (equal ids are equal strings: interned)
+def str_cmp (soff: []u64) (sbin: []u8) (k0: i64) (x: u32) (y: u32) : i32 =
+  if x == y then 0 else
   let xo = i64.u64 soff[i64.u32 x]
   let xn = i64.u64 soff[i64.u32 x + 1] - xo
   let yo = i64.u64 soff[i64.u32 y]
   let yn = i64.u64 soff[i64.u32 y + 1] - yo
   let n = i64.min xn yn
-  let (_, c) = loop (k, c) = (0, 0) while c == 0 && k < n do
+  let (_, c) = loop (k, c) = (k0, 0) while c == 0 && k < n do
                  let p = sbin[xo + k]
                  let q = sbin[yo + k]
                  in (k + 1, if p < q then -1 else if p > q then 1 else 0)
@@ -65,8 +67,16 @@ def str_cmp (soff: []u64) (sbin: []u8) (x: u32) (y: u32) : i32 =
 def typelinks [L] (bstart: [nb]u32) (bucket: [L]u8) (class: [L]u8) (size: [L]u32)
                   (sym: [L]u32) (tlstr: [L]u32) (soff: []u64) (sbin: []u8) =
   let tl = filter (\i -> bucket[i] == b_typelink) (iota L)
-  let leq i j = let c = str_cmp soff sbin tlstr[i] tlstr[j] in c < 0 || (c == 0 && sym[i] <= sym[j])
-  let tl = merge_sort leq tl
+  -- sort (first 8 bytes, next 8 bytes, index) tuples: most comparisons end in the two words, the rest
+  -- compare the whole strings
+  let word i k = let o = i64.u64 soff[i64.u32 tlstr[i]]
+                 let n = i64.u64 soff[i64.u32 tlstr[i] + 1] - o
+                 in loop w = 0u64 for j < 8 do w << 8 | (if k + j < n then u64.u8 sbin[o + k + j] else 0)
+  let keyed = map (\i -> (word i 0, word i 8, i)) tl
+  let leq (x0, x1, i) (y0, y1, j) =
+    if x0 != y0 then x0 < y0 else if x1 != y1 then x1 < y1
+    else let c = str_cmp soff sbin 16 tlstr[i] tlstr[j] in c < 0 || (c == 0 && sym[i] <= sym[j])
+  let tl = merge_sort_cpu leq keyed |> map (.2)
   let steps = map (\i -> (0, 1 << i64.u8 class[i], i64.u32 size[i])) tl
   let ends = scan adv_then adv_id steps
   let addr = map2 (\e (_, _, n) -> adv_apply e (i64.u32 bstart[i64.u8 b_typelink]) - n) ends steps
@@ -101,6 +111,23 @@ entry layout_loop [L] (nunits: i64) (min_func: u32) (bstart: [nb]u32) (bminalign
       in if c < 0 then (addr, cur) else (addr with [i] = cur[c], cur with [c] = cur[c] + occ[i])
   let (tl, taddr) = typelinks bstart bucket class size sym tlstr soff sbin
   in scatter addr tl taddr |> map u32.i64
+
+-- the pieces of 3a, to time them apart (same signature as layout; the results are not addresses)
+entry piece_cells [L] (nunits: i64) (min_func: u32) (bstart: [nb]u32) (bminalign: [nb]u32)
+                      (bucket: [L]u8) (class: [L]u8) (size: [L]u32) (unit: [L]u32)
+                      (_sym: [L]u32) (_tlstr: [L]u32) (_soff: []u64) (_sbin: []u8) : [L]u32 =
+  let (_, _, cstart) = cell_starts nunits min_func bstart bminalign bucket class size unit
+  in map (\i -> u32.i64 cstart[i % length cstart]) (iota L)
+entry piece_typelinks [L] (_nunits: i64) (_min_func: u32) (bstart: [nb]u32) (_bminalign: [nb]u32)
+                      (bucket: [L]u8) (class: [L]u8) (size: [L]u32) (_unit: [L]u32)
+                      (sym: [L]u32) (tlstr: [L]u32) (soff: []u64) (sbin: []u8) : [L]u32 =
+  let (tl, taddr) = typelinks bstart bucket class size sym tlstr soff sbin
+  in scatter (replicate L 0) tl taddr |> map u32.i64
+entry piece_radix [L] (_nunits: i64) (_min_func: u32) (_bstart: [nb]u32) (_bminalign: [nb]u32)
+                      (bucket: [L]u8) (class: [L]u8) (_size: [L]u32) (_unit: [L]u32)
+                      (_sym: [L]u32) (_tlstr: [L]u32) (_soff: []u64) (_sbin: []u8) : [L]u32 =
+  let key = map2 (\b c -> if b == b_typelink then 255u32 else u32.u8 b * 13 + 12 - u32.u8 c) bucket class
+  in radix_sort_by_key (\i -> key[i]) 8 u32.get_bit (iota L) |> map u32.i64
 
 -- 3b. Copy every symbol's bytes into the image, then patch its relocations.
 def chunk = 64i64
