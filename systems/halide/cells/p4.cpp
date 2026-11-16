@@ -172,7 +172,8 @@ int main(int argc, char **argv) {
         bad += checkEmit();
     } else {
         printf("threads=%s huge=%d\n", th ? th : "default", huge);
-        Stat s = timeRuns(runSeg);
+        // (a wrapping lambda: timeRuns(runSeg) itself crashed in this build; not understood, see NOTES.md)
+        Stat s = timeRuns([&] { runSeg(); });
         printf("4 templates       " STAT_FMT "\n", STAT_ARGS(s));
         for (int v = 0; v < nLayouts; v++) {
             if (mode != "all" && mode != layouts[v].name) continue;

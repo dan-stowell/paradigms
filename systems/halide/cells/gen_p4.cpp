@@ -173,6 +173,11 @@ public:
     // patch: 0 = 8 byte stores per hole, the bytes it does not own to 8 scratch bytes (3b's form);
     //        1 = one 8-byte read-modify-write per hole (a dense vector), in two parity passes like the copy
     GeneratorParam<int> pform{"pform", 0};
+    // copy form: 0 = each item copies its bytes (a ragged scatter, above); 1 = each output byte fetches its own (a
+    // gather, the pure definition): per tile of output bytes, the items starting in it mark (source - destination)
+    // at their first byte, a running fill carries it to every byte, and code(x) = src(x + fill(x))
+    GeneratorParam<int> gform{"gform", 0};
+    GeneratorParam<int> tile{"tile", 4096};
     ITEM_INPUTS
     Input<Buffer<uint32_t, 1>> relHole{"relHole"};
     Input<Buffer<uint8_t, 1>> src{"src"};  // glue.bin, then tmpl.bin (segSrc points into it)
@@ -229,9 +234,41 @@ public:
         Expr nsrc = src.dim(0).extent();
 
         // ---- copy
-        code(x) = undef<uint8_t>();
         Over oc;
-        if (vec == 0) {  // (byte, item, chunk): the where on the byte is the inner loop's bound
+        Func mark("mark"), fill("fill"), first("first");
+        Var xi("xi"), tl("tl");
+        if (gform == 1) {
+            const int T = tile;
+            Expr ntile = (NC + 64 + T - 1) / T;
+            // the item holding the first byte of tile tl: the last item with at <= tl * T (zero-length items share
+            // their successor's at, so this is never one of them); 23 halving steps
+            Func bs("bsi");
+            bs(tl) = Tuple(0, n - 1);
+            RDom it(0, 23, "it");
+            {
+                Expr a = bs(tl)[0], b = bs(tl)[1], mid = (a + b + 1) / 2;
+                Expr le = i64(at(inside(mid, 0, n))) <= i64(tl) * T;
+                Expr go = a < b && it.x >= 0;
+                bs(tl) = Tuple(select(go && le, mid, a), select(go && !le, mid - 1, b));
+            }
+            first(tl) = inside(bs(min(tl, ntile))[0], 0, n - 1);
+            auto delta = [&](Expr i) { i = inside(i, 0, n - 1); Item di = item(*this, i); return di.src - i32(at(i)); };
+            const int NONE = -(1 << 30);
+            mark(xi, tl) = NONE;
+            RDom ri(1, 1 << 22, "ri");
+            Expr f0 = first(tl), im = min(f0 + ri, n - 1);
+            ri.where(ri <= first(tl + 1) - f0);
+            Expr pos = i32(at(inside(im, 0, n - 1))) - tl * T;  // in [0, T]: an item starting at the next tile's first byte goes to T
+            mark(inside(pos, 0, T), tl) = delta(im);
+            fill(xi, tl) = select(mark(xi, tl) != NONE, mark(xi, tl), delta(f0));
+            RDom rf(1, T - 1, "rf");
+            fill(rf, tl) = select(mark(rf, tl) != NONE, mark(rf, tl), fill(rf - 1, tl));
+            code(x) = src(inside(x + fill(x % T, x / T), 0, nsrc - 1));
+        } else {
+            code(x) = undef<uint8_t>();
+        }
+        if (gform == 1) {
+        } else if (vec == 0) {  // (byte, item, chunk): the where on the byte is the inner loop's bound
             oc = over({Range(0, 1 << 17)}, false, "rc");
             Item ci = item(*this, oc.i);
             oc.r.where(oc.r[0] < select(oc.real, ci.len, 0));
@@ -298,13 +335,22 @@ public:
 
         // ---- the schedule
         int pc = oc.ic + 1, pp = op.ic + 1;  // the chunk RVar of each update
-        if (vec > 0) code.update(0).allow_race_conditions().vectorize(oc.r[0]);
-        if (pform == 0) code.update(1).unroll(op.r[0]);
-        else code.update(1).allow_race_conditions().vectorize(op.r[0]);
+        int pu = gform == 1 ? 0 : 1;          // the patch's update
+        if (gform == 1) {
+            Var xt("xt"), xv("xv");
+            code.split(x, xt, xv, tile).vectorize(xv, 32);
+            if (par) code.parallel(xt);
+            mark.compute_at(code, xt).vectorize(xi, 32);
+            fill.compute_at(code, xt).vectorize(xi, 32);
+            first.compute_root();
+        }
+        if (vec > 0 && gform == 0) code.update(0).allow_race_conditions().vectorize(oc.r[0]);
+        if (pform == 0) code.update(pu).unroll(op.r[0]);
+        else code.update(pu).allow_race_conditions().vectorize(op.r[0]);
         if (par) {
             // (with parity, the chunk RVar is parallel inside the serial parity loop)
-            code.update(0).allow_race_conditions().parallel(oc.r[pc]);
-            code.update(1).allow_race_conditions().parallel(op.r[pp]);
+            if (gform == 0) code.update(0).allow_race_conditions().parallel(oc.r[pc]);
+            code.update(pu).allow_race_conditions().parallel(op.r[pp]);
             rel.update(0).allow_race_conditions().parallel(rm.z);
             rel.update(1).allow_race_conditions().parallel(orl.r[orl.ic + 1]);
         }

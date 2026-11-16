@@ -58,7 +58,8 @@ for p in $probs; do
         gen p4 templates templates
         for par in false true; do gen p4 layout lay_${par:0:1} par=$par; done
         for par in false true; do for vec in 0 16 32; do for pf in 0 1; do
-            gen p4 emit emit_${par:0:1}_v${vec}_p$pf par=$par vec=$vec pform=$pf; done; done; done
+            gen p4 emit emit_${par:0:1}_v${vec}_p$pf par=$par vec=$vec pform=$pf; done; done
+            gen p4 emit emit_${par:0:1}_g_p0 par=$par gform=1 pform=0; done
         { cat p4_variants.inc; table p4 layout layouts; table p4 emit emits; } > p4_variants.h
         ;;
     esac
