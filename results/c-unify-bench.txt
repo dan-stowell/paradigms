@@ -1,0 +1,330 @@
+== check minio-edit c1
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit c1fp
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit c1lazy
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit exact
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 350, verify keq 0, exact fallbacks 1, common prefix 0 suffix 0
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit omp8
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit omp8fp
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+/home/exedev/paradigms/data/minio-edit/diff/idmap_b.u32: 5205438 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 c1
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 c1fp
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 c1lazy
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 exact
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 744031, verify keq 0, exact fallbacks 1, common prefix 0 suffix 0
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 omp8
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== check minio-edit2 omp8fp
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+/home/exedev/paradigms/data/minio-edit2/diff/idmap_b.u32: 5205398 entries, 0 differ (byte-identical)
+/home/exedev/paradigms/data/minio-edit2/diff/strmap_b.u32: 18937 entries, 0 differ (byte-identical)
+CHECK OK
+== round 1 minio-edit c1 |  20:32:46 up  5:17,  0 user,  load average: 3.42, 2.41, 1.86
+end-to-end: map 39.74 ms (716107044 bytes, MAP_POPULATE) + unify 44.08 ms = 83.83 ms, 1 thread(s); 16134 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 43.02 ms, slow-path classes 0.01 ms, myers 0.01 ms
+warm: 28 reps in 1.04 s, 37.199 ms per unify (fast path 36.328, slow-path classes 0.017, myers 0.003)
+== round 1 minio-edit c1fp |  20:32:47 up  5:17,  0 user,  load average: 3.42, 2.41, 1.86
+--fp: per-object fingerprints of both dumps, 100.26 ms (outside the timing: an extractor would write them)
+end-to-end: map 39.33 ms (716107044 bytes, MAP_POPULATE) + unify 10.18 ms = 49.51 ms, 1 thread(s); 16139 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.10 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 429 reps in 1.00 s, 2.332 ms per unify (fast path 1.500, slow-path classes 0.011, myers 0.002)
+== round 1 minio-edit c1lazy |  20:32:48 up  5:17,  0 user,  load average: 3.47, 2.44, 1.88
+end-to-end: map 0.25 ms (716129780 bytes, lazy) + unify 10.65 ms = 10.89 ms, 1 thread(s); 5223 minor faults (21.4 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.10 ms, slow-path classes 0.08 ms, myers 0.01 ms
+warm: 426 reps in 1.00 s, 2.349 ms per unify (fast path 1.524, slow-path classes 0.011, myers 0.002)
+== round 1 minio-edit omp8 |  20:32:49 up  5:17,  0 user,  load average: 3.47, 2.44, 1.88
+end-to-end: map 51.14 ms (716107044 bytes, MAP_POPULATE) + unify 22.52 ms = 73.66 ms, 8 thread(s); 16148 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 21.20 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 61 reps in 1.01 s, 16.564 ms per unify (fast path 15.641, slow-path classes 0.018, myers 0.004)
+== round 1 minio-edit omp8fp |  20:32:51 up  5:17,  0 user,  load average: 3.47, 2.44, 1.88
+--fp: per-object fingerprints of both dumps, 111.80 ms (outside the timing: an extractor would write them)
+end-to-end: map 56.58 ms (716107044 bytes, MAP_POPULATE) + unify 4.73 ms = 61.31 ms, 8 thread(s); 16156 minor faults (66.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 3.62 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 544 reps in 1.00 s, 1.839 ms per unify (fast path 0.947, slow-path classes 0.013, myers 0.003)
+== round 1 minio-edit2 c1 |  20:32:52 up  5:17,  0 user,  load average: 3.47, 2.44, 1.88
+end-to-end: map 41.53 ms (716104839 bytes, MAP_POPULATE) + unify 73.63 ms = 115.16 ms, 1 thread(s); 23439 minor faults (96.0 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 40.80 ms, slow-path classes 27.32 ms, myers 3.74 ms
+warm: 20 reps in 1.01 s, 50.711 ms per unify (fast path 33.155, slow-path classes 15.601, myers 0.484)
+== round 1 minio-edit2 c1fp |  20:32:53 up  5:17,  0 user,  load average: 3.47, 2.44, 1.88
+--fp: per-object fingerprints of both dumps, 103.92 ms (outside the timing: an extractor would write them)
+end-to-end: map 43.11 ms (716104839 bytes, MAP_POPULATE) + unify 47.33 ms = 90.45 ms, 1 thread(s); 23468 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.09 ms, slow-path classes 33.33 ms, myers 3.78 ms
+warm: 53 reps in 1.02 s, 19.191 ms per unify (fast path 1.409, slow-path classes 15.834, myers 0.481)
+== round 1 minio-edit2 c1lazy |  20:32:54 up  5:17,  0 user,  load average: 3.59, 2.48, 1.89
+end-to-end: map 0.23 ms (716127575 bytes, lazy) + unify 43.80 ms = 44.04 ms, 1 thread(s); 13225 minor faults (54.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.27 ms, slow-path classes 29.98 ms, myers 3.74 ms
+warm: 50 reps in 1.01 s, 20.122 ms per unify (fast path 1.567, slow-path classes 16.498, myers 0.480)
+== round 1 minio-edit2 omp8 |  20:32:55 up  5:17,  0 user,  load average: 3.59, 2.48, 1.89
+end-to-end: map 42.44 ms (716104839 bytes, MAP_POPULATE) + unify 50.00 ms = 92.44 ms, 8 thread(s); 23451 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 15.42 ms, slow-path classes 28.61 ms, myers 3.70 ms
+warm: 30 reps in 1.00 s, 33.424 ms per unify (fast path 15.440, slow-path classes 16.078, myers 0.462)
+== round 1 minio-edit2 omp8fp |  20:32:56 up  5:17,  0 user,  load average: 3.59, 2.48, 1.89
+--fp: per-object fingerprints of both dumps, 104.99 ms (outside the timing: an extractor would write them)
+end-to-end: map 42.25 ms (716104839 bytes, MAP_POPULATE) + unify 36.46 ms = 78.71 ms, 8 thread(s); 23481 minor faults (96.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 3.97 ms, slow-path classes 26.92 ms, myers 3.79 ms
+warm: 50 reps in 1.01 s, 20.202 ms per unify (fast path 0.856, slow-path classes 17.325, myers 0.472)
+== round 2 minio-edit c1 |  20:32:58 up  5:17,  0 user,  load average: 3.59, 2.48, 1.89
+end-to-end: map 36.42 ms (716107044 bytes, MAP_POPULATE) + unify 42.10 ms = 78.52 ms, 1 thread(s); 16134 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 41.04 ms, slow-path classes 0.01 ms, myers 0.01 ms
+warm: 28 reps in 1.00 s, 35.750 ms per unify (fast path 34.857, slow-path classes 0.015, myers 0.003)
+== round 2 minio-edit c1fp |  20:32:59 up  5:17,  0 user,  load average: 3.70, 2.52, 1.91
+--fp: per-object fingerprints of both dumps, 100.87 ms (outside the timing: an extractor would write them)
+end-to-end: map 50.81 ms (716107044 bytes, MAP_POPULATE) + unify 10.17 ms = 60.98 ms, 1 thread(s); 16142 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.10 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 416 reps in 1.00 s, 2.409 ms per unify (fast path 1.573, slow-path classes 0.011, myers 0.002)
+== round 2 minio-edit c1lazy |  20:33:00 up  5:17,  0 user,  load average: 3.70, 2.52, 1.91
+end-to-end: map 0.25 ms (716129780 bytes, lazy) + unify 10.43 ms = 10.68 ms, 1 thread(s); 5225 minor faults (21.4 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.28 ms, slow-path classes 0.08 ms, myers 0.01 ms
+warm: 429 reps in 1.00 s, 2.336 ms per unify (fast path 1.505, slow-path classes 0.010, myers 0.002)
+== round 2 minio-edit omp8 |  20:33:01 up  5:17,  0 user,  load average: 3.70, 2.52, 1.91
+end-to-end: map 46.05 ms (716107044 bytes, MAP_POPULATE) + unify 18.18 ms = 64.23 ms, 8 thread(s); 16147 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 17.11 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 67 reps in 1.01 s, 15.107 ms per unify (fast path 14.198, slow-path classes 0.017, myers 0.003)
+== round 2 minio-edit omp8fp |  20:33:02 up  5:17,  0 user,  load average: 3.70, 2.52, 1.91
+--fp: per-object fingerprints of both dumps, 100.08 ms (outside the timing: an extractor would write them)
+end-to-end: map 43.91 ms (716107044 bytes, MAP_POPULATE) + unify 4.42 ms = 48.34 ms, 8 thread(s); 16160 minor faults (66.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 3.16 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 641 reps in 1.00 s, 1.560 ms per unify (fast path 0.721, slow-path classes 0.011, myers 0.003)
+== round 2 minio-edit2 c1 |  20:33:03 up  5:17,  0 user,  load average: 3.70, 2.52, 1.91
+end-to-end: map 55.08 ms (716104839 bytes, MAP_POPULATE) + unify 74.56 ms = 129.64 ms, 1 thread(s); 23439 minor faults (96.0 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 42.30 ms, slow-path classes 26.65 ms, myers 3.70 ms
+warm: 18 reps in 1.00 s, 55.823 ms per unify (fast path 34.930, slow-path classes 18.567, myers 0.573)
+== round 2 minio-edit2 c1fp |  20:33:04 up  5:17,  0 user,  load average: 3.65, 2.53, 1.92
+--fp: per-object fingerprints of both dumps, 189.01 ms (outside the timing: an extractor would write them)
+end-to-end: map 49.74 ms (716104839 bytes, MAP_POPULATE) + unify 96.74 ms = 146.48 ms, 1 thread(s); 23465 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 17.07 ms, slow-path classes 64.63 ms, myers 8.53 ms
+warm: 52 reps in 1.01 s, 19.424 ms per unify (fast path 1.427, slow-path classes 16.028, myers 0.539)
+== round 2 minio-edit2 c1lazy |  20:33:06 up  5:17,  0 user,  load average: 3.65, 2.53, 1.92
+end-to-end: map 0.24 ms (716127575 bytes, lazy) + unify 43.75 ms = 43.99 ms, 1 thread(s); 13230 minor faults (54.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.69 ms, slow-path classes 29.57 ms, myers 3.66 ms
+warm: 51 reps in 1.01 s, 19.757 ms per unify (fast path 1.450, slow-path classes 16.311, myers 0.545)
+== round 2 minio-edit2 omp8 |  20:33:07 up  5:17,  0 user,  load average: 3.65, 2.53, 1.92
+end-to-end: map 44.68 ms (716104839 bytes, MAP_POPULATE) + unify 44.03 ms = 88.71 ms, 8 thread(s); 23451 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 12.69 ms, slow-path classes 25.91 ms, myers 3.66 ms
+warm: 36 reps in 1.01 s, 28.038 ms per unify (fast path 10.375, slow-path classes 15.755, myers 0.478)
+== round 2 minio-edit2 omp8fp |  20:33:08 up  5:17,  0 user,  load average: 3.65, 2.53, 1.92
+--fp: per-object fingerprints of both dumps, 100.36 ms (outside the timing: an extractor would write them)
+end-to-end: map 47.09 ms (716104839 bytes, MAP_POPULATE) + unify 36.67 ms = 83.77 ms, 8 thread(s); 23479 minor faults (96.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 3.78 ms, slow-path classes 26.77 ms, myers 4.11 ms
+warm: 49 reps in 1.01 s, 20.520 ms per unify (fast path 0.957, slow-path classes 17.389, myers 0.597)
+== round 3 minio-edit c1 |  20:33:09 up  5:17,  0 user,  load average: 3.51, 2.52, 1.92
+end-to-end: map 56.51 ms (716107044 bytes, MAP_POPULATE) + unify 47.00 ms = 103.51 ms, 1 thread(s); 16134 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 44.94 ms, slow-path classes 0.02 ms, myers 0.02 ms
+warm: 29 reps in 1.02 s, 35.296 ms per unify (fast path 34.413, slow-path classes 0.018, myers 0.003)
+== round 3 minio-edit c1fp |  20:33:10 up  5:17,  0 user,  load average: 3.51, 2.52, 1.92
+--fp: per-object fingerprints of both dumps, 103.06 ms (outside the timing: an extractor would write them)
+end-to-end: map 61.29 ms (716107044 bytes, MAP_POPULATE) + unify 10.41 ms = 71.70 ms, 1 thread(s); 16141 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.30 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 429 reps in 1.00 s, 2.333 ms per unify (fast path 1.498, slow-path classes 0.010, myers 0.002)
+== round 3 minio-edit c1lazy |  20:33:12 up  5:17,  0 user,  load average: 3.51, 2.52, 1.92
+end-to-end: map 0.25 ms (716129780 bytes, lazy) + unify 10.11 ms = 10.36 ms, 1 thread(s); 5226 minor faults (21.4 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 8.95 ms, slow-path classes 0.08 ms, myers 0.01 ms
+warm: 424 reps in 1.00 s, 2.360 ms per unify (fast path 1.528, slow-path classes 0.010, myers 0.002)
+== round 3 minio-edit omp8 |  20:33:13 up  5:17,  0 user,  load average: 3.51, 2.52, 1.92
+end-to-end: map 51.97 ms (716107044 bytes, MAP_POPULATE) + unify 21.57 ms = 73.55 ms, 8 thread(s); 16145 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 20.28 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 48 reps in 1.01 s, 21.089 ms per unify (fast path 20.166, slow-path classes 0.018, myers 0.003)
+== round 3 minio-edit omp8fp |  20:33:14 up  5:17,  0 user,  load average: 4.67, 2.78, 2.00
+--fp: per-object fingerprints of both dumps, 186.56 ms (outside the timing: an extractor would write them)
+end-to-end: map 40.62 ms (716107044 bytes, MAP_POPULATE) + unify 12.33 ms = 52.95 ms, 8 thread(s); 16159 minor faults (66.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 11.28 ms, slow-path classes 0.01 ms, myers 0.01 ms
+warm: 302 reps in 1.00 s, 3.324 ms per unify (fast path 2.443, slow-path classes 0.012, myers 0.003)
+== round 3 minio-edit2 c1 |  20:33:15 up  5:17,  0 user,  load average: 4.67, 2.78, 2.00
+end-to-end: map 40.64 ms (716104839 bytes, MAP_POPULATE) + unify 73.68 ms = 114.32 ms, 1 thread(s); 23437 minor faults (96.0 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 41.32 ms, slow-path classes 26.98 ms, myers 3.64 ms
+warm: 20 reps in 1.01 s, 50.647 ms per unify (fast path 32.829, slow-path classes 15.776, myers 0.544)
+== round 3 minio-edit2 c1fp |  20:33:16 up  5:17,  0 user,  load average: 4.67, 2.78, 2.00
+--fp: per-object fingerprints of both dumps, 99.85 ms (outside the timing: an extractor would write them)
+end-to-end: map 41.20 ms (716104839 bytes, MAP_POPULATE) + unify 40.68 ms = 81.88 ms, 1 thread(s); 23467 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.69 ms, slow-path classes 26.47 ms, myers 3.74 ms
+warm: 52 reps in 1.01 s, 19.423 ms per unify (fast path 1.403, slow-path classes 16.017, myers 0.563)
+== round 3 minio-edit2 c1lazy |  20:33:17 up  5:17,  0 user,  load average: 4.67, 2.78, 2.00
+end-to-end: map 0.24 ms (716127575 bytes, lazy) + unify 44.06 ms = 44.30 ms, 1 thread(s); 13229 minor faults (54.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.65 ms, slow-path classes 29.91 ms, myers 3.68 ms
+warm: 52 reps in 1.02 s, 19.534 ms per unify (fast path 1.396, slow-path classes 16.157, myers 0.552)
+== round 3 minio-edit2 omp8 |  20:33:19 up  5:17,  0 user,  load average: 4.54, 2.78, 2.01
+end-to-end: map 43.01 ms (716104839 bytes, MAP_POPULATE) + unify 46.39 ms = 89.40 ms, 8 thread(s); 23450 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 13.51 ms, slow-path classes 27.43 ms, myers 3.66 ms
+warm: 31 reps in 1.03 s, 33.186 ms per unify (fast path 13.791, slow-path classes 17.251, myers 0.579)
+== round 3 minio-edit2 omp8fp |  20:33:20 up  5:17,  0 user,  load average: 4.54, 2.78, 2.01
+--fp: per-object fingerprints of both dumps, 99.76 ms (outside the timing: an extractor would write them)
+end-to-end: map 56.91 ms (716104839 bytes, MAP_POPULATE) + unify 36.12 ms = 93.03 ms, 8 thread(s); 23478 minor faults (96.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 3.51 ms, slow-path classes 27.09 ms, myers 3.75 ms
+warm: 54 reps in 1.00 s, 18.548 ms per unify (fast path 0.752, slow-path classes 15.815, myers 0.547)
+== round 4 minio-edit c1 |  20:33:21 up  5:17,  0 user,  load average: 4.54, 2.78, 2.01
+end-to-end: map 42.14 ms (716107044 bytes, MAP_POPULATE) + unify 42.28 ms = 84.42 ms, 1 thread(s); 16135 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 41.22 ms, slow-path classes 0.01 ms, myers 0.01 ms
+warm: 30 reps in 1.02 s, 33.991 ms per unify (fast path 33.144, slow-path classes 0.015, myers 0.003)
+== round 4 minio-edit c1fp |  20:33:22 up  5:17,  0 user,  load average: 4.54, 2.78, 2.01
+--fp: per-object fingerprints of both dumps, 99.87 ms (outside the timing: an extractor would write them)
+end-to-end: map 42.62 ms (716107044 bytes, MAP_POPULATE) + unify 10.22 ms = 52.84 ms, 1 thread(s); 16141 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.16 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 439 reps in 1.00 s, 2.283 ms per unify (fast path 1.459, slow-path classes 0.010, myers 0.002)
+== round 4 minio-edit c1lazy |  20:33:23 up  5:17,  0 user,  load average: 4.54, 2.78, 2.01
+end-to-end: map 0.24 ms (716129780 bytes, lazy) + unify 10.84 ms = 11.07 ms, 1 thread(s); 5227 minor faults (21.4 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.59 ms, slow-path classes 0.09 ms, myers 0.01 ms
+warm: 425 reps in 1.00 s, 2.355 ms per unify (fast path 1.508, slow-path classes 0.010, myers 0.002)
+== round 4 minio-edit omp8 |  20:33:24 up  5:17,  0 user,  load average: 4.34, 2.77, 2.01
+end-to-end: map 44.40 ms (716107044 bytes, MAP_POPULATE) + unify 14.19 ms = 58.59 ms, 8 thread(s); 16147 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 13.06 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 114 reps in 1.00 s, 8.797 ms per unify (fast path 7.918, slow-path classes 0.016, myers 0.003)
+== round 4 minio-edit omp8fp |  20:33:25 up  5:17,  0 user,  load average: 4.34, 2.77, 2.01
+--fp: per-object fingerprints of both dumps, 102.27 ms (outside the timing: an extractor would write them)
+end-to-end: map 39.24 ms (716107044 bytes, MAP_POPULATE) + unify 6.16 ms = 45.40 ms, 8 thread(s); 16157 minor faults (66.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 5.09 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 631 reps in 1.00 s, 1.585 ms per unify (fast path 0.726, slow-path classes 0.012, myers 0.002)
+== round 4 minio-edit2 c1 |  20:33:27 up  5:17,  0 user,  load average: 4.34, 2.77, 2.01
+end-to-end: map 43.55 ms (716104839 bytes, MAP_POPULATE) + unify 71.66 ms = 115.21 ms, 1 thread(s); 23435 minor faults (96.0 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 40.72 ms, slow-path classes 25.51 ms, myers 3.68 ms
+warm: 21 reps in 1.02 s, 48.683 ms per unify (fast path 31.764, slow-path classes 14.957, myers 0.545)
+== round 4 minio-edit2 c1fp |  20:33:28 up  5:17,  0 user,  load average: 4.34, 2.77, 2.01
+--fp: per-object fingerprints of both dumps, 100.52 ms (outside the timing: an extractor would write them)
+end-to-end: map 41.27 ms (716104839 bytes, MAP_POPULATE) + unify 39.86 ms = 81.13 ms, 1 thread(s); 23467 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.60 ms, slow-path classes 25.79 ms, myers 3.72 ms
+warm: 50 reps in 1.01 s, 20.225 ms per unify (fast path 1.494, slow-path classes 16.597, myers 0.602)
+== round 4 minio-edit2 c1lazy |  20:33:29 up  5:17,  0 user,  load average: 4.15, 2.76, 2.01
+end-to-end: map 0.47 ms (716127575 bytes, lazy) + unify 61.41 ms = 61.88 ms, 1 thread(s); 13231 minor faults (54.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 12.81 ms, slow-path classes 41.82 ms, myers 4.84 ms
+warm: 48 reps in 1.00 s, 20.916 ms per unify (fast path 1.426, slow-path classes 17.446, myers 0.564)
+== round 4 minio-edit2 omp8 |  20:33:30 up  5:17,  0 user,  load average: 4.15, 2.76, 2.01
+end-to-end: map 45.89 ms (716104839 bytes, MAP_POPULATE) + unify 48.31 ms = 94.20 ms, 8 thread(s); 23451 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 15.21 ms, slow-path classes 27.45 ms, myers 3.80 ms
+warm: 30 reps in 1.02 s, 34.002 ms per unify (fast path 14.911, slow-path classes 17.015, myers 0.582)
+== round 4 minio-edit2 omp8fp |  20:33:31 up  5:17,  0 user,  load average: 4.15, 2.76, 2.01
+--fp: per-object fingerprints of both dumps, 111.98 ms (outside the timing: an extractor would write them)
+end-to-end: map 45.60 ms (716104839 bytes, MAP_POPULATE) + unify 40.93 ms = 86.53 ms, 8 thread(s); 23483 minor faults (96.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 2.45 ms, slow-path classes 31.88 ms, myers 4.82 ms
+warm: 50 reps in 1.01 s, 20.145 ms per unify (fast path 0.894, slow-path classes 17.130, myers 0.591)
+== round 5 minio-edit c1 |  20:33:33 up  5:17,  0 user,  load average: 4.15, 2.76, 2.01
+end-to-end: map 40.05 ms (716107044 bytes, MAP_POPULATE) + unify 42.89 ms = 82.93 ms, 1 thread(s); 16134 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 41.83 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 30 reps in 1.03 s, 34.276 ms per unify (fast path 33.424, slow-path classes 0.016, myers 0.003)
+== round 5 minio-edit c1fp |  20:33:34 up  5:18,  0 user,  load average: 3.98, 2.74, 2.01
+--fp: per-object fingerprints of both dumps, 101.53 ms (outside the timing: an extractor would write them)
+end-to-end: map 46.37 ms (716107044 bytes, MAP_POPULATE) + unify 10.54 ms = 56.91 ms, 1 thread(s); 16142 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.45 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 430 reps in 1.00 s, 2.329 ms per unify (fast path 1.495, slow-path classes 0.010, myers 0.002)
+== round 5 minio-edit c1lazy |  20:33:35 up  5:18,  0 user,  load average: 3.98, 2.74, 2.01
+end-to-end: map 0.24 ms (716129780 bytes, lazy) + unify 10.78 ms = 11.01 ms, 1 thread(s); 5226 minor faults (21.4 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 9.61 ms, slow-path classes 0.09 ms, myers 0.01 ms
+warm: 421 reps in 1.00 s, 2.376 ms per unify (fast path 1.525, slow-path classes 0.011, myers 0.002)
+== round 5 minio-edit omp8 |  20:33:36 up  5:18,  0 user,  load average: 3.98, 2.74, 2.01
+end-to-end: map 40.45 ms (716107044 bytes, MAP_POPULATE) + unify 16.30 ms = 56.75 ms, 8 thread(s); 16149 minor faults (66.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 15.20 ms, slow-path classes 0.02 ms, myers 0.01 ms
+warm: 65 reps in 1.01 s, 15.462 ms per unify (fast path 14.520, slow-path classes 0.049, myers 0.003)
+== round 5 minio-edit omp8fp |  20:33:37 up  5:18,  0 user,  load average: 3.98, 2.74, 2.01
+--fp: per-object fingerprints of both dumps, 109.71 ms (outside the timing: an extractor would write them)
+end-to-end: map 42.96 ms (716107044 bytes, MAP_POPULATE) + unify 4.59 ms = 47.54 ms, 8 thread(s); 16155 minor faults (66.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 168 + B 171 slots, unique-key matched 89, myers input 79 + 82 (D sum 31), myers pairs 65, a_only 14, b_only 17, probes 341, verify keq 171, exact fallbacks 0, common prefix 23 suffix 2
+phases (first run): fast path 3.30 ms, slow-path classes 0.02 ms, myers 0.02 ms
+warm: 638 reps in 1.00 s, 1.568 ms per unify (fast path 0.703, slow-path classes 0.011, myers 0.003)
+== round 5 minio-edit2 c1 |  20:33:38 up  5:18,  0 user,  load average: 3.98, 2.74, 2.01
+end-to-end: map 39.74 ms (716104839 bytes, MAP_POPULATE) + unify 79.12 ms = 118.85 ms, 1 thread(s); 23439 minor faults (96.0 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 40.92 ms, slow-path classes 32.76 ms, myers 3.65 ms
+warm: 20 reps in 1.04 s, 51.906 ms per unify (fast path 33.504, slow-path classes 16.296, myers 0.543)
+== round 5 minio-edit2 c1fp |  20:33:39 up  5:18,  0 user,  load average: 3.90, 2.75, 2.01
+--fp: per-object fingerprints of both dumps, 100.35 ms (outside the timing: an extractor would write them)
+end-to-end: map 57.17 ms (716104839 bytes, MAP_POPULATE) + unify 42.70 ms = 99.87 ms, 1 thread(s); 23466 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 8.49 ms, slow-path classes 28.55 ms, myers 3.83 ms
+warm: 48 reps in 1.01 s, 21.110 ms per unify (fast path 1.540, slow-path classes 17.489, myers 0.576)
+== round 5 minio-edit2 c1lazy |  20:33:41 up  5:18,  0 user,  load average: 3.90, 2.75, 2.01
+end-to-end: map 0.23 ms (716127575 bytes, lazy) + unify 45.24 ms = 45.46 ms, 1 thread(s); 13225 minor faults (54.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 9.57 ms, slow-path classes 30.05 ms, myers 3.81 ms
+warm: 47 reps in 1.02 s, 21.710 ms per unify (fast path 1.606, slow-path classes 18.048, myers 0.547)
+== round 5 minio-edit2 omp8 |  20:33:42 up  5:18,  0 user,  load average: 3.90, 2.75, 2.01
+end-to-end: map 45.19 ms (716104839 bytes, MAP_POPULATE) + unify 47.95 ms = 93.14 ms, 8 thread(s); 23452 minor faults (96.1 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 15.46 ms, slow-path classes 27.03 ms, myers 3.68 ms
+warm: 32 reps in 1.02 s, 31.904 ms per unify (fast path 14.294, slow-path classes 15.572, myers 0.526)
+== round 5 minio-edit2 omp8fp |  20:33:43 up  5:18,  0 user,  load average: 3.90, 2.75, 2.01
+--fp: per-object fingerprints of both dumps, 102.02 ms (outside the timing: an extractor would write them)
+end-to-end: map 59.19 ms (716104839 bytes, MAP_POPULATE) + unify 36.71 ms = 95.90 ms, 8 thread(s); 23485 minor faults (96.2 MB of pages touched)
+objects differ 1 of 1421; slow path: A 318974 + B 318937 slots, unique-key matched 142581, myers input 176393 + 176356 (D sum 125), myers pairs 176312, a_only 81, b_only 44, probes 600160, verify keq 434487, exact fallbacks 0, common prefix 32775 suffix 18964
+phases (first run): fast path 3.01 ms, slow-path classes 27.67 ms, myers 4.12 ms
+warm: 52 reps in 1.01 s, 19.465 ms per unify (fast path 0.755, slow-path classes 16.703, myers 0.554)
