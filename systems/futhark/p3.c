@@ -1,5 +1,5 @@
 // p3.c: driver for p3.fut. Loads the flat files, calls the entries, times them, checks against the oracles.
-//   p3 DATADIR THREADS REPS CELL [nocheck]     CELL: 3a 3a_loop 3b 3b_bytes
+//   p3 DATADIR THREADS REPS CELL [nocheck]     CELL: 3a 3a_loop 3b 3b_bytes 3b_blk
 #include "p3.h"
 #include "drv.h"
 LOADER(u8, uint8_t) LOADER(u32, uint32_t) LOADER(u64, uint64_t) LOADER(i64, int64_t)
@@ -52,9 +52,11 @@ int main(int argc, char **argv) {
 		u32 unreach = (u32)metaGet("addr_unreachableMethod"), mapinit = (u32)metaGet("addr_mapinitnoop");
 		SYNC();
 		printf("load %.1f ms\n", (now() - tl0) * 1e3);
-		// 3b: chunked copy + patch; 3b_bytes: per-byte copy + patch; 3b_copy, 3b_patch: the halves alone (no check)
+		// 3b: chunked copy + patch; 3b_bytes: per-byte copy + patch; 3b_blk: blocked copy + patch; 3b_copy, 3b_patch: the halves alone (no check)
 		typeof(futhark_entry_relocate) *entry = futhark_entry_relocate;
 		if (strcmp(cell, "3b_bytes") == 0) entry = futhark_entry_relocate_bytes;
+		if (strcmp(cell, "3b_blk") == 0) entry = futhark_entry_relocate_blocks;     // copy in 64 blocks (memcpy)
+		if (strcmp(cell, "3b_blkcopy") == 0) entry = futhark_entry_copy_blocks_only, check = 0;
 		if (strcmp(cell, "3b_copy") == 0) entry = futhark_entry_copy_only, check = 0;
 		if (strcmp(cell, "3b_patch") == 0) entry = futhark_entry_patch_only, check = 0;
 		struct futhark_opaque_tup2_arr1d_u8_i64 *out = NULL;

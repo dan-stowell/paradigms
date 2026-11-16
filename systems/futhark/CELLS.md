@@ -40,6 +40,11 @@ GPU-shaped, 6x slower).
 **41 / 50 (8)**; e2e 342 (1), 286 (8); 2 MB 114 (8) - 60 lines - forced: the copy as a scatter of (index, byte)
 pairs in 64-byte chunks (no bulk copy into a slice); impossible from the language: output page size (glibc tunable
 does it: faults 104 K -> 2.5 K per process; first rep 126-137 -> 52-64 ms at 8 threads).
+**3b_blk** (blocked copy, IDEAS I18; 18:24Z, load 4.6-5.4, 2 MB, 5 interleaved rounds) - correct (`... 3b_blk` ->
+P3b_blk OK) - warm best min | median of process medians: **60.4 | 62.0 (1, multicore 1 thread)**, **23.5 | 30.5 (8)**,
+vs old 3b in the same window 159.7 | 166.7 (1, c) and 96.4 | 110.9 (8): 2.7x / 3.6x - +20 lines - forced: symbols
+grouped by image block (expand + 6-bit radix sort) since they are not in address order; the c backend gains only
+1.2x (its map over blocks copies 4x slower), so use multicore at 1 thread.
 
 **4 code generation by shape (emit)** - correct (`build/p4_c.exe /home/exedev/paradigms/data/minio-p4 1 1 4bf` ->
 P4bf OK: 60,733,909 bytes = oracle/p4_code.bin, fn offsets, 1,780,281 relocations as a sorted list; all five shapes

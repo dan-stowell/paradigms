@@ -144,6 +144,36 @@ def copy_chunks [L] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8)
   let (is, vs) = unzip (flatten (map2 row owner k))
   in scatter (replicate nimg 0u8) is vs
 
+-- copy, shaped as blocks (IDEAS I18): the image cut into P equal blocks, a map over the blocks, and in each a
+-- sequential loop of slice updates (each a memcpy) over the symbols that overlap it. Symbols are not in address
+-- order, so each (block, symbol) overlap is listed by an expand over the symbols and grouped by block with a radix
+-- sort on the block number (log2 P bits); a block's symbols are then a range found by a scatter + max-scan.
+def blit [S] (row: *[S]u8) (to: i64) (xs: []u8) (from: i64) (m: i64) : *[S]u8 =
+  row with [to : to + m] = (xs[from : from + m] :> [to + m - to]u8)
+
+def copy_blocks [L] (lg: i64) (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (doff: []u64) (dbin: []u8) =
+  let P = 1i64 << lg
+  let S = (nimg + P - 1) / P
+  let len s = if is_bss bucket[s] then 0 else i64.u64 doff[s + 1] - i64.u64 doff[s]
+  let start s = i64.u32 addr[s] - image_base
+  let nblk s = if len s == 0 then 0 else (start s + len s - 1) / S - start s / S + 1
+  let pairs = expand nblk (\s j -> (start s / S + j, s)) (iota L)
+  let pairs = radix_sort_by_key (.0) (i32.i64 lg) i64.get_bit pairs
+  let n = length pairs
+  -- first pair of each block (n if none), by scatter + a min-scan from the right
+  let firsts = scatter (replicate (P + 1) n) (map (\k -> if k == 0 || pairs[k - 1].0 != pairs[k].0 then pairs[k].0 else -1) (iota n)) (iota n)
+  let firsts = reverse (scan i64.min n (reverse firsts))
+  let block b =
+    let lo = b * S
+    let hi = i64.min nimg (lo + S)
+    let row = replicate S 0u8
+    in loop row for k in firsts[b] ..< firsts[b + 1] do
+         let s = pairs[k].1
+         let a = i64.max (start s) lo
+         let e = i64.min (start s + len s) hi
+         in blit row (a - lo) dbin (i64.u64 doff[s] + a - start s) (e - a)
+  in take nimg (flatten (map block (iota P))) :> [nimg]u8
+
 -- the row of CSR offsets `at` (n rows) that holds item j: the largest s with at s <= j (binary search)
 def row_of (n: i64) (at: i64 -> i64) (j: i64) : i64 =
   let (lo, _) = loop (lo, hi) = (0, n) while hi - lo > 1 do
@@ -205,11 +235,21 @@ entry relocate_bytes [L][R] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket
   let img = copy_bytes nimg image_base addr bucket doff dbin
   in patch img image_base addr bucket rstart roff rsiz rkind radd rtgt addr_all sect unreach mapinit
 
+entry relocate_blocks [L][R] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (doff: []u64) (dbin: []u8)
+                      (rstart: []u32) (roff: [R]u32) (rsiz: [R]u8) (rkind: [R]u8) (radd: [R]i64) (rtgt: [R]u32)
+                      (addr_all: []u32) (sect: [8]u32) (unreach: u32) (mapinit: u32) : ([]u8, i64) =
+  let img = copy_blocks 6 nimg image_base addr bucket doff dbin
+  in patch img image_base addr bucket rstart roff rsiz rkind radd rtgt addr_all sect unreach mapinit
+
 -- the pieces of 3b, to time them apart (same signature as relocate)
 entry copy_only [L][R] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (doff: []u64) (dbin: []u8)
                       (_rstart: []u32) (_roff: [R]u32) (_rsiz: [R]u8) (_rkind: [R]u8) (_radd: [R]i64) (_rtgt: [R]u32)
                       (_addr_all: []u32) (_sect: [8]u32) (_unreach: u32) (_mapinit: u32) : ([]u8, i64) =
   (copy_chunks nimg image_base addr bucket doff dbin, 0)
+entry copy_blocks_only [L][R] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (doff: []u64) (dbin: []u8)
+                      (_rstart: []u32) (_roff: [R]u32) (_rsiz: [R]u8) (_rkind: [R]u8) (_radd: [R]i64) (_rtgt: [R]u32)
+                      (_addr_all: []u32) (_sect: [8]u32) (_unreach: u32) (_mapinit: u32) : ([]u8, i64) =
+  (copy_blocks 6 nimg image_base addr bucket doff dbin, 0)
 entry patch_only [L][R] (nimg: i64) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (_doff: []u64) (_dbin: []u8)
                       (rstart: []u32) (roff: [R]u32) (rsiz: [R]u8) (rkind: [R]u8) (radd: [R]i64) (rtgt: [R]u32)
                       (addr_all: []u32) (sect: [8]u32) (unreach: u32) (mapinit: u32) : ([]u8, i64) =
