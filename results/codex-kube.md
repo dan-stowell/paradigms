@@ -1,10 +1,67 @@
 # kube-apiserver, unchanged paradigm cells
 
-Dataset: `/home/exedev/paradigms/data/kube-apiserver` (read-only). Checkout: `/home/exedev/paradigms-w`, branch `codex-kube`. All builds and measured processes use `systemd-run --user --scope -p MemoryMax=10G`; `OMP_WAIT_POLICY=passive`. No cell algorithms changed. Tools come from `/home/exedev/tools` without modifying them.
+Completed 2026-11-16, 17:21–18:16 UTC, on branch `codex-kube`. Dataset: `/home/exedev/paradigms/data/kube-apiserver` (read-only); checkout: `/home/exedev/paradigms-w`. All five paradigms were rebuilt and checked, then their bench.sh ran on kube. Tuned C was sampled in five rounds interleaved across the same window. All cell oracle checks passed; no algorithms changed and nothing was pushed.
 
-Goose, Futhark, Halide and Soufflé measurements are complete; DuckDB and the final C comparison round are in progress.
+All builds and measured processes used `systemd-run --user --scope -p MemoryMax=10G` and `OMP_WAIT_POLICY=passive`. Tools were read from `/home/exedev/tools`. The only source changes are benchmark memory caps and Soufflé's data-directory argument. Each active job had its own cap; some jobs overlapped as documented below. Other builders shared the host. We did not wait for quiet; sampled one-minute load ranged from 2.43 to 25.72 in the long SQL window.
 
-Times are warm milliseconds, min / median / max over at least five rounds. Each system retains its bench.sh definition of a round (specified below); these definitions differ. The historical MinIO values are from GRID.md, not same-window reruns. Where GRID gives a range, ratios use its midpoint, so ratios are descriptive, not speedup claims. A missing comparable GRID value is N/A. Same-window tuned C samples are interleaved across the measurement window. The machine is shared; uptime/load is recorded, without waiting for quiet.
+Times are warm milliseconds, min / median / max over five rounds. Each system retains its bench.sh definition of a round, specified below. Historical MinIO values are from GRID.md, not same-window reruns. Range ratios use the midpoint unless the endpoints identify distinct variants; missing comparable GRID values are marked N/A or —. Futhark's historical values often use minima, while kube ratios use medians. Ratios therefore mix dataset, load, and sometimes runtime/page/statistic differences: they are descriptive, not measured speedups. Overlapping ranges are within noise.
+
+## Failures and limits
+
+- **Cell oracle failures: none.** No first differing values exist for the successful checks. Exact commands and outputs are retained in the linked logs and reproducer scripts.
+- **Setup only:** one stray Soufflé `prep_lazy` invocation printed usage; the correct kube invocation immediately succeeded before cells ran. The reproducer was corrected and the original log retained.
+- **Memory-limit kills: none observed.** Huge-page checks pass for Goose and DuckDB. Halide checks the reused-output image; fresh-mapping timings use the same verified pipeline but do not independently compare each fresh image.
+- `p3par`'s C layout remains serial even with eight OpenMP threads. Goose's distributed relocation excludes the separately listed gather. No algorithm or schedule was changed for kube.
+
+Independent table reviews: [Goose](codex-kube-goose-review.md), [Futhark](codex-kube-futhark-review.md), [Halide](codex-kube-halide-review.md), [Soufflé](codex-kube-souffle-review.md), [DuckDB](codex-kube-duckdb-review.md). They check raw timing triples, sample counts, oracle status and GRID mappings. Corrections were confined to report parsing/baseline attribution.
+
+## Tuned C comparison
+
+Built here with `gcc -O2 -march=native -fopenmp ref/flat/NAME.c -o build/NAME` for `NAME=p1par,p2par,p2lazy`, and `gcc -O2 -march=native -fopenmp ref/flat/p3.c -o build/p3par`, inside the same 10G scope/passive environment. These are the build flags in `ref/flat/check.sh`.
+
+Commands: `bash results/codex-kube-c-round.sh LABEL`; each process runs under a 10 GiB systemd scope with `OMP_WAIT_POLICY=passive`. P1/P2 values are each process’s best of 10/30/20 in-process repetitions respectively; 3a is the mean of iterations until >=1 s; 3b is the median of 30 repetitions. Table entries are min / median / max across independent process rounds, in ms. 3a in `p3par` is serial at both thread settings. Ratios use the midpoint of the exact MinIO range in GRID.md. The 1a denominator is GRID’s later p1par-versus-p1compact snapshot (16:34Z, load 3–5), while the 1a+1b total and 1b use its earlier snapshot. GRID has no matching separated 1-thread p1par 1b or p3par 3b number, and its tuned 3a row is a different program.
+
+| Cell | Oracle | Kube 1 thread | Kube 8 threads | MinIO GRID 1 / 8 | Kube/MinIO 1 / 8 | Rounds 1 / 8 |
+|---|---|---:|---:|---|---|---|
+| 1a+1b | OK | 158.00 / 159.20 / 171.80 | 36.10 / 89.70 / 94.40 | 74–77 / 13.9–16.8 | 2.11x / 5.84x | 5 / 5 |
+| 1a | OK | 95.50 / 97.60 / 102.10 | 22.50 / 60.10 / 61.60 | 41.7–48.7 / 9.5–12.9 | 2.16x / 5.37x | 5 / 5 |
+| 1b | OK | 61.20 / 63.60 / 69.70 | 13.70 / 28.30 / 33.60 | — / 5.3–6.3 | — / 4.88x | 5 / 5 |
+| 1c | OK | 84.10 / 95.40 / 118.10 | 24.00 / 53.20 / 60.00 | 36.9 / 7.2–8.9 | 2.59x / 6.61x | 5 / 5 |
+| 2 CSR | OK | 39.70 / 46.90 / 51.20 | 17.70 / 55.20 / 116.90 | 27–30 / 13–17 | 1.65x / 3.68x | 5 / 5 |
+| 2 lazy | OK | 82.00 / 95.80 / 121.40 | 23.70 / 110.70 / 135.80 | 52.6 / 13.6–15.4 | 1.82x / 7.63x | 5 / 5 |
+| 3a serial layout | OK | 12.83 / 17.57 / 20.41 | 12.78 / 14.21 / 24.70 | — / — | — / — | 5 / 5 |
+| 3b 4 KB | OK | 64.30 / 76.20 / 82.50 | 11.30 / 28.80 / 59.40 | — / 13.4–29 | — / 1.36x | 5 / 5 |
+| 3b 2 MB | OK | 32.20 / 34.00 / 46.40 | 9.80 / 24.00 / 28.10 | — / 5.4–12 | — / 2.76x | 5 / 5 |
+
+Raw data: [codex-kube-c-raw.log](codex-kube-c-raw.log). Every run performs built-in oracle checks; `--layout` checks all addresses, P3 compares all placed image symbols, P1 checks canon/builtins/targets/content canon, and P2 checks the full live list.
+
+Recorded window and uptime/load:
+
+```text
+ROUND 1 2026-11-16T17:21:55Z
+ 17:21:55 up  2:06,  0 user,  load average: 13.66, 6.39, 4.41
+ 17:22:22 up  2:06,  0 user,  load average: 14.05, 7.07, 4.69
+ENDROUND 1 2026-11-16T17:22:22Z
+ROUND 2 2026-11-16T17:27:13Z
+ 17:27:13 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+ 17:27:49 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+ENDROUND 2 2026-11-16T17:27:49Z
+ROUND between-halide-futhark 2026-11-16T17:34:28Z
+ 17:34:28 up  2:18,  0 user,  load average: 18.23, 15.66, 11.31
+ 17:35:02 up  2:19,  0 user,  load average: 19.88, 16.30, 11.68
+ENDROUND between-halide-futhark 2026-11-16T17:35:02Z
+ROUND 4-after-fh 2026-11-16T17:55:04Z
+ 17:55:04 up  2:39,  0 user,  load average: 14.90, 17.93, 16.91
+ 17:55:36 up  2:40,  0 user,  load average: 13.94, 17.34, 16.75
+ENDROUND 4-after-fh 2026-11-16T17:55:36Z
+ROUND 5-after-duckdb 2026-11-16T18:15:34Z
+ 18:15:34 up  3:00,  0 user,  load average: 2.56, 5.14, 9.59
+ 18:15:52 up  3:00,  0 user,  load average: 2.62, 4.99, 9.45
+ENDROUND 5-after-duckdb 2026-11-16T18:15:52Z
+```
+
+Failures: none.
+
 
 ## Goose
 
@@ -38,6 +95,7 @@ done 2026-11-16T17:26:45Z, load 22.45 15.92 9.01
 
 Goose overlapped DuckDB checks/bench and external builders. Historical ratios therefore include load differences as well as dataset differences. No oracle failures. Explicit huge-page checks also pass at 1/8 workers: [log](codex-kube-goose-huge-check.log), with nonzero huge-page byte counts.
 
+
 ## Futhark and Halide measurement notes
 
 Builds completed successfully under `systemd-run --user --scope -p MemoryMax=10G`, with `OMP_WAIT_POLICY=passive`:
@@ -52,7 +110,7 @@ The input directory is read-only `/home/exedev/paradigms/data/kube-apiserver`.
 Futhark uses `HUGE=1`, matching GRID.md's 2 MB-page baseline, and the sequential C, stock multicore,
 and yielding multicore backends. The environment's `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` requests
 huge pages but glibc can fall back to ordinary pages when the reserved pool is exhausted.
-Each warm statistic will be min/median/max of the per-process medians across five full bench.sh rounds,
+Each warm statistic is min/median/max of the per-process medians across five full bench.sh rounds,
 with the script's unchanged inner repetition counts. Oracle checks omit `nocheck`.
 Halide's unchanged bench.h times five rounds per schedule; each round repeats the kernel for at least
 approximately one second and reports per-iteration time. Its bench.sh covers all schedules and fresh
@@ -189,6 +247,7 @@ Warm ms; min / median / max of five process medians. All configurations request 
 | 3b reloc_f0_pt_v32 fresh 4KB | 8 | OK | 83.71 / 113.51 / 151.62 | — | — |
 | 3b reloc_f0_pt_v32 fresh 2MB | 8 | OK | 71.49 / 78.57 / 81.21 | 27–30.8 | 2.72x |
 
+
 ## SQL-family runs: method and oracle checks
 
 Dataset `/home/exedev/paradigms/data/kube-apiserver` was read-only. Builds, checks and runs used `systemd-run --user --scope -p MemoryMax=10G` with `OMP_WAIT_POLICY=passive`. No cell algorithms changed. See `codex-kube-{duckdb,souffle}-run.sh` for commands and `*-build.log`, `*-raw.txt`, `*-bench.txt` for raw evidence. DuckDB's bench cap was changed from 8G to the requested 10G; Soufflé's bench accepts its second argument as the data directory and uses a cgroup rather than a virtual-address limit.
@@ -201,7 +260,25 @@ Soufflé rebuilt all eight generated programs with `./build.sh "$p.dl"`, plus th
 
 For Soufflé 1c at eight threads, GRID's `394–587` combines two implementations: NOTES identifies 587 with `resolve_c` and 394 with `resolve_c2`. The table uses those matching GRID endpoints, not a midpoint across different variants.
 
-## Souffle
+Reproduce the run scopes from the repository root (the scripts' bare child invocations inherit this cap):
+
+```sh
+systemd-run --user --scope -q -p MemoryMax=10G env OMP_WAIT_POLICY=passive bash results/codex-kube-duckdb-run.sh
+systemd-run --user --scope -q -p MemoryMax=10G env OMP_WAIT_POLICY=passive bash results/codex-kube-souffle-run.sh
+```
+
+Build first, also scoped: `systemd-run --user --scope -q -p MemoryMax=10G env OMP_WAIT_POLICY=passive systems/duckdb/build.sh`; for Soufflé use the same scope prefix around `bash -c 'cd systems/souffle; for p in resolve_a resolve_b resolve_c resolve_c2 reach layout relocate reach_lazy; do ./build.sh "$p.dl" || exit; done; gcc -O2 -o build/check_p3 check_p3.c; gcc -O2 -o build/prep_lazy prep_lazy.c'`.
+
+Soufflé checks ran **2026-11-16 17:43:55–17:49:10 UTC**, benchmark **17:49:10–18:03:25 UTC**. Sampled one-minute uptime load over its full check/benchmark window ranged **8.56–25.72**; benchmark start `21.43, 21.10, 16.93`, end `9.61, 12.26, 14.59` (1/5/15-minute loads). [Sampled uptime log](codex-kube-souffle-load.log), [checks/raw summary](codex-kube-souffle-raw.txt), [five-round benchmark](codex-kube-souffle-bench.txt). It overlapped DuckDB, Futhark, short C reference runs, and unrelated builders. Measurements did not wait for a quiet host.
+
+DuckDB checks ran **2026-11-16 17:21:30–17:25:56 UTC**, benchmark **17:25:56–18:15:01 UTC**. Sampled one-minute uptime load over the check/benchmark window ranged **2.43–25.72**; benchmark start `23.13, 14.90, 8.32`, end `3.76, 5.66, 9.93` (1/5/15-minute loads). [Sampled uptime log](codex-kube-duckdb-load.log), [checks/raw summary](codex-kube-duckdb-raw.txt), [five-round benchmark](codex-kube-duckdb-bench.txt). The long benchmark overlapped Goose, Halide/Futhark, Soufflé, short C references, and other builders during portions of its window. Every one of its 22 warm rows and ten e2e rows has five rounds.
+
+After benchmarking, the huge-page P3b configuration was additionally checked at both thread counts: `DK_THP=1 ./dk "$D" T sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql` then `python3 -I check3b.py "$D" out/p3_image.bin`, inside the same 10G scope/passive environment. Both checked 72,579,169 bytes with zero differing symbols; [raw huge-page oracle checks](codex-kube-duckdb-huge-check.txt).
+
+Tables: [DuckDB](codex-kube-duckdb-table.md), [Soufflé](codex-kube-souffle-table.md). All tested cell oracle checks passed. No mismatching values, failed cells, or memory-limit kills were observed. The only setup-command failure was the disclosed stray Soufflé preparer invocation, corrected before any checked or timed cell. Wide timing ranges reflect the measured shared-host load; overlapping ranges are within noise, including DuckDB's 4KB versus huge-page relocation results.
+
+
+## Soufflé
 
 | Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |
 |---|---|---|---|---|---|
@@ -227,3 +304,30 @@ E2e and separate assembly (same five rounds):
 | 3a / e2e | 15616.8 / 17512.7 / 38792.5 | 4809.3 / 7050.4 / 9064.6 |
 | 3b / e2e | 3839.5 / 4307.6 / 5640.2 | 2881.5 / 3168.2 / 3651.8 |
 | 3b / assemble | 59.2 / 71.9 / 75.1 | 23.7 / 34.3 / 39.8 |
+
+
+## DuckDB
+
+| Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |
+|---|---|---|---|---|---|
+| 1a | OK / OK | 877.5 / 991.5 / 1499.9 | 225.9 / 411.2 / 590.1 | — / 103–113 | — / 3.81× |
+| 1b | OK / OK | 3485.4 / 4189.7 / 6193.3 | 693.7 / 1252.9 / 1473.1 | — / 272–375 | — / 3.87× |
+| 1c | OK / OK | 1144.2 / 1472.2 / 2378.1 | 238.4 / 438.7 / 586.0 | — / 128–190 | — / 2.76× |
+| 2eager | OK / OK | 7317.6 / 8539.1 / 11485.2 | 1599.0 / 2856.1 / 3470.0 | — / — | — / — |
+| 2loop | OK / OK | 5004.1 / 6767.4 / 9075.5 | 2767.2 / 3687.5 / 5904.1 | — / 1965–2354 | — / 1.71× |
+| 2loop-eager | OK / OK | 5474.2 / 6842.6 / 9514.3 | 2934.7 / 4395.7 / 6786.3 | — / — | — / — |
+| 2loop-lazy | OK / OK | 12388.4 / 13640.9 / 19550.4 | 4489.3 / 9663.5 / 15583.7 | — / — | — / — |
+| 2prep | OK / OK | 449.7 / 610.0 / 758.3 | 158.6 / 272.4 / 374.0 | — / 103 | — / 2.64× |
+| 3a | OK / OK | 438.6 / 448.2 / 511.4 | 326.0 / 594.0 / 1159.0 | — / 217–263 | — / 2.48× |
+| 3b | OK / OK | 1372.3 / 1612.8 / 2060.6 | 405.4 / 968.5 / 1707.3 | — / 339–368 | — / 2.74× |
+| 3b-hugepages | OK / OK | 1269.0 / 1614.6 / 2877.2 | 379.3 / 897.9 / 1347.5 | — / 309–332 | — / 2.80× |
+
+E2e and separate assembly (same five rounds):
+
+| Cell / metric | 1 thread min / median / max ms | 8 threads min / median / max ms |
+|---|---|---|
+| P1 / e2e | 10031.6 / 11407.1 / 14792.3 | 2347.5 / 4136.2 / 7483.0 |
+| P1-P3 / e2e | 12946.5 / 14437.6 / 18607.5 | 3535.2 / 5739.1 / 9433.7 |
+| P2 / e2e | 6464.0 / 8362.1 / 8991.0 | 2919.8 / 4446.3 / 7401.3 |
+| P3a / e2e | 544.2 / 720.6 / 816.5 | 438.5 / 529.0 / 1071.6 |
+| P3b / e2e | 2666.2 / 3303.2 / 4265.4 | 871.7 / 1690.1 / 2484.3 |

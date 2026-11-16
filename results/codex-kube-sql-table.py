@@ -18,7 +18,7 @@ for sys,refs in [('duckdb',refsD),('souffle',refsS)]:
   if m:
    c,t,k,*v=m.groups();rows.setdefault((c,k),{})[int(t)]=tuple(map(float,v))
  if not rows:continue
- out=[f'## {sys.title()}','', '| Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |','|---|---|---|---|---|---|']
+ out=[f'## {dict(duckdb="DuckDB", souffle="Soufflé")[sys]}','', '| Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |','|---|---|---|---|---|---|']
  for (c,k),ts in rows.items():
   if k!='warm':continue
   a,b=refs.get(c,(None,None));x=ts.get(1);y=ts.get(8)

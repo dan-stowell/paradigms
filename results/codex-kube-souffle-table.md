@@ -1,4 +1,4 @@
-## Souffle
+## Soufflé
 
 | Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |
 |---|---|---|---|---|---|

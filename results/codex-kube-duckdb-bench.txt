@@ -1,0 +1,38 @@
+2026-11-16T17:25:56Z
+ 17:25:56 up  2:10,  0 user,  load average: 23.13, 14.90, 8.32
+1a               1 threads warm  min    877.5 median    991.5 max   1499.9 ms (5 rounds)
+1b               1 threads warm  min   3485.4 median   4189.7 max   6193.3 ms (5 rounds)
+1c               1 threads warm  min   1144.2 median   1472.2 max   2378.1 ms (5 rounds)
+2eager           1 threads warm  min   7317.6 median   8539.1 max  11485.2 ms (5 rounds)
+2loop            1 threads warm  min   5004.1 median   6767.4 max   9075.5 ms (5 rounds)
+2loop-eager      1 threads warm  min   5474.2 median   6842.6 max   9514.3 ms (5 rounds)
+2loop-lazy       1 threads warm  min  12388.4 median  13640.9 max  19550.4 ms (5 rounds)
+2prep            1 threads warm  min    449.7 median    610.0 max    758.3 ms (5 rounds)
+3a               1 threads warm  min    438.6 median    448.2 max    511.4 ms (5 rounds)
+3b               1 threads warm  min   1372.3 median   1612.8 max   2060.6 ms (5 rounds)
+3b-hugepages     1 threads warm  min   1269.0 median   1614.6 max   2877.2 ms (5 rounds)
+P1               1 threads e2e   min  10031.6 median  11407.1 max  14792.3 ms (5 rounds)
+P1-P3            1 threads e2e   min  12946.5 median  14437.6 max  18607.5 ms (5 rounds)
+P2               1 threads e2e   min   6464.0 median   8362.1 max   8991.0 ms (5 rounds)
+P3a              1 threads e2e   min    544.2 median    720.6 max    816.5 ms (5 rounds)
+P3b              1 threads e2e   min   2666.2 median   3303.2 max   4265.4 ms (5 rounds)
+1a               8 threads warm  min    225.9 median    411.2 max    590.1 ms (5 rounds)
+1b               8 threads warm  min    693.7 median   1252.9 max   1473.1 ms (5 rounds)
+1c               8 threads warm  min    238.4 median    438.7 max    586.0 ms (5 rounds)
+2eager           8 threads warm  min   1599.0 median   2856.1 max   3470.0 ms (5 rounds)
+2loop            8 threads warm  min   2767.2 median   3687.5 max   5904.1 ms (5 rounds)
+2loop-eager      8 threads warm  min   2934.7 median   4395.7 max   6786.3 ms (5 rounds)
+2loop-lazy       8 threads warm  min   4489.3 median   9663.5 max  15583.7 ms (5 rounds)
+2prep            8 threads warm  min    158.6 median    272.4 max    374.0 ms (5 rounds)
+3a               8 threads warm  min    326.0 median    594.0 max   1159.0 ms (5 rounds)
+3b               8 threads warm  min    405.4 median    968.5 max   1707.3 ms (5 rounds)
+3b-hugepages     8 threads warm  min    379.3 median    897.9 max   1347.5 ms (5 rounds)
+P1               8 threads e2e   min   2347.5 median   4136.2 max   7483.0 ms (5 rounds)
+P1-P3            8 threads e2e   min   3535.2 median   5739.1 max   9433.7 ms (5 rounds)
+P2               8 threads e2e   min   2919.8 median   4446.3 max   7401.3 ms (5 rounds)
+P3a              8 threads e2e   min    438.5 median    529.0 max   1071.6 ms (5 rounds)
+P3b              8 threads e2e   min    871.7 median   1690.1 max   2484.3 ms (5 rounds)
+cell 3b-hugepages: min 1185.7 median 1269.0 max 1420.3 ms over 5 reps; 81436 minor faults in rep 1, 47814 per later rep
+cell 3b-hugepages: min 1213.1 median 1347.5 max 1513.2 ms over 5 reps; 91613 minor faults in rep 1, 52381 per later rep
+cell 3b-hugepages: min 1264.1 median 1361.6 max 1427.1 ms over 5 reps; 78775 minor faults in rep 1, 45351 per later rep
+cell 3b-hugepages: min 1386.8 median 1614.6 max 2048.2 ms over 5 reps; 80482 minor faults in rep 1, 46617 per later rep
