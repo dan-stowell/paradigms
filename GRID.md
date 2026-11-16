@@ -39,6 +39,8 @@ tuned C reference reproduces its oracles (`ref/flat/check.sh data/kube-apiserver
 p1c 550 ms, p2 66.5 ms (926,486 live), p3a 30.4 ms, p3b 67.8 ms (72.6 MB, 2.82 M relocations); p1par 26.2 ms and
 p2par 19.6 ms on 8 threads. Its oracles come from hlink alone so far (MinIO's live list was also checked against fclink).
 
+**Paradigm cells on kube-apiserver** (codex-kube, 17:21-18:16Z, merged 18:30Z; [results/codex-kube.md](results/codex-kube.md)): every P1-P3 cell of Goose, Futhark, Halide, Soufflé and DuckDB, unchanged, reproduces kube's oracles at 1 and 8 threads (lead spot-checked Halide P1 and Goose P2 at 18:28Z). Load was 17-26 for most of the window, so 8-thread kube/MinIO ratios (2-10x) mostly measure the load; the 1-thread ratios, 1.5-2.5x for a dataset ~1.4x MinIO's ids and 1.4x its live set, say no cell has a cost that grows faster than the data except Halide 1a (6.7x on 1 thread: to recheck quiet).
+
 Floors are bottom-up's FLOOR.md model (same CPU model, the 2026-11-13 VM); they count the raw object bytes hlink
 reads, so for the flat files they are an upper bound on the floor.
 

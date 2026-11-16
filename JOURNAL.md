@@ -87,3 +87,4 @@ reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a se
 - 2026-11-16T17:59:57Z merged levelfree builder: level count is not Futhark's cost (45 levels; per-level passes are); Goose async 1.3-1.5x; lead reran both checks (P2 OK). ATTACKS 3 updated.
 - 2026-11-16T18:10:45Z merged Futhark P4 (lead rebuilt + reran c/multicore: P4bf OK): 3.2x C on 1 core, ~5x on 8; slice-update loop inside a map = bulk copy.
 - 2026-11-16T18:20:04Z merged second attempts (Soufflé 3a no longer falls down: 1.9 s ranked chain; DuckDB P2 falls down after 3) and GraphBLAS column (P1/P2 OK, 9-24x tuned C, does not scale: frontiers below its threading threshold); lead reran every check.
+- 2026-11-16T18:20:53Z merged codex-kube: all 5 paradigms' P1-P3 cells correct on kube-apiserver; 1-thread scaling 1.5-2.5x; Halide 1a 6.7x flagged.
