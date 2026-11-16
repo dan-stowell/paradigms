@@ -47,10 +47,12 @@ Milestones log:
   one-array 8-worker 3b). Oracle number: **16/20** (4 paradigms x P1-P3 + the C column's 4; P4 0/4 paradigms) **+ DuckDB 3**;
   **3 ATTACKS entries backed by measurement** (lazy decode in the flood; huge-page output; drop level synchronization).
 
-Now (2026-11-16T17:23Z, lead session paradigms-46): M2 done; all builders finished and merged; no subagents running.
-Next: (1) triage the M2 skeptic review (reviews/inbox/20261116T1713-codex-skeptic.md, running until ~17:55Z) into
-REVIEWS.md; (2) fresh context (LOOP.md); (3) M3/M4: launch builders for problem 4 (ref/p4/README.md, data/minio-p4) in
-two paradigms (Halide and Futhark first: templates + operand patch is a gather/scatter), kube-apiserver for each paradigm's
-cells (bench.sh with data/kube-apiserver), second attempts on falls-downs (DuckDB P2 as one recursive query, 425 ms
-plain edges; Soufflé 3a sort via a functor or a ranked relation), GraphBLAS column (IDEAS.md). Quiet-machine reruns of
-8-thread numbers are owed once (ref/flat/bench.sh, systems/*/bench.sh) but never block.
+Now (2026-11-16T17:27Z): M2 done and reviewed (REVIEWS.md); no subagents or Codex jobs running. Start M3/M4:
+launch Opus builders (one per worktree via the Agent tool with isolation, brief = ideas/BUILDER.md + this list), and give
+Codex the C-side jobs. (a) Problem 4 (ref/p4/README.md, data/minio-p4, oracle by `ref/p4/check.sh`) in Halide and
+Futhark (templates + operand patch = gather/scatter). (b) Second attempts owed by the M2 review: DuckDB P2 with a
+persistent index or one recursive query (plain edges alone 425 ms); Soufflé 3a sort (functor or ranked relation).
+(c) ATTACKS 3 beyond C: a batched-level / level-free flood in Futhark and Goose, counted (passes, barriers, messages) and
+timed against their originals. (d) kube-apiserver for each paradigm's cells (systems/*/bench.sh with data/kube-apiserver).
+(e) GraphBLAS column (IDEAS.md) for reach as a semiring BFS. Measure per CHARTER (ranges over 5 interleaved, note
+load; OMP_WAIT_POLICY=passive; vm.nr_hugepages=1536, reset on reboot).
