@@ -10,3 +10,11 @@
 4. Halide 1a kube 6.7x uninvestigated -> **accept, measured**: interleaved at load 2.6, 2.6x for 2.55x the slots (linear); the 6.7x was the load, and GRID's "1.4x ids" was wrong (fixed).
 5. ATTACKS 3's general claim contradicted by Futhark -> **accept**: retitled to its measured scope; Halide/DuckDB batched variants not run (DuckDB's rounds already measured in its third attempt; Halide owed: Now line).
 6. No work-avoidance passage -> nothing to do.
+
+## M4 skeptic (reviews/done/20261116T1848-codex-skeptic-M4.md), triaged 2026-11-16T19:05Z
+1. Goose P4 check never compares function offsets -> **accept**: Codex job (branch codex-goose-fnoff) adds the nfn+1 offset compare + a planted fault; the cell stays counted only if it passes.
+2. DuckDB P2 verdict now supported -> noted, nothing to do.
+3. Goose P4 "ties C" leaves out the join; Halide 1-thread P4 is CPU time -> **accept, fixed** in GRID (join cost stated as part of the cell; CPU/wall labelled).
+4. Futhark sequential worklist beats its parallel flood, ATTACKS said "no worklist" -> **accept, fixed** in ATTACKS 3 (the fastest Futhark flood is the one that drops data parallelism).
+5. ATTACKS 3 in Halide unmeasured (~100 pipeline calls) -> **accept**: Opus builder running (results/halide-levelfree.md).
+6. None found.

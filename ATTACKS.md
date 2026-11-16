@@ -142,7 +142,7 @@ dropping level sync pays where waiting on a descheduled worker is the cost (C un
 level is many whole-array passes (Futhark); there the fix is fewer passes per level, which no variant here achieved.
 
 **What it says about the paradigms.** None of the grid's data-parallel systems can say "a fixpoint without levels":
-Futhark and Halide have no worklist; Soufflé's semi-naive evaluation is level-synchronous by construction; DuckDB's
+Halide has no worklist; Futhark has one only as a sequential loop (in-place updates, no data parallelism), and that loop beats its own parallel flood (8 threads 67/102/130 vs 156/201/258 ms), so in Futhark the fastest flood is the one that drops the paradigm; Soufflé's semi-naive evaluation is level-synchronous by construction; DuckDB's
 recursive CTE iterates rounds; Goose has the queues but no shared visited set. The C worklist is ~200 lines of
 mechanism (stealing, credits) for ~15 lines of rules. A build farm's machines are shared like this VM, so robustness
 under load is part of the speed. **Next:** a quiet-machine run (does async lose anything with nothing else running?),
