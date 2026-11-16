@@ -512,7 +512,7 @@ static void exec(int from, int to) {
 			for (;;) {
 				rounds++;
 				exec(i + 1, j);
-				quiet = 1; // print the first round only
+				if (!getenv("DK_ALLROUNDS")) quiet = 1; // print the first round only (DK_ALLROUNDS: every round)
 				uint64_t v = firstValue(prog[j].arg);
 				if (v == 0) break;
 			}
