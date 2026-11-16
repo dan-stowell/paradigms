@@ -154,6 +154,13 @@ int main(int argc, char **argv) {
 		printf("code: %ld functions differ\n", nf);
 		bad++;
 	}
+	{	/* every function offset, unconditionally (a byte-equal image can still place a boundary wrongly) */
+		long no = 0;
+		for (u32 f = 0; f < nfn; f++) if (at[fnItem[f]] != wfn[f]) no++;
+		if (pos != wfn[nfn]) no++;
+		printf("function offsets: %u, %ld differ\n", nfn + 1, no);
+		if (no) bad++;
+	}
 	printf("code: %llu bytes in %u functions, %s oracle/p4_code.bin\n", (unsigned long long)pos, nfn, bad ? "NOT equal to" : "equal to");
 	const u64 *wo = FMAP(u64, "oracle/p4_rel_off.u64", NULL);
 	const u8 *wsiz = FMAP(u8, "oracle/p4_rel_siz.u8", NULL);
