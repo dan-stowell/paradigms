@@ -231,7 +231,7 @@ public:
     Input<uint32_t> imageBase{"imageBase"};
     Input<uint32_t> unreach{"unreach"};
     Input<uint32_t> mapinit{"mapinit"};
-    // image: updated in place (its pure step is undef: the caller hands a zeroed buffer)
+    // image: updated in place (its pure step is undef: the caller hands a zeroed buffer), plus 8 scratch bytes
     Output<Buffer<uint8_t, 1>> image{"image"};
     Output<Buffer<int32_t, 0>> nerr{"nerr"};
 
@@ -240,7 +240,7 @@ public:
     void generate() {
         Expr L = bucket.dim(0).extent();
         Expr R = roff.dim(0).extent();
-        Expr NI = image.dim(0).extent();
+        Expr NI = image.dim(0).extent() - 8;  // the image, then 8 scratch bytes
         auto hasBytes = [&](Expr i) { Expr bb = bucket(i); return bb < 13 || bb > 15; };  // not bss, noptrbss, coverage
 
         // ---- the algorithm
@@ -291,17 +291,21 @@ public:
             rr = RDom(0, 8, 0, 1 << 24, 0, L, "rr");
             sym = rr.z;
             rel = inside(i32(rstart(sym)) + rr.y, 0, R - 1);
-            rr.where(rr.y < i32(rstart(sym + 1) - rstart(sym)));
+            // (bss symbols have no bytes: an empty range, so Halide can still make the where a loop bound)
+            rr.where(rr.y < select(hasBytes(sym), i32(rstart(sym + 1) - rstart(sym)), 0));
         } else {           // (byte, relocation within the chunk, chunk)
             rr = RDom(0, 8, 0, chunk, 0, (R + chunk - 1) / chunk, "rr");
-            rel = rr.z * chunk + rr.y;
+            rel = inside(rr.z * chunk + rr.y, 0, R - 1);
             rr.where(rel < R);
             sym = inside(owner(rel)[0], 0, L - 1);
         }
         Patch pt = patch(rel, addr(sym));
-        rr.where(hasBytes(sym));
-        rr.where(pt.write && rr.x < pt.nbytes);
-        image(inside(i32(addr(sym) + roff(rel) - imageBase) + rr.x, 0, NI - 1)) = cast<uint8_t>(pt.v >> cast<int64_t>(8 * rr.x));
+        if (rform == 1) rr.where(hasBytes(sym));
+        // Halide turns a where into a loop bound only on the innermost RVar that has one: a where on rr.x
+        // (the byte count) leaves rr.y's where an if inside a loop to 2^24. So the byte loop always runs 8 bytes,
+        // and the bytes a relocation does not write go to 8 scratch bytes past the image's end.
+        Expr at = select(pt.write && rr.x < pt.nbytes, i32(addr(sym) + roff(rel) - imageBase) + rr.x, NI + rr.x);
+        image(inside(at, 0, NI + 7)) = cast<uint8_t>(pt.v >> cast<int64_t>(8 * rr.x));
 
         // errors, over the relocations of the symbols that have bytes
         Func errs("errs");  // per symbol, then summed
@@ -319,6 +323,7 @@ public:
             // even a vector copy of contiguous bytes needs the race override: the store index is data-dependent
             image.update(0).allow_race_conditions().split(rc.x, xo, xi, vec, TailStrategy::GuardWithIf).vectorize(xi);
         }
+        image.update(1).unroll(rr.x);  // the 8 byte stores of one relocation, straight-line
         if (rform == 1) {
             owner.compute_at(image, rr.z);  // one chunk's owners at a time, the 20 halving steps in cache
             owner.vectorize(q, 8, TailStrategy::GuardWithIf);

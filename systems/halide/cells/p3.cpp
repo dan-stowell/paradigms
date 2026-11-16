@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
 
     Buffer<u32, 1> addr(L);  // 3b alone (mode = a reloc name) starts from the oracle addresses
     memcpy(addr.data(), FMAP(u32, "oracle/p3_addr.u32", NULL), 4 * (size_t)L);
-    u8 *imgp = (u8 *)calloc(nimg, 1);
-    Buffer<u8, 1> img(imgp, (int)nimg);
+    u8 *imgp = (u8 *)calloc(nimg + 8, 1);  // + 8 scratch bytes (gen_p3.cpp)
+    Buffer<u8, 1> img(imgp, (int)nimg + 8);
     Buffer<int32_t, 0> nerr = Buffer<int32_t, 0>::make_scalar();
     auto runLayout = [&](int v) { layouts[v].fn(bucket, cls, size, unit, bstart, bmin, tlstrB, soffB, sbinB, (int)nunits, (int)ntl, minFunc, addr); };
     auto runReloc = [&](int v) {
@@ -126,8 +126,8 @@ int main(int argc, char **argv) {
             bad += checkImage();
             double tf = best([&] {
                 free(imgp);
-                imgp = (u8 *)calloc(nimg, 1);
-                img = Buffer<u8, 1>(imgp, (int)nimg);
+                imgp = (u8 *)calloc(nimg + 8, 1);
+                img = Buffer<u8, 1>(imgp, (int)nimg + 8);
                 runReloc(v);
             });
             printf("3b %-16s %8.2f ms warm, %8.2f ms with a fresh image (page faults)\n", relocs[v].name, t, tf);
