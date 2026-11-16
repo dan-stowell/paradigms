@@ -1,0 +1,115 @@
+unify 767 ms: objects that differ [109]; slots only in A 14, only in B 17; load+sort 1190 ms
+  only in A: (unnamed, kind 1, id 877785)
+  only in A: (unnamed, kind 1, id 877786)
+  only in A: (unnamed, kind 1, id 877787)
+  only in A: (unnamed, kind 1, id 877788)
+  only in A: (unnamed, kind 1, id 877789)
+  only in A: (unnamed, kind 3, id 877815)
+  only in A: (unnamed, kind 3, id 877821)
+  only in A: (unnamed, kind 3, id 877822)
+  only in A: (unnamed, kind 3, id 877823)
+  only in A: (unnamed, kind 3, id 877824)
+  only in A: (unnamed, kind 3, id 877825)
+  only in A: (unnamed, kind 3, id 877826)
+  only in A: (unnamed, kind 3, id 877828)
+  only in A: gclocals·Dap7A2NKYbTRbDZ/t+WlRQ==
+  only in B: (B) (unnamed, kind 1, id 5205435)
+  only in B: (B) (unnamed, kind 1, id 5205436)
+  only in B: (B) (unnamed, kind 1, id 5205437)
+  only in B: (B) (unnamed, kind 1, id 5205438)
+  only in B: (B) (unnamed, kind 1, id 5205439)
+  only in B: (B) (unnamed, kind 3, id 5205440)
+  only in B: (B) (unnamed, kind 3, id 5205441)
+  only in B: (B) (unnamed, kind 3, id 5205442)
+  only in B: (B) (unnamed, kind 3, id 5205443)
+  only in B: (B) (unnamed, kind 3, id 5205444)
+  only in B: (B) (unnamed, kind 3, id 5205445)
+  only in B: (B) (unnamed, kind 3, id 5205446)
+  only in B: (B) (unnamed, kind 3, id 5205447)
+  only in B: (B) gclocals·fkHcluv1jfoT+jrot747NQ==
+  only in B: (B) gclocals·NgGS6CaEyOmI1roLZDI73Q==
+  only in B: (B) go:info.net/http.ParseTime$abstract
+  only in B: (B) net/http/header.go
+diff 27 ms: edges -11 +16, flags -14 +16, methods -0 +0, roots -0 +0 (of 9741684 A facts)
+symbols with changed facts: 31
+  edge - github.com/minio/minio/internal/amztime.ISO8601Parse -> kind 0 gclocals·mwFurZyQFy+ezr0Dhah66w==
+  edge - github.com/minio/minio/internal/amztime.ISO8601Parse -> kind 0 gclocals·Dap7A2NKYbTRbDZ/t+WlRQ==
+  edge - (unnamed, kind 1, id 877785) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge - (unnamed, kind 1, id 877786) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge - (unnamed, kind 1, id 877787) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge - (unnamed, kind 1, id 877788) -> kind 0 go:info.error
+  edge - (unnamed, kind 1, id 877788) -> kind 0 go:info.string
+  edge - (unnamed, kind 1, id 877788) -> kind 0 go:info.time.Time
+  edge - (unnamed, kind 1, id 877788) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge - (unnamed, kind 1, id 877788) -> kind 0 (unnamed, kind 1, id 877785)
+  edge - (unnamed, kind 1, id 877788) -> kind 0 (unnamed, kind 1, id 877786)
+  flag - (unnamed, kind 1, id 877785) = 1
+  flag - (unnamed, kind 1, id 877786) = 1
+  flag - (unnamed, kind 1, id 877787) = 1
+  flag - (unnamed, kind 1, id 877788) = 1
+  flag - (unnamed, kind 1, id 877789) = 1
+  flag - (unnamed, kind 3, id 877815) = 1
+  flag - (unnamed, kind 3, id 877821) = 1
+  flag - (unnamed, kind 3, id 877822) = 1
+  flag - (unnamed, kind 3, id 877823) = 1
+  flag - (unnamed, kind 3, id 877824) = 1
+  flag - (unnamed, kind 3, id 877825) = 1
+  flag - (unnamed, kind 3, id 877826) = 1
+  flag - (unnamed, kind 3, id 877828) = 1
+  flag - gclocals·Dap7A2NKYbTRbDZ/t+WlRQ== = 1
+  edge + github.com/minio/minio/internal/amztime.ISO8601Parse -> kind 0 net/http.timeFormats
+  edge + github.com/minio/minio/internal/amztime.ISO8601Parse -> kind 0 (B) gclocals·fkHcluv1jfoT+jrot747NQ==
+  edge + github.com/minio/minio/internal/amztime.ISO8601Parse -> kind 0 (B) gclocals·NgGS6CaEyOmI1roLZDI73Q==
+  edge + (B) (unnamed, kind 1, id 5205436) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge + (B) (unnamed, kind 1, id 5205437) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge + (B) (unnamed, kind 1, id 5205438) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 go:info.error
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 go:info.string
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 go:info.time.Time
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 github.com/minio/minio/internal/amztime.ISO8601Parse
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 (B) (unnamed, kind 1, id 5205436)
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 (B) (unnamed, kind 1, id 5205437)
+  edge + (B) (unnamed, kind 1, id 5205439) -> kind 0 (B) go:info.net/http.ParseTime$abstract
+  edge + (B) go:info.net/http.ParseTime$abstract -> kind 0 go:info.error
+  edge + (B) go:info.net/http.ParseTime$abstract -> kind 0 go:info.string
+  edge + (B) go:info.net/http.ParseTime$abstract -> kind 0 go:info.time.Time
+  flag + (B) (unnamed, kind 1, id 5205435) = 1
+  flag + (B) (unnamed, kind 1, id 5205436) = 1
+  flag + (B) (unnamed, kind 1, id 5205437) = 1
+  flag + (B) (unnamed, kind 1, id 5205438) = 1
+  flag + (B) (unnamed, kind 1, id 5205439) = 1
+  flag + (B) (unnamed, kind 3, id 5205440) = 1
+  flag + (B) (unnamed, kind 3, id 5205441) = 1
+  flag + (B) (unnamed, kind 3, id 5205442) = 1
+  flag + (B) (unnamed, kind 3, id 5205443) = 1
+  flag + (B) (unnamed, kind 3, id 5205444) = 1
+  flag + (B) (unnamed, kind 3, id 5205445) = 1
+  flag + (B) (unnamed, kind 3, id 5205446) = 1
+  flag + (B) (unnamed, kind 3, id 5205447) = 1
+  flag + (B) gclocals·fkHcluv1jfoT+jrot747NQ== = 1
+  flag + (B) gclocals·NgGS6CaEyOmI1roLZDI73Q== = 1
+  flag + (B) go:info.net/http.ParseTime$abstract = 1
+setup (read, decode, unify, diff) 1994 ms
+full A	2382.9 ms
+update A->B	1.62 ms	rep 0
+update B->A	1.50 ms	rep 0
+update A->B	1.52 ms	rep 1
+update B->A	1.35 ms	rep 1
+update A->B	1.37 ms	rep 2
+update B->A	1.38 ms	rep 2
+update A->B	1.37 ms	rep 3
+update B->A	1.35 ms	rep 3
+update A->B	1.37 ms	rep 4
+update B->A	1.53 ms	rep 4
+full B (from scratch)	2050.4 ms
+check A: 663630 live, oracle 663630, extra 0, missing 0 -> OK
+check A->B vs B oracle (unified ids): 663631 live, oracle 663631, extra 0, missing 0 -> OK
+check B->A vs A oracle: 663630 live, oracle 663630, extra 0, missing 0 -> OK
+live ids changed: -1 +2
+  live - gclocals·Dap7A2NKYbTRbDZ/t+WlRQ==
+  live + (B) gclocals·fkHcluv1jfoT+jrot747NQ==
+  live + (B) gclocals·NgGS6CaEyOmI1roLZDI73Q==
+check A->B update vs B from scratch (same process, unified ids): OK
+check B from scratch vs B oracle: 663631 live, oracle 663631, extra 0, missing 0 -> OK
+P2 OK
+e2e (process start to here) 6556 ms
