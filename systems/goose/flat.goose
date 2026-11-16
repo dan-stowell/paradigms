@@ -72,6 +72,11 @@ fn load_ids<T>(name: const u8[:]) -> T[>..] {
 
 fn ms(t0: f64, t1: f64) -> f64 { (t1 - t0) * 1000.0 }
 
+fn env_set(name: const u8[:]) -> bool {
+    var v: u8[>..] = [];
+    return env(name, v) && v.len > 0;
+}
+
 fn report(note: u8[>..]&, what: const u8[:], t0: f64, t1: f64) {
     format(note, what, " ");
     format_flt(note, ms(t0, t1), 1);
