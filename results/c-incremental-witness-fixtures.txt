@@ -1,0 +1,28 @@
+fixtures traversal=bfs counts=no
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=bfs counts=yes
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=lifo counts=no
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=lifo counts=yes
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK

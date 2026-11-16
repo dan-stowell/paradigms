@@ -1,0 +1,80 @@
+p2inc (plain DRed): setup 398.9 ms, flood A (same rules, worklist) 143.0 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.046 ms	rep 0	over-deleted 2 live, rederived 3 directly, set 3, edges read 0, reverse entries 17, support checks 0
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.015 ms	rep 0	over-deleted 7 live, rederived 6 directly, set 6, edges read 8, reverse entries 25, support checks 0
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.046 ms, B->A 0.015 ms
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+fuzz: 30 random diffs seed 88172645463325252, 0 failed
+P2INC OK
+p2inc (plain DRed): setup 416.5 ms, flood A (same rules, worklist) 172.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	219.497 ms	rep 0	over-deleted 594148 live, rederived 133680 directly, set 581838, edges read 3890503, reverse entries 4621388, support checks 0
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	199.422 ms	rep 0	over-deleted 578494 live, rederived 130306 directly, set 590804, edges read 3868288, reverse entries 4531311, support checks 0
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 219.497 ms, B->A 199.422 ms
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+fuzz: 30 random diffs seed 88172645463325252, 0 failed
+P2INC OK

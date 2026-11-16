@@ -1,0 +1,1347 @@
+2026-11-16T20:47:05Z
+ 20:47:05 up  5:31,  0 user,  load average: 1.57, 2.18, 2.12
+FUZZ edit=minio-edit mode=normal
+p2inc (DRed + derivation-order supports): setup 411.2 ms, flood A (same rules, worklist) 167.3 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.052 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 13, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.014 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 6, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.052 ms, B->A 0.014 ms
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+fuzz: 300 random diffs seed 88172645463325252, 0 failed
+P2INC OK
+FUZZ edit=minio-edit mode=counts
+p2inc (DRed + derivation-order supports): setup 407.1 ms, flood A (same rules, worklist) 229.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.044 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.013 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.044 ms, B->A 0.013 ms
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 663631 oracle entries, 0 differ -> OK
+fuzz: 300 random diffs seed 88172645463325252, 0 failed
+P2INC OK
+FUZZ edit=minio-edit2 mode=normal
+p2inc (DRed + derivation-order supports): setup 380.2 ms, flood A (same rules, worklist) 150.6 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	9.551 ms	rep 0	over-deleted 23091 live, rederived 2177 directly, set 10781, edges read 117169, reverse entries 343024, support checks 235966
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	3.998 ms	rep 0	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 254814, support checks 99457
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 9.551 ms, B->A 3.998 ms
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+fuzz: 300 random diffs seed 88172645463325252, 0 failed
+P2INC OK
+FUZZ edit=minio-edit2 mode=counts
+p2inc (DRed + derivation-order supports): setup 388.7 ms, flood A (same rules, worklist) 218.0 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	8.387 ms	rep 0	over-deleted 23091 live, rederived 2177 directly, set 10781, edges read 180953, reverse entries 310781, support checks 235966
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	3.704 ms	rep 0	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 122390, reverse entries 286130, support checks 99457
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 8.387 ms, B->A 3.704 ms
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+check fuzz revert vs B oracle: 651320 oracle entries, 0 differ -> OK
+fuzz: 300 random diffs seed 88172645463325252, 0 failed
+P2INC OK
+2026-11-16T20:50:11Z
+ 20:50:11 up  5:34,  0 user,  load average: 3.25, 2.58, 2.28
+p2inc (DRed + derivation-order supports): setup 404.8 ms, flood A (same rules, worklist) 175.9 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 63/49/69/59
+chain: 240 random diffs seed 4, 0 failed
+P2INC OK
+2026-11-16T20:51:26Z
+ 20:51:26 up  5:35,  0 user,  load average: 3.16, 2.72, 2.35
+p2inc (DRed + derivation-order supports): setup 407.3 ms, flood A (same rules, worklist) 202.5 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 57/72/53/58
+chain: 240 random diffs seed 5, 0 failed
+P2INC OK
+2026-11-16T20:52:42Z
+ 20:52:42 up  5:37,  0 user,  load average: 3.42, 2.89, 2.44
+p2inc (DRed + derivation-order supports): setup 391.2 ms, flood A (same rules, worklist) 186.5 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 63/66/51/60
+chain: 240 random diffs seed 6, 0 failed
+P2INC OK
+storage hash OK
+storage pool OK
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+
+Harness correction: the initial driver requested nonexistent fixture "overlay-method" (exit 2).
+The committed driver uses "condition-overlay" and unsets environment flags for BFS/no-count modes.
+All large-data FUZZ/CHAIN and both storage checks above had completed successfully.
+Corrected complete fixture matrix follows (independently rerun against final source):
+fixtures traversal=bfs counts=no
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=bfs counts=yes
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=lifo counts=no
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+fixtures traversal=lifo counts=yes
+witness alternative and dead plain cycle OK
+witness overlay edge removal and dead cycle OK
+witness method condition cannot self-support through its target OK
+witness source definition loss OK
+witness interface type alternative and dead type cycle OK
+witness overlay method condition removal and re-add OK
+FINAL CHECKS OK: 4 x FUZZ=300; CHAIN seeds 4,5,6; storage hash/pool; 24 fixtures.

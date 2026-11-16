@@ -237,3 +237,168 @@ gcc -O2 -o build/test-p2inc-storage ref/flat/test-p2inc-storage.c
 prlimit --as=8589934592 build/test-p2inc-storage hash
 prlimit --as=8589934592 build/test-p2inc-storage pool
 ```
+
+
+## Follow-up (witness), 2026-11-16
+
+**Fresh edit 2 now beats destination recompute in both directions.** With cached witnesses and FIFO
+flooding, fresh A->B is **10.285 ms median** and freshly flooded B->A is **6.467 ms**, versus
+**20.000 / 17.400 ms** for 8-thread recompute of B / A. Their five-run ranges do not overlap.
+The baseline rebuilt from `587b3514085808aacd8365164258d199acb0316e` takes **21.032 / 98.547 ms**
+in the same interleaved window. This remains a reach-update kernel with stored identities/diffs and
+resident indexes, not an end-to-end relink. No whole-graph restamp is hidden outside the update timer.
+
+### Diagnose first: the 49 M reads are method conditions
+
+An instrumentation-only baseline build attributes every counted reverse read and support invocation
+by phase and target. Fresh edit-2 B->A reproduces **49,171,996** reads and **35,378** live retractions:
+
+| Baseline phase | reverse entries | checks |
+|---|---:|---:|
+| Delete: live support | 462,434 | 77,070 |
+| Delete: iface support | 494,367 | 11,244 |
+| Delete: method condition | **48,013,690** | **285,037** |
+| Rederive: live | 80,250 | 36,938 |
+| Rederive: iface | 121,255 | 37,887 |
+
+Thus **97.64%** is deletion-time `condWF`, not the rederive step. Its signature/name/reflect scans
+restart at zero on every condition loss, even if a different predecessor remains the proof.
+**2,747 `Error() string` method rows alone account for 43,760,352 reads over 184,673 checks**.
+Across all signatures, 12,908 method rows are checked, up to 125 times each. For example:
+
+| target (method-table index, or id) | reads | checks |
+|---|---:|---:|
+| method 105984, `OrcaLoadReportRequestMultiError.Error` | 17,884 | 68 |
+| method 6499, `(*os.File).Close` | 54,723 | 51 |
+| methods 6572, 6617, 6660, 6705, 8935, 26397, other `Close` implementations (each) | 54,723 | 51 |
+| method 9961, `(*fmt.pp).Write` | 26,862 | 74 |
+| live id 408063, `runtime.writeBarrier` | 45,529 | 1,177 |
+| iface id 241664, `type:func()` | 155,771 | 187 |
+
+[Baseline diagnostic](c-incremental-witness-diagnosis.txt) includes top targets in every phase.
+[Complete baseline target TSV, gzip](c-incremental-witness-baseline-targets.tsv.gz) records **every**
+checked target, including zero-read witness hits (update 0 is fresh B->A, update 1 is the return A->B).
+Method indices are zero-based; live/iface targets use unified symbol IDs. Counters count examined
+CSR entries, including rejected/removed entries, rather than physical cache misses. Overlay traversal
+and witness membership checks are not fully represented by `cRev`; the benchmark times include them.
+
+### Trials, in the requested order
+
+**(a) Keep witnesses.** Live and iface facts cache an edge source or method/type proof. The fast path
+validates that proof's current fact, edge/flag, and strictly smaller stamp before returning; no reverse
+support list is scanned. Base edge membership uses a sorted-row lookup/removal hash; overlay membership
+uses its source list. Method conditions cache a signature/name source or reflect source; base sources
+come from immutable indexes and need only the removal lookup, while overlay witnesses name an append-only
+pool slot. On witness loss, live/iface searches resume their existing cursor, including recording the
+end of the CSR when support comes from a method. Method conditions gain a cursor spanning their immutable
+signature/name/reflect lists, reset on each new method stamp. Added-edge fallback searches remain conservative.
+Roots/flags and the fixed live+iface conjunction for type activation need no searched predecessor.
+
+A current smaller-stamp proof cannot support its own cycle. Losing it triggers the existing propagation;
+a method's own later-stamped targets cannot keep its condition true. Skipping an earlier cursor entry
+that becomes valid after an edge restoration can cause extra deletion, but cannot keep a false fact:
+rederivation always checks the entire current graph. This is exactness, not a claim that no unnecessary
+retractions remain. In LIFO mode witnesses preserve the baseline retraction counts but cut fresh B->A
+reverse reads to **868,902**, including acquiring new condition witnesses during additions.
+
+**(b) Do not enable counts by default.** `COUNTS=1` maintains a per-id count of live, defined plain
+predecessors with smaller live stamps. Edge insertion/removal adjusts the count; source retraction removes
+its contributions before survival checks; a new target stamp recounts incoming edges. No old target
+can gain a smaller-stamp contribution from a newly stamped source. A positive count is an O(1) live
+survival test; zero skips the plain-edge search, retaining method/root checks. This tests the requested
+count optimization on plain live predecessors; iface/method conditions still use witnesses.
+It adds **4 bytes/id**, an extra outgoing pass on death, and incoming reads on restamping. Fresh B->A
+reads **898,848 reverse entries and 361,979 outgoing entries**, versus witness-only **868,902 / 270,358**.
+All four timing comparisons below overlap witness-only ranges: **within noise**, with no change in
+retraction counts. The opt-in implementation remains to reproduce the negative experiment.
+
+**(c) Keep FIFO flooding.** The stack gave a freshly flooded B long derivation chains through code
+changed by this patch. Using the worklist as a FIFO seeds breadth-first discovery stamps, including
+method/type consequences, without a separate rebuild. Updates also drain FIFO and retain their state;
+there is no full restamping after an update. Fresh B->A retractions fall from **35,378 to 9,406**,
+outgoing reads from **270,358 to 108,128**, and total reverse reads to **278,411**. Of those reads,
+105,511 are deletion support checks, 53,558 are rederivation checks, and 119,342 acquire new method
+condition witnesses. [Final phase profile](c-incremental-witness-profile.txt) and
+[complete target TSV, gzip](c-incremental-witness-final-targets.tsv.gz) preserve the counts.
+
+| Edit 2 ms, min / median / max | fresh A->B | fresh B->A | repeated A->B | repeated B->A |
+|---|---|---|---|---|
+| baseline | 19.294 / 21.032 / 30.116 | 92.833 / 98.547 / 101.049 | 10.091 / 11.101 / 18.766 | 5.407 / 6.037 / 7.619 |
+| witness | 13.100 / 14.339 / 19.351 | 16.613 / 18.932 / 25.835 | 5.815 / 6.399 / 7.903 | 3.537 / 3.796 / 5.091 |
+| counts | 11.631 / 12.257 / 13.484 | 16.938 / 17.719 / 20.650 | 5.086 / 5.950 / 7.226 | 3.506 / 4.013 / 5.108 |
+| BFS witness | 9.729 / 10.285 / 11.485 | 6.116 / 6.467 / 8.376 | 5.957 / 7.175 / 9.473 | 3.526 / 4.308 / 5.534 |
+
+FIFO's repeated-update ranges overlap witness-only LIFO: **within noise**; retain FIFO for the clear
+fresh-state gain. This removes the measured pathological rescanning and reduces work to the local
+change cone on these edits. It does **not** establish an asymptotic bound by the symmetric live-set
+difference for arbitrary cyclic graphs: stamp-based DRed can still over-delete, and method indexes can
+fan out to many calls. For perspective, edit 2 changes 12,330 live-set memberships; fresh B->A still
+retracts 9,406 IDs although only 10 actually die (12,320 are genuinely added).
+
+### Five interleaved rounds, fresh and repeated
+
+Window **2026-11-16T20:44:35Z–20:46:19Z**; sampled one-minute `uptime` load **2.12–2.31**.
+Every measured child uses **`prlimit --as=12884901888` (12 GiB)**. Each round interleaves both edits,
+four implementation stages, fresh-A and fresh-B processes, repeated toggles, and destination recomputes.
+The final implementation also repeats after touching 1 GiB. Fresh samples are **five new processes**
+per direction; repeats are **20 samples**, repetitions 1–4 from five separate five-toggle processes.
+All destination oracles pass. p2par uses 8 threads, passive waiting, and reports its best of five floods,
+as in skeptic-inc. p2 measures the destination once per process. A is the B->A destination for both edits.
+
+| Final ms, min / median / max | edit 1 A->B | edit 1 B->A | edit 2 A->B | edit 2 B->A |
+|---|---|---|---|---|
+| Fresh state | 0.042 / 0.043 / 0.046 | 0.033 / 0.040 / 0.042 | 9.729 / 10.285 / 11.485 | 6.116 / 6.467 / 8.376 |
+| Repeated toggles | 0.003 / 0.004 / 0.016 | 0.003 / 0.006 / 0.013 | 5.957 / 7.175 / 9.473 | 3.526 / 4.308 / 5.534 |
+| Repeats after touching 1 GiB | 0.012 / 0.014 / 0.017 | 0.016 / 0.019 / 0.033 | 8.249 / 8.472 / 11.061 | 5.371 / 5.521 / 6.574 |
+| p2 destination | 41.700 / 48.000 / 59.700 | 39.900 / 42.300 / 54.100 | 39.600 / 50.300 / 56.200 | 41.300 / 42.200 / 46.100 |
+| p2par destination, 8 threads | 14.800 / 15.900 / 24.100 | 13.700 / 19.000 / 24.600 | 14.800 / 20.000 / 23.500 | 12.700 / 17.400 / 24.500 |
+
+Cache displacement leaves work counts unchanged; normal and displaced edit-2 repeat timing ranges
+overlap. [Raw output](c-incremental-witness-raw.txt) contains every command, setup/flood/update time,
+oracle result, work count, timestamp and load; [summary TSV](c-incremental-witness-summary.tsv) also
+includes first toggles and both edits for every ablation. Profiling is a separate build, never timed here.
+
+**Memory and initialization cost.** Two 8-byte witnesses per unified ID plus an 8-byte condition witness
+and 4-byte cursor per method add `16*(N+1) + 12*nmeth` bytes: **84,560,628 bytes (80.64 MiB)** for edit 2,
+or **16.245 bytes/id** amortized over 5,205,480 slots and 106,079 methods. The optional count adds
+20,821,920 bytes (19.86 MiB), exactly 4 bytes/id. FIFO reuses the existing worklist allocation; it has
+no separate per-id array; both baseline and final profile runs use the same 1,048,576-entry
+(8 MiB) worklist capacity. Allocation capacity may grow with other queued cones. Diagnostic arrays are
+excluded and are absent in timing/normal builds. Across the benchmark processes, initial A-flood medians
+are baseline **92.9 ms**, LIFO witness **126.3 ms**, counts **171.3 ms**, and FIFO witness **158.95 ms**;
+index setup medians stay near 402–407 ms. The faster updates therefore cost extra resident memory and
+initial proof construction, rather than being free. Fresh-B setup still installs B into A's CSR/overlay
+and floods it directly, without a priming incremental update; only the traversal policy changes.
+
+### Correctness and reproduction
+
+The unchanged full A/B oracle checks cover both edits in both directions, including fresh B. The
+[check log](c-incremental-witness-checks.txt) records `FUZZ=300` for each edit in both default and count
+modes, and the unchanged `check-p2inc-chain.sh` seeds 4/5/6 (720 accumulated random plus 72 real updates).
+**All four 300-diff runs and all 792 chained steps pass, as do both storage regressions.**
+Plain DRed also passes 30 fuzz diffs per edit ([log](c-incremental-witness-plain-checks.txt)). An independent reviewer added explicit expected-answer
+fixtures for plain cycles, alternate witnesses, overlay removal/re-add, method self-support cycles,
+definition loss, and interface/type cycles; see [review](c-incremental-witness-review.md) and
+[test source](../ref/flat/test-p2inc-witness.c). These also compare with an isolated scratch flood and
+check maintained counts independently. All 24 BFS/LIFO × count/no-count fixture runs pass
+([fixture log](c-incremental-witness-fixtures.txt)); the independent
+[method-row comparison/rejection check](c-incremental-witness-method-check.txt) passes too. The scratch oracle shares the transfer rules; the supplied real
+A/B oracles and tiny explicit assertions provide independent checks of results.
+
+```sh
+cd /home/exedev/paradigms-w
+mkdir -p build
+export TMPDIR="$PWD/build"
+# Compile-only instrumentation patch against the recorded baseline, and current per-target profiles:
+bash ref/flat/profile-p2inc-witness.sh
+# Four stages, both edits/directions, >=5 rounds, 12 GiB cap and destination recomputes:
+python3 ref/flat/bench-p2inc-witness.py 5
+# Both edits FUZZ=300, count ablation too; original CHAIN script; storage; all tiny fixture modes:
+bash ref/flat/check-p2inc-witness.sh > results/c-incremental-witness-checks.txt
+# Existing independent method-row comparison and unsupported-diff rejection:
+prlimit --as=12884901888 python3 results/c-incremental-method-check.py build/p2inc
+# The target command now uses FIFO witnesses by default:
+FRESH_B=1 prlimit --as=12884901888 build/p2inc \
+  /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+# Ablations: prefix with LIFO=1, or LIFO=1 COUNTS=1. No data files are written.
+```

@@ -242,8 +242,8 @@ recompute on 1 worker (p2 43), faster on 8 workers than 1-core p2 but 2x slower 
 measured on 8 workers was load); retracting 12 K reachable ids withdraws each derivation round by round through 45 loop rounds. DD's own
 full run is 60-100x C (2.7 s / 1.6 s) and holds 2.7 GB of arrangements.
 
-**Observation 3: in plain C, maintenance wins the additive edit by 4 orders of magnitude and the retracting one only
-with a warm history; derivation stamps are required, but not yet enough** ([results/c-incremental.md](results/c-incremental.md), `ref/flat/p2inc.c`, 1 core, reading the stored diff
+**Observation 3: in plain C, maintenance wins both edits from a fresh state, if deletions use breadth-first derivation
+stamps and cached witnesses** ([results/c-incremental.md](results/c-incremental.md), `ref/flat/p2inc.c`, 1 core, reading the stored diff
 `data/minio-edit{,2}/diff/`). Bench 20:12Z, load 0.7-1.7, 5 interleaved rounds, medians: edit 1 update **3 µs** (DD
 1.4 ms, p2 45 ms, p2par 17 ms on 8); edit 2 update **9.5 ms A->B / 5.2 ms B->A** (p2 43, p2par 14 on 8, DD 59 on 1
 worker / 29 on 8): 4.5x 1-core recompute, but **within noise of 8-thread recompute** (ranges 9.5-16.6 vs 13.0-18.3).
@@ -255,7 +255,13 @@ recompute (p2) / 17 (p2par)**: it over-deletes 35,378 live ids and reads **49.2 
 their counts and times. Stamps depend on traversal order and history, so a fresh flood's stamps give popular targets
 few smaller-stamp supports. Chained correctness: 792 maintained steps (720 random, 72 real) over 3 seeds, each
 checked against a from-scratch flood, all pass; two storage bugs found and fixed (removed-edge hash saturation,
-added-edge pool overflow). Neither edit changes method-table rows. Deletion is DRed (delete, rederive) where a fact survives the delete step if it has a derivation
+added-edge pool overflow). Neither edit changes method-table rows. **Fixed (codex-p2inc-witness; lead reran 20:58Z: fresh B->A
+6.1-8.7 ms, FUZZ=300 and the chained check OK):** 97.6% of the 49 M reads were deletion-time method-condition checks
+restarting from zero (2,747 `Error() string` rows alone: 43.8 M). Two changes: each derived fact caches a witness (one
+smaller-stamp proof, checked O(1) before any scan; on loss the scan resumes a cursor), and the flood uses a FIFO
+worklist, so stamps are breadth-first. Fresh edit 2: **A->B 10.3 ms, B->A 6.5 ms vs 20.0 / 17.4 ms 8-thread recompute,
+ranges apart**; B->A over-deletes 9,406 (was 35,378) and reads 278 K reverse entries; +16 bytes per id. A per-id count
+of smaller-stamp predecessors was tried and is within noise of witnesses alone. Deletion is DRed (delete, rederive) where a fact survives the delete step if it has a derivation
 from a true fact with a smaller stamp (the clock when it was set): edit 2 retracts 32 K ids for 12 K real deaths;
 textbook DRed retracts 594 K and takes 123 ms (3x recompute). Checked on both edits and directions and by 300
 random diffs per edit against a from-scratch flood (each fuzz diff starts from a recomputed state, so chained
