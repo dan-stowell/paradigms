@@ -84,3 +84,39 @@ already mostly paid outside write.
 **What it would take.** Quiet 8-thread numbers; then the paradigms' 3b cells should report whether their runtime lets
 the output live on huge pages (Futhark's and Halide's buffers, Goose's arenas, DuckDB's blobs), because on this
 problem that matters as much as the loop.
+
+## 3. Reach: the level count is the cost; drop level synchronization
+
+**Problem.** Reach (2), the same flood as entry 1.
+
+**Before.** Every data-parallel shape of the flood is level-synchronous: expand the frontier, barrier, swap. MinIO's
+reach has **111 levels in 7 rounds** (kube 103). p2par (OpenMP) pays one team barrier per level; Futhark pays ~25
+whole-array passes per level (its lazy flood "falls down": 165 / 90 ms, slower than its own eager flood, NOTES.md);
+Goose pays a message exchange per superstep and scales only 1.7x on 8 workers; DuckDB iterates 45 SQL rounds.
+
+**Observation.** On this shared 8-core VM the barrier is not a constant: with OpenMP's default spinning wait, p2par's
+8-thread flood takes **593-1071 ms instead of 15-27** (MinIO, ambient load from the builders; kube 856-1064 vs 28-103),
+because 111 times per solve all threads wait on whichever one was descheduled (codex-g, results/codex-g.md, 16:25-16:28Z;
+lead saw the same at 16:20Z). A passive wait policy removes most of it, but not under oversubscription.
+
+**Attack.** An asynchronous worklist flood (`ref/flat/p2async.c`, codex-g): per-thread LIFO stacks, chunk stealing,
+termination by credits; the rules are monotone (flags only go 0 -> 1, a push on each transition) so level order is not
+needed for the live set. One join per round: **7 phases instead of 111 barriers.**
+
+**Number.** 5 interleaved processes, ms per solve, min / median / max (codex-g):
+
+| MinIO, 8 threads | p2par active | p2par passive | p2async |
+|---|---|---|---|
+| ambient load | 593 / 953 / 1071 | 15.2 / 21.4 / 26.6 | 16.7 / 19.9 / 30.3 |
+| + 8 busy loops | 2079 / 2290 / 3510 | 105.9 / 152.7 / 156.1 | **81.3 / 89.4 / 93.4** |
+
+1 thread: within noise of p2par (34-38 vs 37-44 ms). Under deliberate overload async beats passive by 1.7x with ranges
+apart; ambient, within noise. P2 OK on 120/120 separate runs (both datasets, 1/2/8 threads) and in check.sh.
+
+**What it says about the paradigms.** None of the grid's data-parallel systems can say "a fixpoint without levels":
+Futhark and Halide have no worklist; Soufflé's semi-naive evaluation is level-synchronous by construction; DuckDB's
+recursive CTE iterates rounds; Goose has the queues but no shared visited set. The C worklist is ~200 lines of
+mechanism (stealing, credits) for ~15 lines of rules. A build farm's machines are shared like this VM, so robustness
+under load is part of the speed. **Next:** a quiet-machine run (does async lose anything with nothing else running?),
+and whether a level-free flood also cuts Futhark's/Goose's cost (fewer, larger rounds: e.g. expand several levels per
+superstep, a "delta-stepping" of the flood).
