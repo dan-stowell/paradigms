@@ -542,6 +542,28 @@ static void dumpFlat(void) {
 	u32 rend = (u32)rOffv.n;
 	VPUSH(prel, rend);
 	meta("p3_placed", psym.n);
+	// Relocation targets that the linker places outside 3a's buckets (its own symbols: runtime.firstmoduledata,
+	// runtime.buildVersion, ...): their addresses are a given input of 3b, like the bucket starts are of 3a.
+	{
+		u8 *isPlaced = calloc(nids, 1), *isFixed = calloc(nids, 1);
+		for (size_t i = 0; i < psym.n; i++) isPlaced[psym.a[i]] = 1;
+		vecu32 fid = {0}, fad = {0};
+		for (size_t i = 0; i < rTgt.n; i++) {
+			u32 tg = rTgt.a[i], c = tg <= N ? canon[tg] : tg;
+			if (c < nids && !isPlaced[c] && addr[c] != 0) isFixed[c] = 1;
+		}
+		for (u32 c = 0; c < nids; c++)
+			if (isFixed[c]) {
+				u32 a_ = addr[c];
+				VPUSH(fid, c);
+				VPUSH(fad, a_);
+			}
+		meta("p3_fixed", fid.n);
+		WVEC("p3_fixed_id.u32", fid);
+		WVEC("p3_fixed_addr.u32", fad);
+		free(isPlaced);
+		free(isFixed);
+	}
 	meta("p3_rel", rOffv.n);
 	meta("p3_rel_unsupported", (u64)nUnsup);
 	meta("p3_data_bytes", dbin.n);

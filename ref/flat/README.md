@@ -117,7 +117,7 @@ order (a unit is an object, or a run of 8192 slots of a big one) and then id ord
 | `p3_bucket_start.u32`, `p3_bucket_minalign.u32` | per bucket (16 entries): its start address and minimum alignment |
 | `p3_data.off.u64`, `p3_data.bin` | per placed symbol: its bytes (may be shorter than its size: the rest is zero; bss buckets: none) |
 | `p3_rel_start.u32` + `p3_rel_off.u32 p3_rel_siz.u8 p3_rel_kind.u8 p3_rel_add.i64 p3_rel_tgt.u32` | CSR per placed symbol: its relocations that write bytes: offset, width (1, 2, 4, 8), kind (below), addend, target slot id |
-| `p3_addr_all.u32` | per id (`nids`): the final address of what it resolves to (0: not in the output). **An input to 3b only**: it contains 3a's answer (`p3_addr_all[p3_sym[i]] == oracle/p3_addr[i]` for every placed symbol), so a 3a cell must not read it. A 3a+3b pipeline cell builds it from its own 3a addresses and `p1_canon` and says so |
+| `p3_addr_all.u32` | per id (`nids`): hlink's raw final `addr` array: image addresses, but also PC-table offsets for non-placed symbols. **An input to 3b only**: it contains 3a's answer (`p3_addr_all[p3_sym[i]] == oracle/p3_addr[i]` for every placed symbol), so a 3a cell must not read it. A 3a+3b pipeline cell propagates its own 3a addresses through `oracle/p1c_canon.u32` (which already includes 1a); see the extraction limitation below |
 
 **3a. Layout.** occupied(i) = size rounded up to 2^class, where a text symbol (buckets 1, 2) is at least `minFunc`
 (16) bytes. For each bucket other than typelink: `va = start`; for each unit in order: if the unit has bytes in
@@ -150,3 +150,18 @@ into canonical ids and itabs resolved to their types (P2), method tables decoded
 relocation types normalised and size relocations folded into constants (P3). hlink does that work inside its
 phases; a system here does not. Compare a system's time with the plain C references on the same files first,
 and with hlink's phase times only with that caveat.
+
+## 3a -> 3b as one pipeline
+
+`build/p3 DATA --pipeline` lays out (3a), builds every id's address from its own 3a addresses through
+`oracle/p1c_canon.u32` (final canon, 1a included) plus the given `p3_fixed_id.u32`/`p3_fixed_addr.u32`, then
+relocates (3b) and compares the image. It never reads `p3_addr_all.u32`. P3 pipeline OK on MinIO and kube-apiserver
+(2026-11-16T16:02:18Z).
+
+| file | what |
+|---|---|
+| `p3_fixed_id.u32`, `p3_fixed_addr.u32` | relocation targets the linker places itself, outside 3a's buckets (MinIO: 7: `runtime.buildVersion`, `runtime.modinfo`, `runtime.godebugDefault`, `runtime.firstmoduledata`, `runtime.lastmoduledatap`, `runtime.runtime_inittasks`, `go:fipsinfo`; kube: 6): canonical id and final address. A given input, like the bucket starts |
+
+`p3_addr_all.u32` is hlink's raw `addr` array: besides image addresses it holds PC-table offsets of non-placed
+symbols (layout.c `addrUnit`), so 661,018 ids differ from "placed address through canon"; no relocation reads
+those. Found by Codex (results/codex-c.md), fixed by extracting the specials.

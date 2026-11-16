@@ -1,62 +1,62 @@
-1	load	18.4
-1	resolve	125.4
-1	inittasks	4.3
-1	deadcode	164.3
-1	layout	84.4
-1	create	28.8
-1	write	104.3
-1	finish	3.7
-1	teardown	5.6
-1	total	539.2
-1	complete	539.2
-1	process	543.5
-2	load	10.9
-2	resolve	64.9
-2	inittasks	4.2
-2	deadcode	90.8
-2	layout	48.4
-2	create	15.5
-2	write	51.7
+1	load	19.9
+1	resolve	106.3
+1	inittasks	4.2
+1	deadcode	147.8
+1	layout	75.0
+1	create	27.9
+1	write	98.4
+1	finish	3.5
+1	teardown	5.4
+1	total	488.4
+1	complete	489.7
+1	process	492.7
+2	load	12.2
+2	resolve	62.8
+2	inittasks	4.3
+2	deadcode	84.6
+2	layout	46.7
+2	create	16.0
+2	write	51.3
 2	finish	3.3
-2	teardown	4.5
-2	total	294.1
-2	complete	294.2
-2	process	297.1
-4	load	20.0
-4	resolve	44.8
-4	inittasks	4.4
-4	deadcode	54.6
-4	layout	30.8
-4	create	9.7
-4	write	29.2
-4	finish	3.3
-4	teardown	4.2
-4	total	201.0
-4	complete	201.1
-4	process	207.1
-8	load	7.6
-8	resolve	24.2
-8	inittasks	4.5
-8	deadcode	41.7
-8	layout	23.4
-8	create	17.1
-8	write	16.7
-8	finish	3.4
-8	teardown	6.9
-8	total	145.6
-8	complete	145.7
-8	process	149.0
+2	teardown	7.3
+2	total	288.5
+2	complete	288.6
+2	process	292.8
+4	load	22.3
+4	resolve	45.3
+4	inittasks	4.2
+4	deadcode	101.5
+4	layout	38.9
+4	create	11.5
+4	write	35.2
+4	finish	3.7
+4	teardown	4.6
+4	total	267.4
+4	complete	267.4
+4	process	270.8
+8	load	13.2
+8	resolve	35.8
+8	inittasks	4.4
+8	deadcode	80.5
+8	layout	31.9
+8	create	10.7
+8	write	25.0
+8	finish	4.2
+8	teardown	4.8
+8	total	210.4
+8	complete	210.5
+8	process	215.0
 # phase       wall ms   cpu ms
-# load            7.6     41.1  [kernel  30.3] 1312 files, 1421 objects, 1763 units; slots: 1124269 by index, 47874+2632620 by content hash, 547814 defined by name, 852850 references by name; 0 of the slots in bare .o files
-# resolve        24.2    187.3  [kernel  42.0] 5205427 slots; joined: 627344 by name (and 3652 definitions by package index); ms: records 13.0, joins 4.0, pkgdefs 3.5, names 3.4
-# inittasks       4.5     15.0  [kernel   3.4] 622 + 3 packages with initialization to run
-# deadcode       41.7    285.1  [kernel  61.2] 360376 symbols live, 110 levels in 7 rounds, 11450 methods pruned, reflection true; 255926 symbols flooded, 2553620 relocations and 2133149 aux records read; content-addressed: 1290076 reached, 456940 kept
-# layout         23.4    102.0  [kernel   0.0] 110680 functions, text 40.0 MB, rodata 21.3, pclntab 31.4, types 9.7 (33261 sorted), data 2.0, bss 32.6
-# create         17.1    145.0  [kernel 115.9] overwrote the old output in place (it was 109.5 MB), zeroed
-# write          16.7    136.7  [kernel   0.0] 2227123 relocations applied
-# finish          3.4     13.3  [kernel   1.1] 
-# teardown        6.9     38.6  [kernel  38.6] output unmapped
-# total         145.6    964.0  8 threads, output 109.5 MB
-# complete      145.7           from the start to the output complete, as the parent sees it (a child tears the link's address space down)
+# load           13.2     49.6  [kernel  32.3] 1312 files, 1421 objects, 1763 units; slots: 1124269 by index, 47874+2632620 by content hash, 547814 defined by name, 852850 references by name; 0 of the slots in bare .o files
+# resolve        35.8    168.8  [kernel  25.2] 5205427 slots; joined: 627344 by name (and 3652 definitions by package index); ms: records 15.2, joins 11.4, pkgdefs 4.2, names 4.2
+# inittasks       4.4      7.2  [kernel   5.0] 622 + 3 packages with initialization to run
+# deadcode       80.5    426.8  [kernel  18.8] 360376 symbols live, 110 levels in 7 rounds, 11450 methods pruned, reflection true; 255893 symbols flooded, 2553930 relocations and 2133149 aux records read; content-addressed: 1290076 reached, 456940 kept
+# layout         31.9    134.8  [kernel  16.2] 110680 functions, text 40.0 MB, rodata 21.3, pclntab 31.4, types 9.7 (33261 sorted), data 2.0, bss 32.6
+# create         10.7     61.3  [kernel  58.0] overwrote the old output in place (it was 109.5 MB), zeroed
+# write          25.0    148.5  [kernel   3.8] 2227123 relocations applied
+# finish          4.2      9.4  [kernel   2.3] 
+# teardown        4.8     24.9  [kernel  21.0] output unmapped
+# total         210.4   1031.4  8 threads, output 109.5 MB
+# complete      210.5           from the start to the output complete, as the parent sees it (a child tears the link's address space down)
 # output_bytes 109486380
-# measured 2026-11-16T15:56:46Z, 3 rounds, hlink
+# measured 2026-11-16T16:06:54Z, 3 rounds, hlink

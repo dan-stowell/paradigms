@@ -21,6 +21,10 @@ abstracts or memory and say so: check before citing):
 | Halide algorithm/schedule split on gather/scatter (relocate) | halide I4-I6 | Halide 3b: schedules tried, ms each | open |
 | Share-nothing threads: a flood partitioned by id range, cross edges as messages | goose 10 | Goose P2 at 8 workers vs 1 | open |
 
+| Per-source edge dedup before the flood (25% of read edges repeat) | lead, reachfacts.py | p2par on a deduped CSR, 1 thread | killed: ~8% (23.9-29.1 vs 26.2-32.5 ms), 16:09Z |
+| Reach over the eager CSR is the wrong shape; decode in the flood | lead, ATTACKS 1 | p2lazy vs p2pipe | alive: 52.6 / 13.6 vs 108.7 / 30.1 ms |
+| Output on huge pages for relocate | lead, ATTACKS 2 | P3_THP=1 build/p3 | alive: 25-29 vs 48-68 ms on 1 core |
+
 ## New columns suggested
 
 | system | why | source | status |
