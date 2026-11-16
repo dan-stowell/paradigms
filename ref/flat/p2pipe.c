@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 	const u32 *roots = FMAP(u32, "p2_roots.u32", &nroots);
 	FMAP(u64, "p2_str.off.u64", &nstr);
 	nroots /= 4, nsig /= 4, nmeth /= 4, nstr = nstr / 8 - 1;
-	
+
  size_t nr;
  const u32 *canon=FMAP(u32,"oracle/p1_canon.u32",NULL);
  const u32 *builtin=FMAP(u32,"oracle/p1_builtin.u32",NULL);
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 		memset(live, 0, N); memset(ifaceDone, 0, N); memset(sigSeen, 0, nsig); memset(named, 0, nstr + 1);
 		memset(sigTab, 0, hs * 8); memset(refl, 0, T * sizeof(int));
 		for (u32 g = 0; g < N; g++) iface[g] = g <= nsl && (fl[g] & fIface);
-		
+
   double start=now();
   #pragma omp parallel for schedule(static,65536)
   for(u32 g=1;g<=nsl;g++) {
