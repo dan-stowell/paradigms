@@ -8,7 +8,7 @@ B=${BUILD:-build}; F=${FEAT:-}  # FEAT=-profile: Halide profiler build (into BUI
 mkdir -p "$here/$B"; cd "$here/$B"
 export LD_LIBRARY_PATH=$H/lib
 CXX="g++ -std=c++17 -O2"
-probs=${*:-p1 p2 p3 p4}
+probs=${*:-p1 p2 p3 p4 p4f}
 
 # gen NAME GENERATOR FUNC [params...]: one AOT variant, appended to the variant table of problem NAME
 gen() {
@@ -70,6 +70,15 @@ for p in $probs; do
         for c in 1024 16384; do gen p4 emit emit_t_i2_v32_p1_c$c par=true info=2 vec=32 pform=1 chunk=$c; done
         for o in 1 2; do gen p4 emit diag${o}_f_i2_v32_p1 info=2 vec=32 pform=1 only=$o; gen p4 emit diag${o}_f_i2_v32_p0 info=2 vec=32 pform=0 only=$o; done
         { cat p4_variants.inc; table p4 layout layouts; table p4 emit emits; } > p4_variants.h
+        ;;
+    p4f)  # the flattened emit stream (ATTACKS 4 step 1)
+        for par in false true; do q=${par:0:1}
+            gen p4f emitflat emitf_$q par=$par
+            gen p4f emitflat emitf_${q}_r32 par=$par pform=1
+            gen p4f emitflat emitf_${q}_norel par=$par doRel=false
+            gen p4f emitflat emitf_${q}_copy par=$par doRel=false
+        done
+        { cat p4f_variants.inc; table p4f emitflat emitfs; } > p4f_variants.h
         ;;
     esac
     # one Halide runtime for all variants of this problem
