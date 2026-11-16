@@ -20,3 +20,6 @@ done
 for variant in A B C; do
     OMP_NUM_THREADS=8 OMP_THREAD_LIMIT=2 P4_HUGE=0 prlimit --as=12884901888 build/p4runs "$d" "$variant"
 done
+
+# Prepared B hole reductions, full oracle checks and planted faults.
+ref/p4/check-holes.sh "$d"

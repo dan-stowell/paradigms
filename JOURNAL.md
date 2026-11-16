@@ -115,3 +115,5 @@ in the paradigms' top-K curves). Writing the draft before the control was run co
 cheap and should have come first. **What did the oracle number do since the last milestone? If it stalled, what is
 the blocker, and what am I doing about it?** 17/20 -> 19/20, ATTACKS 4 backed. The last cell is Soufflé P4, next in
 the Now line; after it the grid is full, and the work turns to the open attacks (holes, level sync in Halide).
+
+2026-11-16 codex-holes: implemented prepared B integer baking (H1), masked adjacent integer stores (H2), and checked no-integer-store diagnostic H0; independent flat-column recount and UBSan/oracle checks pass, including planted byte/offset/relocation faults. All writes restricted to paradigms-c; no push per task instruction. Five interleaved 1/8-thread measurement rounds in progress; detailed results in results/codex-holes.md.

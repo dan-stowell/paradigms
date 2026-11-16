@@ -1,0 +1,19 @@
+counts: records 8018921 integer 5633606 rel32 700229 relocation 1685086 markers 95195
+integer reuse: previous_same_value 1135878 template_bytes_equal 456215 union 1452746
+adjacent writable pairs: total 6245406 touching 177552 gap_le_8 5328335 span_le_8_in_function 3454252 integer_pairs_fit 3044116
+width 0: 0
+width 1: 3792009
+width 2: 373
+width 3: 0
+width 4: 4223772
+width 5: 0
+width 6: 0
+width 7: 0
+width 8: 2767
+prep H2: construct 407.747 ms transform 37.487 ms total 445.234 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 43.052 ms; GB/s 1.410699; reps 1 total 0.043 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
