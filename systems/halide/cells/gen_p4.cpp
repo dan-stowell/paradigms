@@ -185,6 +185,8 @@ public:
     GeneratorParam<int> vec{"vec", 0};
     // patch: 0 = 8 byte stores per hole, the bytes it does not own to 8 scratch bytes (3b's form);
     //        1 = one 8-byte read-modify-write per hole (a dense vector), in two parity passes like the copy
+    //        2 = (tried, not built) a where on the byte (bx < w): it bounds the byte loop, but then the hole loop's
+    //            where is no longer a bound: 32768 iterations per item, each an if (and the store not vectorized)
     GeneratorParam<int> pform{"pform", 0};
     // copy form: 0 = each item copies its bytes (a ragged scatter, above); 1 = each output byte fetches its own (a
     // gather, the pure definition): per tile of output bytes, the items starting in it mark (source - destination)
@@ -342,6 +344,9 @@ public:
             Expr byte = cast<uint8_t>(val >> i64(8 * bx));
             if (pform == 0) {
                 code(inside(select(own, P + bx, NC + bx), 0, NC + 63)) = byte;
+            } else if (pform == 2) {
+                op.r.where(own);  // the bytes the hole owns only: a predicated (masked) vector store
+                code(inside(P + bx, 0, NC + 63)) = byte;
             } else {
                 Expr q = inside(P + bx, 0, NC + 63);
                 code(q) = select(own, byte, code(q));
@@ -400,6 +405,7 @@ public:
         }
         if (vec > 0 && gform == 0) code.update(0).allow_race_conditions().vectorize(oc.r[0]);
         if (pform == 0) code.update(pu).unroll(op.r[0]);
+        else if (pform == 2) code.update(pu).allow_race_conditions().vectorize(op.r[0]);
         else code.update(pu).allow_race_conditions().vectorize(op.r[0]);
         if (par) {
             // (with parity, the chunk RVar is parallel inside the serial parity loop)

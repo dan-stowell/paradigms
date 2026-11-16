@@ -2,7 +2,7 @@
 // SegHoles, Layout and Emit pipelines, checks the code against oracle/p4_code.bin (+ p4_fn_off.u64) byte for byte
 // and the relocations, sorted, against oracle/p4_rel_*.
 //   p4 DATA [all|layout|NAME]   every schedule variant (or those whose name starts with NAME), warm (bench.h), checked
-//   p4 DATA e2e LV EV [out]     one run of layout variant LV and emit variant EV (index into the tables), checked
+//   p4 DATA e2e LV EV [out]     one run of layout variant LV and emit variant EV (index or name), checked
 // Env: HL_NUM_THREADS (Halide's pool); P4_HUGE=1 maps the code output on 2 MB pages (MAP_HUGETLB); P4_TOPK=K
 // emits only the nodes of the K commonest templates (the rest as glue); P4_NOCHECK=1 skips the e2e check;
 // BENCH_CPU=1 times warm runs by process CPU time (bench.h).
@@ -268,7 +268,11 @@ int main(int argc, char **argv) {
     const char *th = getenv("HL_NUM_THREADS");
     long bad = 0;
     if (mode == "e2e") {
-        int lv = argc > 3 ? atoi(argv[3]) : 0, ev = argc > 4 ? atoi(argv[4]) : 0;
+        auto pick = [&](const char *a, auto &tab, int nt) {  // a variant by index or by name
+            for (int k = 0; k < nt; k++) if (strcmp(tab[k].name, a) == 0) return k;
+            return atoi(a);
+        };
+        int lv = argc > 3 ? pick(argv[3], layouts, nLayouts) : 0, ev = argc > 4 ? pick(argv[4], emits, nEmits) : 0;
         double t0 = now();
         runSeg();
         double t1 = now();
