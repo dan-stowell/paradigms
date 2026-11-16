@@ -39,9 +39,9 @@ reads, so for the flat files they are an upper bound on the floor.
 
 ## The paradigms
 
-| problem | Goose | Futhark | Halide | Soufflé |
-|---|---|---|---|---|
-| 1. resolve | | | | |
-| 2. reach | | | | |
-| 3. lay out + relocate | | | | |
-| 4. codegen by shape (stretch) | | | | |
+| problem | Goose | Futhark | Halide | Soufflé | DuckDB (added 16:00Z) |
+|---|---|---|---|---|---|
+| 1. resolve | | | | | |
+| 2. reach | | | | | |
+| 3. lay out + relocate | | | | | |
+| 4. codegen by shape (stretch) | | | | | |
