@@ -138,7 +138,7 @@ inside each level. In **Goose** an async flood (no supersteps, termination by me
 bulk-synchronous one at 8 workers (33/39/44 vs 48/53/63 ms, ranges apart in one window; lead one-round rerun 32 vs
 61); the limit after that is the busiest partition and ~1.04 M ids through the queues. In tuned C the same hybrid
 (ref/flat/p2hyb.c) drops 111 barriers to 12 but moves ~44% of pops to one thread (results/levels.md). So:
-dropping level sync pays where waiting on a descheduled worker is the cost (C under load, Goose), not where each
+In **Halide** (M4 review 5; [results/halide-levelfree.md](results/halide-levelfree.md); lead rebuilt and reran 19:30Z, P2 OK every variant): k = 2/4/8 levels per pipeline call cut calls 98 -> 17-58 and are **1.0-1.2x slower** (1 thread 294 vs 348 ms k=4; 8 threads 64 vs 84 ms k=8). A call costs ~0.02 ms (98 calls ~2 ms of 300); each level's passes cost 0.63 ms (1) / 0.23 ms (8) even when the frontier is empty, ~21-30% of the flood, whatever the grouping. Batching had to be forced (a Func cannot read its own state across levels, so an input aliased to the state buffer; loop bounds cannot come from data computed in the same call, so later levels run to a cap). Same verdict as Futhark. dropping level sync pays where waiting on a descheduled worker is the cost (C under load, Goose), not where each
 level is many whole-array passes (Futhark); there the fix is fewer passes per level, which no variant here achieved.
 
 **What it says about the paradigms.** None of the grid's data-parallel systems can say "a fixpoint without levels":

@@ -16,5 +16,5 @@
 2. DuckDB P2 verdict now supported -> noted, nothing to do.
 3. Goose P4 "ties C" leaves out the join; Halide 1-thread P4 is CPU time -> **accept, fixed** in GRID (join cost stated as part of the cell; CPU/wall labelled).
 4. Futhark sequential worklist beats its parallel flood, ATTACKS said "no worklist" -> **accept, fixed** in ATTACKS 3 (the fastest Futhark flood is the one that drops data parallelism).
-5. ATTACKS 3 in Halide unmeasured (~100 pipeline calls) -> **accept**: Opus builder running (results/halide-levelfree.md).
+5. ATTACKS 3 in Halide unmeasured -> **accept, measured** (results/halide-levelfree.md; lead reran 19:30Z): batching k levels per call is 1.0-1.2x slower; calls ~0.02 ms each, the per-level passes are the cost.
 6. None found.
