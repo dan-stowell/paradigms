@@ -1,0 +1,1048 @@
+$  gcc -O2 -march=native -o /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms-w/ref/flat/p2inc.c
+$  gcc -O2 -march=native -o /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms-w/ref/flat/p2.c
+$  gcc -O2 -march=native -fopenmp -o /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms-w/ref/flat/p2par.c
+start
+$  date -u +%FT%TZ
+2026-11-16T20:30:29Z
+$  uptime
+ 20:30:29 up  5:14,  0 user,  load average: 3.14, 1.61, 1.55
+round 1
+$  date -u +%FT%TZ
+2026-11-16T20:30:29Z
+$  uptime
+ 20:30:29 up  5:14,  0 user,  load average: 3.14, 1.61, 1.55
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 411.1 ms, flood A (same rules, worklist) 93.2 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.037 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.005 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.037 ms, B->A 0.005 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 385.8 ms, flood A (same rules, worklist) 91.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+check fresh B: 663631 oracle entries, 0 differ -> OK
+update B->A	0.026 ms	rep 0	over-deleted 6 live, rederived 5 directly, set 5, edges read 8, reverse entries 31, support checks 7
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.003 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+best update A->B 0.003 ms, B->A 0.026 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 405.1 ms, flood A (same rules, worklist) 91.7 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.033 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.005 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.004 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.004 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.002 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.005 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.003 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.004 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.002 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.004 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.002 ms, B->A 0.004 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 467.5 ms, flood A (same rules, worklist) 96.2 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.045 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.022 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.014 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.021 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.015 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.020 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.015 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.019 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.013 ms, B->A 0.018 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit
+p2 (1 core): flood 40.3 ms, 663631 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (1 threads): flood best 31.8 ms, 663631 live, 111 levels in 7 rounds
+mean 34.924 ms, total 0.174619 s, 111 barriers, 678451 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (8 threads): flood best 17.8 ms, 663631 live, 111 levels in 7 rounds
+mean 21.327 ms, total 0.106637 s, 111 barriers, 678087 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 44.1 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 36.4 ms, 663630 live, 111 levels in 7 rounds
+mean 37.830 ms, total 0.189149 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 18.2 ms, 663630 live, 111 levels in 7 rounds
+mean 21.818 ms, total 0.109088 s, 111 barriers, 677852 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 388.6 ms, flood A (same rules, worklist) 96.5 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	22.934 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.048 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 22.934 ms, B->A 8.048 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 395.6 ms, flood A (same rules, worklist) 98.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	103.614 ms	rep 0	over-deleted 35378 live, rederived 12789 directly, set 47688, edges read 270358, reverse entries 49171996, support checks 373351
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	46.933 ms	rep 0	over-deleted 20452 live, rederived 17 directly, set 8142, edges read 100666, reverse entries 20975429, support checks 222919
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 46.933 ms, B->A 103.614 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 391.5 ms, flood A (same rules, worklist) 99.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	25.030 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	11.864 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	19.368 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.148 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.989 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.072 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	14.326 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.246 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	14.936 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.500 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 13.989 ms, B->A 8.072 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 420.0 ms, flood A (same rules, worklist) 94.3 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	52.401 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	11.578 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.992 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.455 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.670 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.321 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	17.189 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	11.150 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	15.920 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.461 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 12.670 ms, B->A 7.321 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit2
+p2 (1 core): flood 56.4 ms, 651320 live, 7 rounds, 11222 methods pruned, reflect 1
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (1 threads): flood best 32.9 ms, 651320 live, 111 levels in 7 rounds
+mean 41.729 ms, total 0.208647 s, 111 barriers, 665599 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (8 threads): flood best 25.5 ms, 651320 live, 111 levels in 7 rounds
+mean 28.953 ms, total 0.144767 s, 111 barriers, 665540 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 48.6 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 32.7 ms, 663630 live, 111 levels in 7 rounds
+mean 38.103 ms, total 0.190515 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 18.2 ms, 663630 live, 111 levels in 7 rounds
+mean 19.336 ms, total 0.096679 s, 111 barriers, 677609 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+round 2
+$  date -u +%FT%TZ
+2026-11-16T20:30:39Z
+$  uptime
+ 20:30:39 up  5:15,  0 user,  load average: 3.20, 1.68, 1.57
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 405.2 ms, flood A (same rules, worklist) 103.2 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.039 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.013 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.039 ms, B->A 0.013 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 410.9 ms, flood A (same rules, worklist) 100.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+check fresh B: 663631 oracle entries, 0 differ -> OK
+update B->A	0.031 ms	rep 0	over-deleted 6 live, rederived 5 directly, set 5, edges read 8, reverse entries 31, support checks 7
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.007 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+best update A->B 0.007 ms, B->A 0.031 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 388.7 ms, flood A (same rules, worklist) 96.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.053 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.010 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.011 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.008 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.008 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.015 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.010 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.017 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.008 ms, B->A 0.011 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 396.3 ms, flood A (same rules, worklist) 122.5 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.040 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.034 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.011 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.036 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.046 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.021 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.014 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.011 ms, B->A 0.018 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit
+p2 (1 core): flood 63.0 ms, 663631 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (1 threads): flood best 37.7 ms, 663631 live, 111 levels in 7 rounds
+mean 41.111 ms, total 0.205553 s, 111 barriers, 678451 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (8 threads): flood best 18.0 ms, 663631 live, 111 levels in 7 rounds
+mean 21.576 ms, total 0.107882 s, 111 barriers, 678203 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 57.9 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 36.9 ms, 663630 live, 111 levels in 7 rounds
+mean 45.353 ms, total 0.226763 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 20.8 ms, 663630 live, 111 levels in 7 rounds
+mean 32.939 ms, total 0.164695 s, 111 barriers, 677973 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 529.0 ms, flood A (same rules, worklist) 133.0 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	33.811 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	12.120 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 33.811 ms, B->A 12.120 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 490.7 ms, flood A (same rules, worklist) 97.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	105.433 ms	rep 0	over-deleted 35378 live, rederived 12789 directly, set 47688, edges read 270358, reverse entries 49171996, support checks 373351
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	45.209 ms	rep 0	over-deleted 20452 live, rederived 17 directly, set 8142, edges read 100666, reverse entries 20975429, support checks 222919
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 45.209 ms, B->A 105.433 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 429.5 ms, flood A (same rules, worklist) 109.9 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	23.360 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.667 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.637 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.127 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	19.863 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	19.368 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	47.584 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	22.117 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	46.347 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	23.076 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 12.637 ms, B->A 7.667 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 770.1 ms, flood A (same rules, worklist) 109.7 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	29.978 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.943 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	19.030 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	11.059 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	14.671 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.467 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.327 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.739 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.567 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.962 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 12.327 ms, B->A 7.739 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit2
+p2 (1 core): flood 45.2 ms, 651320 live, 7 rounds, 11222 methods pruned, reflect 1
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (1 threads): flood best 37.0 ms, 651320 live, 111 levels in 7 rounds
+mean 41.839 ms, total 0.209195 s, 111 barriers, 665599 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (8 threads): flood best 21.0 ms, 651320 live, 111 levels in 7 rounds
+mean 25.814 ms, total 0.129071 s, 111 barriers, 665245 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 45.7 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 36.8 ms, 663630 live, 111 levels in 7 rounds
+mean 38.743 ms, total 0.193715 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 15.8 ms, 663630 live, 111 levels in 7 rounds
+mean 21.122 ms, total 0.105610 s, 111 barriers, 678018 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+round 3
+$  date -u +%FT%TZ
+2026-11-16T20:30:49Z
+$  uptime
+ 20:30:49 up  5:15,  0 user,  load average: 3.56, 1.80, 1.61
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 422.3 ms, flood A (same rules, worklist) 102.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.049 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.049 ms, B->A 0.012 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 414.0 ms, flood A (same rules, worklist) 100.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+check fresh B: 663631 oracle entries, 0 differ -> OK
+update B->A	0.026 ms	rep 0	over-deleted 6 live, rederived 5 directly, set 5, edges read 8, reverse entries 31, support checks 7
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.007 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+best update A->B 0.007 ms, B->A 0.026 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 503.1 ms, flood A (same rules, worklist) 121.9 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.066 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.020 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.007 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.010 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.015 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.016 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.016 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.019 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.007 ms, B->A 0.010 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 449.2 ms, flood A (same rules, worklist) 105.6 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.040 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.017 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.019 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.021 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.015 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.020 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.012 ms, B->A 0.017 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit
+p2 (1 core): flood 52.1 ms, 663631 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (1 threads): flood best 40.3 ms, 663631 live, 111 levels in 7 rounds
+mean 41.149 ms, total 0.205747 s, 111 barriers, 678451 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (8 threads): flood best 17.3 ms, 663631 live, 111 levels in 7 rounds
+mean 23.906 ms, total 0.119532 s, 111 barriers, 677913 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 52.4 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 45.9 ms, 663630 live, 111 levels in 7 rounds
+mean 53.423 ms, total 0.267117 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 19.5 ms, 663630 live, 111 levels in 7 rounds
+mean 23.585 ms, total 0.117923 s, 111 barriers, 677955 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 417.4 ms, flood A (same rules, worklist) 99.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	23.581 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.185 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 23.581 ms, B->A 9.185 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 399.5 ms, flood A (same rules, worklist) 97.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	116.229 ms	rep 0	over-deleted 35378 live, rederived 12789 directly, set 47688, edges read 270358, reverse entries 49171996, support checks 373351
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	68.215 ms	rep 0	over-deleted 20452 live, rederived 17 directly, set 8142, edges read 100666, reverse entries 20975429, support checks 222919
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 68.215 ms, B->A 116.229 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 539.9 ms, flood A (same rules, worklist) 248.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	21.805 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.126 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.365 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.603 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.621 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.985 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	16.990 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.074 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	14.597 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.310 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 13.365 ms, B->A 7.126 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 451.4 ms, flood A (same rules, worklist) 109.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	28.821 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.146 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	15.201 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.779 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	15.133 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.666 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	18.621 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.639 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	15.036 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.217 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 15.036 ms, B->A 8.217 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit2
+p2 (1 core): flood 45.6 ms, 651320 live, 7 rounds, 11222 methods pruned, reflect 1
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (1 threads): flood best 33.5 ms, 651320 live, 111 levels in 7 rounds
+mean 36.123 ms, total 0.180614 s, 111 barriers, 665599 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (8 threads): flood best 16.7 ms, 651320 live, 109 levels in 7 rounds
+mean 18.777 ms, total 0.093887 s, 109 barriers, 665257 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 55.6 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 46.6 ms, 663630 live, 111 levels in 7 rounds
+mean 53.180 ms, total 0.265901 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 17.0 ms, 663630 live, 111 levels in 7 rounds
+mean 25.920 ms, total 0.129598 s, 111 barriers, 678083 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+round 4
+$  date -u +%FT%TZ
+2026-11-16T20:31:00Z
+$  uptime
+ 20:31:00 up  5:15,  0 user,  load average: 3.78, 1.91, 1.65
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 520.0 ms, flood A (same rules, worklist) 133.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.038 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.038 ms, B->A 0.018 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 443.6 ms, flood A (same rules, worklist) 124.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+check fresh B: 663631 oracle entries, 0 differ -> OK
+update B->A	0.041 ms	rep 0	over-deleted 6 live, rederived 5 directly, set 5, edges read 8, reverse entries 31, support checks 7
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.011 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+best update A->B 0.011 ms, B->A 0.041 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 394.1 ms, flood A (same rules, worklist) 105.0 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.042 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.015 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.007 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.014 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.011 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.009 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.011 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.009 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.014 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.007 ms, B->A 0.011 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 478.9 ms, flood A (same rules, worklist) 103.3 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.039 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.017 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.017 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.020 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.019 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.012 ms, B->A 0.017 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit
+p2 (1 core): flood 49.3 ms, 663631 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (1 threads): flood best 30.5 ms, 663631 live, 111 levels in 7 rounds
+mean 33.013 ms, total 0.165063 s, 111 barriers, 678451 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (8 threads): flood best 20.6 ms, 663631 live, 111 levels in 7 rounds
+mean 25.583 ms, total 0.127914 s, 111 barriers, 677960 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 43.5 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 26.9 ms, 663630 live, 111 levels in 7 rounds
+mean 28.704 ms, total 0.143521 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 22.6 ms, 663630 live, 111 levels in 7 rounds
+mean 25.424 ms, total 0.127121 s, 111 barriers, 678100 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 397.2 ms, flood A (same rules, worklist) 95.6 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	20.979 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	6.832 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 20.979 ms, B->A 6.832 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 397.7 ms, flood A (same rules, worklist) 105.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	99.367 ms	rep 0	over-deleted 35378 live, rederived 12789 directly, set 47688, edges read 270358, reverse entries 49171996, support checks 373351
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	57.694 ms	rep 0	over-deleted 20452 live, rederived 17 directly, set 8142, edges read 100666, reverse entries 20975429, support checks 222919
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 57.694 ms, B->A 99.367 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 410.2 ms, flood A (same rules, worklist) 93.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	23.772 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.037 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.016 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.496 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.979 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.216 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.040 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.343 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.479 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.066 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 12.979 ms, B->A 7.066 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 447.0 ms, flood A (same rules, worklist) 101.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	23.539 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	15.860 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	20.225 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.613 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.167 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	11.058 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	14.719 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.194 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	13.108 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.698 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 13.108 ms, B->A 7.698 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit2
+p2 (1 core): flood 42.4 ms, 651320 live, 7 rounds, 11222 methods pruned, reflect 1
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (1 threads): flood best 35.4 ms, 651320 live, 111 levels in 7 rounds
+mean 41.493 ms, total 0.207467 s, 111 barriers, 665599 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (8 threads): flood best 26.2 ms, 651320 live, 111 levels in 7 rounds
+mean 30.543 ms, total 0.152717 s, 111 barriers, 665268 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 40.1 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 32.2 ms, 663630 live, 111 levels in 7 rounds
+mean 33.057 ms, total 0.165286 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 23.6 ms, 663630 live, 111 levels in 7 rounds
+mean 29.412 ms, total 0.147061 s, 111 barriers, 678029 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+round 5
+$  date -u +%FT%TZ
+2026-11-16T20:31:10Z
+$  uptime
+ 20:31:10 up  5:15,  0 user,  load average: 4.04, 2.03, 1.69
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 481.1 ms, flood A (same rules, worklist) 93.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.035 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.006 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.035 ms, B->A 0.006 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 1
+p2inc (DRed + derivation-order supports): setup 481.4 ms, flood A (same rules, worklist) 133.9 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+check fresh B: 663631 oracle entries, 0 differ -> OK
+update B->A	0.034 ms	rep 0	over-deleted 6 live, rederived 5 directly, set 5, edges read 8, reverse entries 31, support checks 7
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.017 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+best update A->B 0.017 ms, B->A 0.034 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 463.7 ms, flood A (same rules, worklist) 129.3 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.048 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.018 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.019 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.022 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.020 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.021 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.019 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.020 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.009 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.012 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.009 ms, B->A 0.012 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit 5
+p2inc (DRed + derivation-order supports): setup 459.7 ms, flood A (same rules, worklist) 109.0 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+update A->B	0.055 ms	rep 0	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 16, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.015 ms	rep 0	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 1	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.016 ms	rep 1	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.012 ms	rep 2	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.017 ms	rep 2	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.013 ms	rep 3	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.019 ms	rep 3	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	0.014 ms	rep 4	over-deleted 1 live, rederived 2 directly, set 2, edges read 0, reverse entries 14, support checks 2
+check A->B vs B oracle (unified ids): 663631 oracle entries, 0 differ -> OK
+update B->A	0.022 ms	rep 4	over-deleted 2 live, rederived 1 directly, set 1, edges read 0, reverse entries 7, support checks 3
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 0.012 ms, B->A 0.015 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit
+p2 (1 core): flood 47.4 ms, 663631 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (1 threads): flood best 32.2 ms, 663631 live, 111 levels in 7 rounds
+mean 35.737 ms, total 0.178683 s, 111 barriers, 678451 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit 5
+p2par (8 threads): flood best 20.4 ms, 663631 live, 111 levels in 7 rounds
+mean 24.110 ms, total 0.120548 s, 111 barriers, 678230 items
+live: 663631 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 40.6 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 32.5 ms, 663630 live, 111 levels in 7 rounds
+mean 33.543 ms, total 0.167714 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 22.7 ms, 663630 live, 111 levels in 7 rounds
+mean 25.973 ms, total 0.129867 s, 111 barriers, 678278 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 423.3 ms, flood A (same rules, worklist) 121.7 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	28.141 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	9.103 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 28.141 ms, B->A 9.103 ms
+P2INC OK
+$ FRESH_B=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 1
+p2inc (DRed + derivation-order supports): setup 423.6 ms, flood A (same rules, worklist) 101.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	113.386 ms	rep 0	over-deleted 35378 live, rederived 12789 directly, set 47688, edges read 270358, reverse entries 49171996, support checks 373351
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	43.417 ms	rep 0	over-deleted 20452 live, rederived 17 directly, set 8142, edges read 100666, reverse entries 20975429, support checks 222919
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 43.417 ms, B->A 113.386 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 390.3 ms, flood A (same rules, worklist) 86.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	19.189 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	6.213 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	11.580 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	6.259 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	10.582 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	6.004 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	10.642 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	5.870 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	11.012 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	5.737 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 10.582 ms, B->A 5.737 ms
+P2INC OK
+$ EVICT=1 prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2inc-followup /home/exedev/paradigms/data/minio /home/exedev/paradigms/data/minio-edit2 5
+p2inc (DRed + derivation-order supports): setup 408.9 ms, flood A (same rules, worklist) 93.4 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+update A->B	21.316 ms	rep 0	over-deleted 32238 live, rederived 5050 directly, set 19928, edges read 176298, reverse entries 3049918, support checks 369484
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.291 ms	rep 0	over-deleted 8112 live, rederived 13 directly, set 20422, edges read 100280, reverse entries 1088061, support checks 98502
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.781 ms	rep 1	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100218, reverse entries 2257483, support checks 222738
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.818 ms	rep 1	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100108, reverse entries 1086145, support checks 98536
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.540 ms	rep 2	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.483 ms	rep 2	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.377 ms	rep 3	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	8.042 ms	rep 3	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	12.924 ms	rep 4	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 2253023, support checks 222742
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+update B->A	7.560 ms	rep 4	over-deleted 8102 live, rederived 3 directly, set 20412, edges read 100098, reverse entries 1086132, support checks 98540
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+best update A->B 12.377 ms, B->A 7.291 ms
+P2INC OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio-edit2
+p2 (1 core): flood 40.4 ms, 651320 live, 7 rounds, 11222 methods pruned, reflect 1
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (1 threads): flood best 32.9 ms, 651320 live, 111 levels in 7 rounds
+mean 33.679 ms, total 0.168396 s, 111 barriers, 665599 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio-edit2 5
+p2par (8 threads): flood best 21.5 ms, 651320 live, 111 levels in 7 rounds
+mean 25.086 ms, total 0.125429 s, 111 barriers, 665080 items
+live: 651320 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$  prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2-followup /home/exedev/paradigms/data/minio
+p2 (1 core): flood 41.7 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=1 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (1 threads): flood best 30.0 ms, 663630 live, 111 levels in 7 rounds
+mean 33.159 ms, total 0.165794 s, 111 barriers, 678450 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+$ OMP_NUM_THREADS=8 OMP_WAIT_POLICY=passive prlimit --as=8589934592 /home/exedev/paradigms-w/build/p2par-followup /home/exedev/paradigms/data/minio 5
+p2par (8 threads): flood best 17.0 ms, 663630 live, 111 levels in 7 rounds
+mean 18.985 ms, total 0.094924 s, 111 barriers, 678202 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+end
+$  date -u +%FT%TZ
+2026-11-16T20:31:20Z
+$  uptime
+ 20:31:20 up  5:15,  0 user,  load average: 4.18, 2.13, 1.72

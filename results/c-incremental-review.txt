@@ -1,0 +1,44 @@
+Independent review, 2026-11-16
+
+Oracle isolation: scratchCheck forks after update finishes. All mutable graph/state
+allocations are private heap allocations; mapped input columns use MAP_PRIVATE.
+The child copies the maintained live set, resets derived state, floods the current
+facts, compares every slot, and reports through exit status. Parent state is never
+replaced by recomputation. The flood shares rule code, so this catches maintenance
+errors, not bugs common to both flood paths. Real dataset oracles provide the
+separate external check. An independently compiled seed 42 chain (20 random diffs,
+real edit interleaved, REPS=0) passed under an 8 GiB address-space limit.
+
+Fresh B: initial implementation used update(A->B), then scratch(). Its derivation
+stamps were fresh but update buffers had already been allocated. Reported this to
+parent; direct fact installation before scratch avoids the asymmetry.
+
+Generator: initially sampled roots uniformly over 5.2 million slots, making root
+removal practically absent. Reported to parent; existing-A-root sampling added.
+The final generator also removes overlay edges and restores removed A edges.
+It remains randomized coverage rather than exhaustive enumeration.
+
+Storage bug found in review: removed-edge hash had 65,536 fixed slots and kept
+keys after restoration, so sufficiently long maintained chains looped forever.
+The added-edge pool also had fixed capacity, while every repeated non-A edge add
+appended another record, eventually writing past its allocation. Dynamic growth
+now preserves both alive and restored hash entries, and reallocates the pool.
+
+Minimal regression: ref/flat/test-p2inc-storage.c, four hash slots then five unique
+remove/restore keys; separately two pool slots then two add/remove cycles.
+Before fix: hash timed out (exit 124); AddressSanitizer reported heap-buffer-overflow
+in edgeAdd on the pool test (exit 1). After fix both tests pass with ASAN and with
+prlimit --as=8589934592. ASAN itself needs a large virtual address reservation and
+was therefore run without the 8 GiB virtual-address cap (tiny test inputs only).
+
+Reproduce old code without modifying source or the read-only datasets:
+  git show 1b02f8e60921ea46332fc4f0751429510e9149ab:ref/flat/p2inc.c > build/p2inc-before-storage.c
+  gcc -O1 -g -fsanitize=address -Iref/flat -DOLD_STORAGE \
+    '-DP2INC_SOURCE="/home/exedev/paradigms-w/build/p2inc-before-storage.c"' \
+    -o build/test-p2inc-storage-old ref/flat/test-p2inc-storage.c
+  timeout 2 env ASAN_OPTIONS=detect_leaks=0 build/test-p2inc-storage-old hash
+  ASAN_OPTIONS=detect_leaks=0 build/test-p2inc-storage-old pool
+New code:
+  gcc -O2 -Iref/flat -o build/test-p2inc-storage ref/flat/test-p2inc-storage.c
+  prlimit --as=8589934592 build/test-p2inc-storage hash
+  prlimit --as=8589934592 build/test-p2inc-storage pool

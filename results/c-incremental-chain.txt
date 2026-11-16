@@ -1,0 +1,60 @@
+2026-11-16T20:32:37Z
+ 20:32:37 up  5:17,  0 user,  load average: 3.50, 2.39, 1.85
+p2inc (DRed + derivation-order supports): setup 411.8 ms, flood A (same rules, worklist) 93.5 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 63/49/69/59
+chain: 240 random diffs seed 4, 0 failed
+P2INC OK
+2026-11-16T20:33:32Z
+ 20:33:32 up  5:17,  0 user,  load average: 4.15, 2.76, 2.01
+p2inc (DRed + derivation-order supports): setup 402.5 ms, flood A (same rules, worklist) 107.8 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 57/72/53/58
+chain: 240 random diffs seed 5, 0 failed
+P2INC OK
+2026-11-16T20:34:21Z
+ 20:34:21 up  5:18,  0 user,  load average: 3.00, 2.67, 2.01
+p2inc (DRed + derivation-order supports): setup 431.9 ms, flood A (same rules, worklist) 94.7 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -11 +16, flags -14 +16, roots -0 +0
+chain checked 20 random steps
+chain checked 40 random steps
+chain checked 60 random steps
+chain checked 80 random steps
+chain checked 100 random steps
+chain checked 120 random steps
+chain checked 140 random steps
+chain checked 160 random steps
+chain checked 180 random steps
+chain checked 200 random steps
+chain checked 220 random steps
+chain checked 240 random steps
+chain coverage: 240 completed, 24 real steps, roots +127 -113; flags def/reflect/type/iface 63/66/51/60
+chain: 240 random diffs seed 6, 0 failed
+P2INC OK
