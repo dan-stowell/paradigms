@@ -1,0 +1,133 @@
+Mon Nov 16 17:43:55 UTC 2026
+ 17:43:55 up  2:28,  0 user,  load average: 17.81, 17.72, 14.46
+usage: prep_lazy DATA OUTDIR
+prep_lazy: 1592404 edges kept (aux + kinds 1-3) of 15600772
+CHECK COMMAND: build/resolve_a -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 6769.3 ms (53081203 tuples), compute 12514.9 ms, write 226.0 ms, teardown 0.0 ms, threads 1
+RUN STATUS resolve_a 1 0
+CHECK COMMAND: cmp out/p1_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_canon.u32
+CHECK STATUS resolve_a 1 p1_canon 0
+CHECK COMMAND: cmp out/p1_builtin.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_builtin.u32
+CHECK STATUS resolve_a 1 p1_builtin 0
+CHECK COMMAND: build/resolve_b -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 9228.5 ms (46411022 tuples), compute 24934.8 ms, write 702.3 ms, teardown 0.0 ms, threads 1
+RUN STATUS resolve_b 1 0
+CHECK COMMAND: cmp out/p1_reltarget.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_reltarget.u32
+CHECK STATUS resolve_b 1 p1_reltarget 0
+CHECK COMMAND: build/resolve_c -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 7711.3 ms (26540290 tuples), compute 6310.9 ms, write 406.7 ms, teardown 0.0 ms, threads 1
+RUN STATUS resolve_c 1 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS resolve_c 1 p1c_canon 0
+CHECK COMMAND: build/resolve_c2 -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 15743.8 ms (26540290 tuples), compute 4575.4 ms, write 308.8 ms, teardown 0.0 ms, threads 1
+RUN STATUS resolve_c2 1 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS resolve_c2 1 p1c_canon 0
+CHECK COMMAND: build/reach -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 8359.0 ms (23981940 tuples), compute 7933.5 ms, write 87.0 ms, teardown 0.0 ms, threads 1
+RUN STATUS reach 1 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS reach 1 p2_live 0
+CHECK COMMAND: build/reach_lazy -j1 -F build/lazyfacts -D out
+flatio: load 9991.1 ms (55691929 tuples), compute 11966.9 ms, write 60.0 ms, teardown 0.0 ms, threads 1
+RUN STATUS reach_lazy 1 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS reach_lazy 1 p2_live 0
+CHECK COMMAND: build/layout -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 311.7 ms (1335224 tuples), compute 33423.3 ms, write 28.5 ms, teardown 73.8 ms, threads 1
+RUN STATUS layout 1 0
+CHECK COMMAND: cmp out/p3_addr.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p3_addr.u32
+CHECK STATUS layout 1 p3_addr 0
+CHECK COMMAND: build/relocate -j1 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: image 2792421 patches, assemble min 220.4 median 220.4 max 220.4 ms over 1 (4 KB pages, 18440 minor faults), tuples->vector 539.2 ms, file 181.1 ms
+flatio: load 5632.8 ms (16523588 tuples), compute 6056.0 ms, write 954.5 ms, teardown 725.7 ms, threads 1
+RUN STATUS relocate 1 0
+CHECK COMMAND: build/check_p3 /home/exedev/paradigms/data/kube-apiserver out/p3_image.out
+3b: 0 of 430349 placed symbols differ
+P3 OK
+CHECK STATUS relocate 1 0
+CHECK COMMAND: build/resolve_a -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 8489.6 ms (53081203 tuples), compute 7933.7 ms, write 752.2 ms, teardown 0.0 ms, threads 8
+RUN STATUS resolve_a 8 0
+CHECK COMMAND: cmp out/p1_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_canon.u32
+CHECK STATUS resolve_a 8 p1_canon 0
+CHECK COMMAND: cmp out/p1_builtin.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_builtin.u32
+CHECK STATUS resolve_a 8 p1_builtin 0
+CHECK COMMAND: build/resolve_b -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 11438.5 ms (46411022 tuples), compute 9516.1 ms, write 724.3 ms, teardown 0.0 ms, threads 8
+RUN STATUS resolve_b 8 0
+CHECK COMMAND: cmp out/p1_reltarget.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_reltarget.u32
+CHECK STATUS resolve_b 8 p1_reltarget 0
+CHECK COMMAND: build/resolve_c -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 4641.1 ms (26540290 tuples), compute 3644.5 ms, write 675.5 ms, teardown 0.0 ms, threads 8
+RUN STATUS resolve_c 8 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS resolve_c 8 p1c_canon 0
+CHECK COMMAND: build/resolve_c2 -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 8936.4 ms (26540290 tuples), compute 2223.5 ms, write 315.8 ms, teardown 0.0 ms, threads 8
+RUN STATUS resolve_c2 8 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS resolve_c2 8 p1c_canon 0
+CHECK COMMAND: build/reach -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 3661.8 ms (23981940 tuples), compute 4198.1 ms, write 58.6 ms, teardown 0.0 ms, threads 8
+RUN STATUS reach 8 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS reach 8 p2_live 0
+CHECK COMMAND: build/reach_lazy -j8 -F build/lazyfacts -D out
+flatio: load 8039.7 ms (55691929 tuples), compute 8506.4 ms, write 42.0 ms, teardown 0.0 ms, threads 8
+RUN STATUS reach_lazy 8 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS reach_lazy 8 p2_live 0
+CHECK COMMAND: build/layout -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: load 126.4 ms (1335224 tuples), compute 7745.8 ms, write 16.2 ms, teardown 37.9 ms, threads 8
+RUN STATUS layout 8 0
+CHECK COMMAND: cmp out/p3_addr.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p3_addr.u32
+CHECK STATUS layout 8 p3_addr 0
+CHECK COMMAND: build/relocate -j8 -F /home/exedev/paradigms/data/kube-apiserver -D out
+flatio: image 2792421 patches, assemble min 28.3 median 28.3 max 28.3 ms over 1 (4 KB pages, 18468 minor faults), tuples->vector 154.5 ms, file 136.7 ms
+flatio: load 1481.4 ms (16523588 tuples), compute 900.3 ms, write 326.6 ms, teardown 440.3 ms, threads 8
+RUN STATUS relocate 8 0
+CHECK COMMAND: build/check_p3 /home/exedev/paradigms/data/kube-apiserver out/p3_image.out
+3b: 0 of 430349 placed symbols differ
+P3 OK
+CHECK STATUS relocate 8 0
+Mon Nov 16 17:49:10 UTC 2026
+ 17:49:10 up  2:33,  0 user,  load average: 21.43, 21.10, 16.93
+# 2026-11-16T17:49:10Z  17:49:10 up  2:33,  0 user,  load average: 21.43, 21.10, 16.93
+1a       -j1 warm     min   7068.2  median  10490.7  max  13011.5 ms  (5 runs)
+1a       -j1 e2e      min  11196.1  median  15063.0  max  17857.4 ms  (5 runs)
+1a       -j8 warm     min   2860.3  median   3438.0  max   4699.4 ms  (5 runs)
+1a       -j8 e2e      min   7431.4  median   7500.2  max  10343.1 ms  (5 runs)
+1b       -j1 warm     min  13002.9  median  17545.4  max  23584.9 ms  (5 runs)
+1b       -j1 e2e      min  19144.2  median  25209.7  max  32713.9 ms  (5 runs)
+1b       -j8 warm     min   4252.4  median   6378.8  max   8177.3 ms  (5 runs)
+1b       -j8 e2e      min   8758.7  median  13327.3  max  17399.4 ms  (5 runs)
+1c       -j1 warm     min   3598.2  median   5166.5  max   6141.9 ms  (5 runs)
+1c       -j1 e2e      min   7583.6  median  11324.5  max  12140.5 ms  (5 runs)
+1c       -j8 warm     min   1884.8  median   2240.5  max   2606.2 ms  (5 runs)
+1c       -j8 e2e      min   5013.5  median   6691.9  max   7344.9 ms  (5 runs)
+1c-slot  -j1 warm     min   2133.7  median   3769.0  max   4245.5 ms  (5 runs)
+1c-slot  -j1 e2e      min  10295.6  median  11316.5  max  12037.0 ms  (5 runs)
+1c-slot  -j8 warm     min   1056.8  median   1921.0  max   2702.5 ms  (5 runs)
+1c-slot  -j8 e2e      min   5861.9  median   9681.5  max  12802.0 ms  (5 runs)
+2        -j1 warm     min   2177.1  median   2433.9  max   4220.9 ms  (5 runs)
+2        -j1 e2e      min   5281.0  median   6853.8  max  11089.6 ms  (5 runs)
+2        -j8 warm     min    841.8  median   1661.0  max   3325.5 ms  (5 runs)
+2        -j8 e2e      min   2930.1  median   4046.5  max   6238.5 ms  (5 runs)
+2-lazy   -j1 warm     min   4711.4  median   5463.7  max   7039.3 ms  (5 runs)
+2-lazy   -j1 e2e      min   9107.0  median  10761.5  max  13481.1 ms  (5 runs)
+2-lazy   -j8 warm     min   2450.1  median   5219.7  max  18146.9 ms  (5 runs)
+2-lazy   -j8 e2e      min   6181.5  median   9951.2  max  25657.4 ms  (5 runs)
+3a       -j1 warm     min  15344.3  median  17146.8  max  38350.5 ms  (5 runs)
+3a       -j1 e2e      min  15616.8  median  17512.7  max  38792.5 ms  (5 runs)
+3a       -j8 warm     min   4558.8  median   6677.2  max   8814.9 ms  (5 runs)
+3a       -j8 e2e      min   4809.3  median   7050.4  max   9064.6 ms  (5 runs)
+3b       -j1 warm     min   1715.4  median   1837.1  max   2370.2 ms  (5 runs)
+3b       -j1 e2e      min   3839.5  median   4307.6  max   5640.2 ms  (5 runs)
+3b       -j1 assemble min     59.2  median     71.9  max     75.1 ms  (5 runs)
+3b       -j8 warm     min    732.9  median    900.8  max   1126.3 ms  (5 runs)
+3b       -j8 e2e      min   2881.5  median   3168.2  max   3651.8 ms  (5 runs)
+3b       -j8 assemble min     23.7  median     34.3  max     39.8 ms  (5 runs)
+Mon Nov 16 18:03:25 UTC 2026
+ 18:03:25 up  2:47,  0 user,  load average: 9.61, 12.26, 14.59

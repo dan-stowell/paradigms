@@ -2,7 +2,7 @@
 
 Dataset: `/home/exedev/paradigms/data/kube-apiserver` (read-only). Checkout: `/home/exedev/paradigms-w`, branch `codex-kube`. All builds and measured processes use `systemd-run --user --scope -p MemoryMax=10G`; `OMP_WAIT_POLICY=passive`. No cell algorithms changed. Tools come from `/home/exedev/tools` without modifying them.
 
-Goose, Futhark and Halide measurements are complete; SQL-system tables are in progress.
+Goose, Futhark, Halide and Soufflé measurements are complete; DuckDB and the final C comparison round are in progress.
 
 Times are warm milliseconds, min / median / max over at least five rounds. Each system retains its bench.sh definition of a round (specified below); these definitions differ. The historical MinIO values are from GRID.md, not same-window reruns. Where GRID gives a range, ratios use its midpoint, so ratios are descriptive, not speedup claims. A missing comparable GRID value is N/A. Same-window tuned C samples are interleaved across the measurement window. The machine is shared; uptime/load is recorded, without waiting for quiet.
 
@@ -188,3 +188,42 @@ Warm ms; min / median / max of five process medians. All configurations request 
 | 3b reloc_f0_pt_v32 warm | 8 | OK | 49.25 / 86.54 / 96.07 | 24.9–27 | 3.33x |
 | 3b reloc_f0_pt_v32 fresh 4KB | 8 | OK | 83.71 / 113.51 / 151.62 | — | — |
 | 3b reloc_f0_pt_v32 fresh 2MB | 8 | OK | 71.49 / 78.57 / 81.21 | 27–30.8 | 2.72x |
+
+## SQL-family runs: method and oracle checks
+
+Dataset `/home/exedev/paradigms/data/kube-apiserver` was read-only. Builds, checks and runs used `systemd-run --user --scope -p MemoryMax=10G` with `OMP_WAIT_POLICY=passive`. No cell algorithms changed. See `codex-kube-{duckdb,souffle}-run.sh` for commands and `*-build.log`, `*-raw.txt`, `*-bench.txt` for raw evidence. DuckDB's bench cap was changed from 8G to the requested 10G; Soufflé's bench accepts its second argument as the data directory and uses a cgroup rather than a virtual-address limit.
+
+DuckDB rebuilt with `systems/duckdb/build.sh`. Oracle commands are the NOTES commands with kube substituted: `./dk "$D" T ...` followed by binary `cmp` for P1's canonical/builtin/relocation-target/content-canonical arrays, P2's sorted live IDs, and P3a's addresses; `python3 -I check3b.py "$D" out/p3_image.bin` for isolated and pipeline P3b. All passed at both T=1 and T=8. The complete script lists every SQL file and exact command. Warm runs use five process rounds with five in-process repetitions; the table reports min/median/max of each process's median. E2e additionally runs once per round.
+
+MinIO comparisons below are specifically from GRID.md, not substituted from the fuller NOTES tables. A range denominator is its midpoint; ratios are kube median / midpoint, approximate cross-window dataset scaling rather than controlled speedups. `—` means GRID.md does not give that thread-count/variant's number. Warm timings are milliseconds. The 3b SQL computation includes the C host's stores in DuckDB; Soufflé rules exclude its separately timed C image assembly.
+
+Soufflé rebuilt all eight generated programs with `./build.sh "$p.dl"`, plus the C oracle checker and lazy-input preparer. `build/prep_lazy "$D" build/lazyfacts` generated kube-specific lazy facts (1,592,404 retained auxiliary/kind1–3 edges). All eight programs passed at 1 and 8 threads; `bench.sh 5 "$D"` repeated each oracle check on every timing round. The initial setup log includes an accidental `build/prep_lazy prep_lazy.c` invocation, which printed usage and exited; the immediately following correct invocation succeeded. The reproducible runner now omits that stray invocation. This was a harness setup error, not a cell failure.
+
+For Soufflé 1c at eight threads, GRID's `394–587` combines two implementations: NOTES identifies 587 with `resolve_c` and 394 with `resolve_c2`. The table uses those matching GRID endpoints, not a midpoint across different variants.
+
+## Souffle
+
+| Cell | Oracle 1 / 8 | kube 1 thread min / median / max ms | kube 8 threads min / median / max ms | GRID MinIO 1 / 8 ms | kube/MinIO 1 / 8 |
+|---|---|---|---|---|---|
+| 1a | OK / OK | 7068.2 / 10490.7 / 13011.5 | 2860.3 / 3438.0 / 4699.4 | 1928–2034 / 636 | 5.30× / 5.41× |
+| 1b | OK / OK | 13002.9 / 17545.4 / 23584.9 | 4252.4 / 6378.8 / 8177.3 | 5220–5426 / 1080 | 3.30× / 5.91× |
+| 1c | OK / OK | 3598.2 / 5166.5 / 6141.9 | 1884.8 / 2240.5 / 2606.2 | 1625–1865 / 587 | 2.96× / 3.82× |
+| 1c-slot | OK / OK | 2133.7 / 3769.0 / 4245.5 | 1056.8 / 1921.0 / 2702.5 | — / 394 | — / 4.88× |
+| 2 | OK / OK | 2177.1 / 2433.9 / 4220.9 | 841.8 / 1661.0 / 3325.5 | 1227–1467 / 431 | 1.81× / 3.85× |
+| 2-lazy | OK / OK | 4711.4 / 5463.7 / 7039.3 | 2450.1 / 5219.7 / 18146.9 | 2900–3200 / 960 | 1.79× / 5.44× |
+| 3a | OK / OK | 15344.3 / 17146.8 / 38350.5 | 4558.8 / 6677.2 / 8814.9 | 7222–7589 / 1339 | 2.32× / 4.99× |
+| 3b | OK / OK | 1715.4 / 1837.1 / 2370.2 | 732.9 / 900.8 / 1126.3 | — / 320 | — / 2.81× |
+
+E2e and separate assembly (same five rounds):
+
+| Cell / metric | 1 thread min / median / max ms | 8 threads min / median / max ms |
+|---|---|---|
+| 1a / e2e | 11196.1 / 15063.0 / 17857.4 | 7431.4 / 7500.2 / 10343.1 |
+| 1b / e2e | 19144.2 / 25209.7 / 32713.9 | 8758.7 / 13327.3 / 17399.4 |
+| 1c / e2e | 7583.6 / 11324.5 / 12140.5 | 5013.5 / 6691.9 / 7344.9 |
+| 1c-slot / e2e | 10295.6 / 11316.5 / 12037.0 | 5861.9 / 9681.5 / 12802.0 |
+| 2 / e2e | 5281.0 / 6853.8 / 11089.6 | 2930.1 / 4046.5 / 6238.5 |
+| 2-lazy / e2e | 9107.0 / 10761.5 / 13481.1 | 6181.5 / 9951.2 / 25657.4 |
+| 3a / e2e | 15616.8 / 17512.7 / 38792.5 | 4809.3 / 7050.4 / 9064.6 |
+| 3b / e2e | 3839.5 / 4307.6 / 5640.2 | 2881.5 / 3168.2 / 3651.8 |
+| 3b / assemble | 59.2 / 71.9 / 75.1 | 23.7 / 34.3 / 39.8 |
