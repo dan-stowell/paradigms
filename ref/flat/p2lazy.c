@@ -51,9 +51,7 @@ int main(int argc, char **argv) {
  const u32 *rp=FMAP(u32,"rel_pkg.u32",&nr), *ri=FMAP(u32,"rel_idx.u32",NULL);
  const u16 *rt=FMAP(u16,"rel_type.u16",NULL);
  nr/=4;
- u32 *target=calloc(nr,4), *off=calloc((size_t)nsl+2,4);
- u32 *dst=malloc((size_t)eoff[nsl+1]*4);
- u8 *kind=malloc(eoff[nsl+1]);
+ u32 *target=calloc(nr,4);
  const u32 *oldoff=eoff, *olddst=ed; const u8 *oldkind=ek;
  u32 *extraoff=calloc((size_t)nsl+2,4), *extra=malloc((size_t)eoff[nsl+1]*4);
  u8 *extrak=malloc(eoff[nsl+1]);
@@ -219,27 +217,11 @@ int main(int argc, char **argv) {
   if(f<bf)bf=f;
   if(t<bt)bt=t;
 	}
- // Independently compare the final materialized CSR, preserving multiplicity
- // and kind as well as destination. This check is outside every timer.
- for(u32 g=1;g<=nsl;g++) {
-  size_t n=off[g+1]-off[g];
-  if(n!=oldoff[g+1]-oldoff[g]) {fprintf(stderr,"merged row count mismatch %u\n",g);return 1;}
-  if(!n) continue;
-  u64 *a=malloc(n*8), *b=malloc(n*8);
-  for(size_t i=0;i<n;i++) {
-   a[i]=((u64)kind[off[g]+i]<<32)|dst[off[g]+i];
-   b[i]=((u64)oldkind[oldoff[g]+i]<<32)|olddst[oldoff[g]+i];
-  }
-  qsort(a,n,8,cmp64); qsort(b,n,8,cmp64);
-  if(memcmp(a,b,n*8)) {fprintf(stderr,"merged row multiset mismatch %u\n",g);return 1;}
-  free(a);free(b);
- }
- printf("merged CSR: all source multisets match (%u edges)\n",off[nsl+1]);
 	nlive = 0;
 	for (u32 g = 1; g < N; g++) nlive += live[g];
 	u32 *list = malloc(4 * nlive), k = 0;
 	for (u32 g = 1; g < N; g++) if (live[g]) list[k++] = g;
-	printf("p2lazy (%d threads): flood best %.1f ms, %zu live, %d levels in %d rounds\n", T, best * 1e3, nlive, levels, rounds);
+	printf("p2lazy (%d threads): lazy-decode flood best %.1f ms, %zu live, %d levels in %d rounds\n", T, best * 1e3, nlive, levels, rounds);
 	
 	long bad = check32("live", list, nlive, "oracle/p2_live.u32");
 	printf(bad ? "P2 FAIL\n" : "P2 OK\n");
