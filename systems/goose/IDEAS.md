@@ -180,3 +180,13 @@ ranks ML Kit, GNU obstacks, ParaSail, Ada/GNAT, C arenas, Cyclone as nearest).
   (86.7-98.5 -> 40.8-42.2 ms, faults 26,731 -> 258-457). Goose assigns stacks statically, so it knows which stack holds
   the image: a per-stack (or per-`let`) "huge" attribute would make this idiomatic. Kill test: the same 2x on another
   big write (P1's 200 MB table first touch: 213 ms first rep vs 79-115 later).
+
+## G-P4. The output file as the meeting point of shared-nothing workers (measured on P4)
+
+- Idea: workers that cannot share memory still share the file system. A linker's workers write their ranges of the
+  output file in place; main only hands out bases. Goose has no positioned write, so it is a 20-line C sidecar
+  (flatio.c `flat_create`, `flat_write_at`).
+- Evidence (P4, MinIO, 18:39Z, load 1.9): joining 60.7 MB of code + 1.78 M relocations into one result costs 226-260 ms
+  (1 worker) / 120-152 ms (8) through the queue, and 54-63 / 37-61 ms through the files (ext4, page cache).
+- Next: the same for P3b, whose gather into main is 142-171 ms on 8 workers (Surprise 1). Kill test: if 8 workers
+  writing the 109 MB image to a file are not at least 2x faster than the queue gather, drop it.

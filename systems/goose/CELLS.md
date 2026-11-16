@@ -43,3 +43,14 @@ bases back · impossible: -. `bin/p3 D --pipeline`: 3b from its own 3a addresses
 by address range; gathered into one array in main +142-171 · easy: `move_from` + match on kind · forced: byte-wise
 stores; huge pages only via C remapping the pages under the builder's stack top (runtime maps 4 KB, MADV_NOHUGEPAGE) ·
 impossible: one image written in place by 8 workers (falls down as one array; distributed is the cell).
+
+**4 code generation by shape** — correct: P4 OK (`bin/p4 /home/exedev/paradigms/data/minio-p4 [1|8]`: the code byte for
+byte vs oracle/p4_code.bin, 1,780,281 relocations sorted vs oracle/p4_rel_*; also every `P4_K`) · warm (layout + emit,
+min/median/max of 5 interleaved rounds, 18:37Z, load 1.7-2.6) 1 worker 97.1 / 98.3 / 100.6 (C p4 105.6 / 106.1 / 107.0)
+/ 8 workers 17.6 / 21.3 / 22.9 (C p4par 17.1 / 18.0 / 21.2) · e2e with self-check 1255-1305 / 883-911 (C 593-605 /
+390-446), without the check 656-686 / 267-375 · K=4096 commonest templates, rest glue: 63.7-66.3 / 10.6-15.5; K=0:
+13.3-14.4 / 2.8-4.9 (time follows pieces: ~30-37 ns each) · 482 lines (+40 C in flatio.c) · easy: ranges of whole
+functions are independent, no message during the compute; templates as inline records (`Seg` with its hole range as
+`u32 upto holes`), no binary search · forced: one output image: through the queue 120-260 ms, through the output files
+(each worker pwrites its range, C sidecar) 37-63 ms; a template table copy per worker · impossible: one in-memory image
+written by all workers.
