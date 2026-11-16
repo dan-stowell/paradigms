@@ -91,7 +91,10 @@ template <typename G> static Item item(G &g, Expr i) {
     Item it;
     it.glue = g.itemKind(i) == 0;
     it.r = i32(g.itemRef(i));  // a glue id or a node id
-    Expr rg = clamp(it.r, 0, g.glueOff.dim(0).extent() - 2), rn = clamp(it.r, 0, g.nodeTmpl.dim(0).extent() - 1);
+    // Both sides of every select are evaluated: the side an item is not on reads entry 0 (a cached line) instead
+    // of chasing node -> template -> segment from a glue id (four random misses per glue item)
+    Expr rg = select(it.glue, clamp(it.r, 0, g.glueOff.dim(0).extent() - 2), 0);
+    Expr rn = select(it.glue, 0, clamp(it.r, 0, g.nodeTmpl.dim(0).extent() - 1));
     Expr t = inside(i32(g.nodeTmpl(rn)), 0, g.tsegOff.dim(0).extent() - 2);
     Expr s = select(it.glue, 0, i32(g.itemSeg(i)));
     it.j = inside(i32(g.tsegOff(t)) + s, 0, g.tsegEnd.dim(0).extent() - 1);
@@ -363,10 +366,10 @@ public:
             I li = I_(orl.i, infR);
             Expr kx = orl.r[0];
             orl.r.where(kx < select(orl.real, i32(rat(orl.i + 1) - rat(orl.i)), 0));
-            // (real clamps: both branches of the selects below are evaluated, and rel0 means one or the other)
-            Expr g = clamp(li.rel0 + kx, 0, grelOff.dim(0).extent() - 1);
-            Expr hh = clamp(i32(relHole(clamp(li.rel0 + kx, 0, relHole.dim(0).extent() - 1))), 0, holeAt.dim(0).extent() - 1);
-            Expr oh = clamp(li.ob + hh, 0, opVal.dim(0).extent() - 1);
+            // (both branches of the selects below are evaluated: the side the item is not on reads entry 0)
+            Expr g = select(li.glue, inside(li.rel0 + kx, 0, grelOff.dim(0).extent() - 1), 0);
+            Expr hh = select(li.glue, 0, inside(i32(at_(relHole, li.rel0 + kx)), 0, holeAt.dim(0).extent() - 1));
+            Expr oh = select(li.glue, 0, inside(li.ob + hh, 0, opVal.dim(0).extent() - 1));
             Expr Pn = li.pb + i32(holeAt(hh)), Pg = li.at + i32(grelOff(g));
             Expr slot = inside(i32(rat(orl.i)) + kx, 0, NR - 1);
             rel(slot) = Tuple(u64(select(li.glue, Pg, Pn)), select(li.glue, grelType(g), holeRtype(hh)),
@@ -382,9 +385,10 @@ public:
             infP.compute_at(code, op.r[op.ic]);  // (RVar names are unique: no stage index needed)
             infR.compute_at(rel, orl.r[orl.ic]);
         } else if (info == 1) {
-            inf.compute_root();
+            // vectorized: 16 items' dependent loads (node -> template -> segment) issued side by side as gathers
             Var io("io"), ii("ii");
-            if (par) inf.split(iv, io, ii, 1 << 14, TailStrategy::GuardWithIf).parallel(io);
+            inf.compute_root().split(iv, io, ii, 1 << 14, TailStrategy::GuardWithIf).vectorize(ii, 16, TailStrategy::GuardWithIf);
+            if (par) inf.parallel(io);
         }
         if (gform == 1) {
             Var xt("xt"), xv("xv");
