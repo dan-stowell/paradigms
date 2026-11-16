@@ -2,6 +2,7 @@
 // oracle/p3_addr.u32 (3a) and the bytes of every placed symbol in oracle/p3_image.bin (3b).
 //   ref/flat/p3 data/minio [--pipeline] [out.img]
 #include "flat.h"
+#include <sys/resource.h>
 
 enum { bText = 1, bTextFIPS = 2, bTypelink = 6, bBSS = 13, bNoptrBSS = 14, bCov = 15, nBuckets = 16, nClasses = 13 };
 static inline u32 rnd(u32 v, u32 a) { return (v + a - 1) & ~(a - 1); }
@@ -19,6 +20,12 @@ static int cmpTL(const void *a, const void *b) {
 	return psym[x] < psym[y] ? -1 : psym[x] > psym[y];
 }
 
+#ifdef _OPENMP
+#include <omp.h>
+static int nthreads(void) { return omp_get_max_threads(); }
+#else
+static int nthreads(void) { return 1; }
+#endif
 int main(int argc, char **argv) {
 	flatDir = argc > 1 ? argv[1] : "data/minio";
 	int pipeline = argc > 2 && strcmp(argv[2], "--pipeline") == 0;
@@ -113,9 +120,39 @@ int main(int argc, char **argv) {
 	u32 sect[8] = {(u32)metaGet("lay_text"), (u32)metaGet("lay_rodata"), (u32)metaGet("lay_pclntab"), (u32)metaGet("lay_types"),
 	               (u32)metaGet("lay_noptrdata"), (u32)metaGet("lay_data"), (u32)metaGet("lay_bss"), (u32)metaGet("lay_noptrbss")};
 	u32 unreach = (u32)metaGet("addr_unreachableMethod"), mapinit = (u32)metaGet("addr_mapinitnoop");
-	u8 *img = calloc(nimg, 1);
+	// P3_REPS=n: relocate n times into a fresh image each time (its faults included), report min/median/max per rep
+	// and the minor page faults of one rep (getrusage), so a run lasts long enough to mean something (CHARTER).
+	int reps = getenv("P3_REPS") ? atoi(getenv("P3_REPS")) : 1;
+	double rt[1024];
+	long rflt = 0;
+	u8 *img = NULL;
 	long nerr = 0;
-	double t2 = now();
+	double t2 = 0, t3 = 0;
+	size_t imgMapped = 0;
+	for (int rep = 0; rep < reps && rep < 1024; rep++) {
+	if (img) { if (imgMapped) munmap(img, imgMapped); else free(img); img = NULL; imgMapped = 0; }
+	struct rusage ru0, ru1;
+	getrusage(RUSAGE_SELF, &ru0);
+	nerr = 0;
+	if (getenv("P3_THP")) { // the output on 2 MB huge pages (MAP_HUGETLB): 53 faults instead of 26,700 (ATTACKS 2)
+		size_t hp = 2u << 20, n = (nimg + hp - 1) / hp * hp;
+		imgMapped = n;
+		img = mmap(NULL, n, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+		if (img == MAP_FAILED) { // no reserved huge pages (vm.nr_hugepages): transparent ones if the kernel has them
+			img = mmap(NULL, n, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+			madvise(img, n, MADV_HUGEPAGE);
+		}
+	} else img = calloc(nimg, 1);
+	double tf = now();
+	if (getenv("P3_PREFAULT")) { // first-touch the output and the input bytes outside the timed region (ATTACKS 2)
+		memset(img, 0, nimg);
+		volatile u8 sink = 0;
+		for (size_t k = 0; k < doff[L]; k += 4096) sink ^= dbin[k];
+	}
+	t2 = now();
+	if (getenv("P3_PREFAULT")) printf("p3b prefault %.1f ms\n", (t2 - tf) * 1e3);
+	// Built with -fopenmp (build/p3par) the placed symbols are split over threads: their byte ranges are disjoint.
+#pragma omp parallel for schedule(dynamic, 1024) reduction(+ : nerr)
 	for (u32 i = 0; i < L; i++) {
 		u32 b = pb[i];
 		if (b == bBSS || b == bNoptrBSS || b == bCov) continue;
@@ -157,7 +194,17 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	double t3 = now();
+	t3 = now();
+	getrusage(RUSAGE_SELF, &ru1);
+	rt[rep] = (t3 - t2) * 1e3;
+	rflt = ru1.ru_minflt - ru0.ru_minflt;
+	}
+	if (reps > 1) {
+		int n = reps < 1024 ? reps : 1024;
+		for (int i = 1; i < n; i++) for (int j = i; j > 0 && rt[j] < rt[j - 1]; j--) { double x = rt[j]; rt[j] = rt[j - 1]; rt[j - 1] = x; }
+		printf("p3b reps %d (%s pages, %d threads): min %.1f median %.1f max %.1f ms per rep, %ld minor faults per rep\n", n,
+		       imgMapped ? "2 MB" : "4 KB", nthreads(), rt[0], rt[n / 2], rt[n - 1], rflt);
+	}
 	long nbad = 0;
 	u64 nbytes = 0, sum = 0;
 	for (u32 i = 0; i < L; i++) {
@@ -168,7 +215,7 @@ int main(int argc, char **argv) {
 		for (size_t k = 0; k < n; k++) sum = sum * 1099511628211ull + img[o + k];
 		if (memcmp(img + o, want + o, n) != 0 && nbad++ < 5) printf("  symbol %u (id %u, bucket %u) differs\n", i, psym[i], b);
 	}
-	printf("p3b (1 core): copy + relocate %.1f ms, %llu bytes, %u relocations, %ld errors; checksum %016llx\n", (t3 - t2) * 1e3,
+	printf("p3b (%d threads): copy + relocate %.1f ms, %llu bytes, %u relocations, %ld errors; checksum %016llx\n", nthreads(), (t3 - t2) * 1e3,
 	       (unsigned long long)nbytes, rstart[L], nerr, (unsigned long long)sum);
 	printf("image: %ld placed symbols differ from oracle/p3_image.bin\n", nbad);
 	if (output) {
