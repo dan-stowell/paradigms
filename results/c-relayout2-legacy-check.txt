@@ -1,0 +1,136 @@
+bucket added removed common moved rel_added rel_removed rel_common rel_value_changed image_union image_changed
+1 0 0 109877 89289 8 5 1144391 806879 40765306 26804270
+2 0 0 803 803 0 0 8384 5646 507544 480189
+3 0 0 57032 0 0 0 40137 19495 22272104 22652
+4 0 0 23 0 0 0 0 0 3300 0
+5 1 0 35599 35599 0 0 18988 362 1870913 939408
+6 0 0 33261 33261 0 0 428898 151328 3416264 2189623
+7 0 0 95151 95151 0 0 347641 202655 6476196 4554306
+8 0 0 7620 7620 0 0 31827 28066 315704 122689
+9 0 0 2342 0 0 0 1082 982 1228534 984
+10 0 0 23 0 0 0 0 0 99504 0
+11 0 0 13236 0 0 0 32448 11122 619896 16131
+12 0 0 0 0 0 0 0 0 0 0
+13 0 0 3795 0 0 0 0 0 0 0
+14 0 0 1553 0 0 0 0 0 0 0
+15 0 0 0 0 0 0 0 0 0 0
+global_image_union 77574856 global_image_changed 35129895
+common_extractor_unit_changes 0
+P3COMPARE OK
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=1
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=1
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=1
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=0
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=0
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=1
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=1
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=1
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=272 max_group_growth=256
+chosen=5 image=219800224 capacity=188649472 changed_symbols=2 changed_groups=2 setup_ms=795.798
+forward copied=1032 cleared=750 repatched=34 patch_bytes=136 reverse_visits=9 laid_symbols=6
+slack_bucket 1 added=0 removed=0 moved=3 bytes_changed=1009 repatched=34
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 3 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=1 removed=0 moved=0 bytes_changed=4 repatched=0
+slack_bucket 6 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 7 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 8 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 9 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=12329 forward_ms=0.000811 reverse_ms=0.000848 timed=0.010/0.010
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833464 relocations=2053804
+P3INC INDEPENDENT OK
+p3a (1 core): layout 18.147204 ms (360316 symbols, 33261 sorted by type string), reps 1 total 0.018147 s
+p3b (1 threads): copy + relocate 63.2 ms, 76360168 bytes, 2053804 relocations, 0 errors; checksum e12e80fdfefe6bc3
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 19.258351 ms (360316 symbols, 33261 sorted by type string), reps 1 total 0.019258 s
+p3b (1 threads): copy + relocate 59.4 ms, 76360168 bytes, 2053804 relocations, 0 errors; checksum e12e80fdfefe6bc3
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+bucket added removed common moved rel_added rel_removed rel_common rel_value_changed image_union image_changed
+1 9 1636 108241 107987 73 21267 1123129 999112 41218578 38646079
+2 0 0 803 803 0 0 8384 5832 989660 949637
+3 148 1117 55915 55915 7 460 39677 39624 23047302 22634283
+4 0 0 23 23 0 0 0 0 6600 4821
+5 134 877 34722 34722 34 374 18614 1762 3641337 1360144
+6 0 833 32428 32428 0 8278 420620 383749 6755312 3602508
+7 145 2262 92889 92889 0 6692 340949 330426 12805489 8191308
+8 4 170 7450 7450 58 642 31185 31183 625152 298977
+9 0 5 2337 2337 0 0 1082 1081 2456730 1654798
+10 0 0 23 23 0 0 0 0 199008 197298
+11 0 270 12966 12966 0 488 31960 31960 1233648 294869
+12 0 0 0 0 0 0 0 0 0 0
+13 0 12 3783 3783 0 0 0 0 0 0
+14 0 16 1537 1537 0 0 0 0 0 0
+15 0 0 0 0 0 0 0 0 0 0
+global_image_union 91796980 global_image_changed 76696695
+common_extractor_unit_changes 95
+P3COMPARE OK
+policy quantum=64 percent=0 capacity=113555456 payload=112446436 slack=1109020 spills=38
+policy quantum=128 percent=0 capacity=114655232 payload=112446436 slack=2208796 spills=27
+policy quantum=256 percent=0 capacity=116901120 payload=112446436 slack=4454684 spills=18
+policy quantum=512 percent=0 capacity=121470464 payload=112446436 slack=9024028 spills=9
+policy quantum=1024 percent=0 capacity=130830336 payload=112446436 slack=18383900 spills=6
+policy quantum=4096 percent=0 capacity=188649472 payload=112446436 slack=76203036 spills=0
+policy quantum=64 percent=1 capacity=114657280 payload=112446436 slack=2210844 spills=15
+policy quantum=64 percent=5 capacity=119147776 payload=112446436 slack=6701340 spills=4
+policy quantum=64 percent=10 capacity=124767872 payload=112446436 slack=12321436 spills=4
+arena_total capacity=188649472 payload=112446436 slack=76203036 produced_capacity=137150464 produced_payload=78303235 produced_slack=58847229 produced_extent=168301184 retrospective_growth=7056 max_group_growth=1070
+chosen=5 image=219800224 capacity=188649472 changed_symbols=8243 changed_groups=468 setup_ms=795.570
+forward copied=14459737 cleared=35522160 repatched=869439 patch_bytes=4288536 reverse_visits=404592 laid_symbols=144965
+slack_bucket 1 added=9 removed=1636 moved=12438 bytes_changed=8100157 repatched=291252
+slack_bucket 2 added=0 removed=0 moved=0 bytes_changed=326 repatched=124
+slack_bucket 3 added=148 removed=1117 moved=17066 bytes_changed=20637391 repatched=14979
+slack_bucket 4 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 5 added=134 removed=877 moved=13375 bytes_changed=451732 repatched=5952
+slack_bucket 6 added=0 removed=833 moved=32424 bytes_changed=2319788 repatched=404622
+slack_bucket 7 added=145 removed=2262 moved=25673 bytes_changed=1378690 repatched=137427
+slack_bucket 8 added=4 removed=170 moved=192 bytes_changed=20542 repatched=7065
+slack_bucket 9 added=0 removed=5 moved=1 bytes_changed=224 repatched=29
+slack_bucket 10 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 11 added=0 removed=270 moved=304 bytes_changed=15831 repatched=7989
+slack_bucket 12 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+slack_bucket 13 added=0 removed=12 moved=10 bytes_changed=0 repatched=0
+slack_bucket 14 added=0 removed=16 moved=0 bytes_changed=0 repatched=0
+slack_bucket 15 added=0 removed=0 moved=0 bytes_changed=0 repatched=0
+P3INC OK reps=1 forward_ms=85.084303 reverse_ms=84.446025 timed=0.085/0.084
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181066 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+p3a (1 core): layout 20.321905 ms (353557 symbols, 32428 sorted by type string), reps 1 total 0.020322 s
+p3b (1 threads): copy + relocate 45.1 ms, 55307665 bytes, 2015772 relocations, 0 errors; checksum 2d8ff0f8b47cb70e
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 9.699913 ms (353557 symbols, 32428 sorted by type string), reps 1 total 0.009700 s
+p3b (1 threads): copy + relocate 46.0 ms, 55307665 bytes, 2015772 relocations, 0 errors; checksum 2d8ff0f8b47cb70e
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 19.196117 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.019196 s
+p3b (1 threads): copy + relocate 57.9 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 9.074393 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.009074 s
+p3b (1 threads): copy + relocate 63.5 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833464 relocations=2053804
+P3INC INDEPENDENT OK
+negative relocation byte: rejected (1)
+negative misaligned address: rejected (2)
+negative overlapping address: rejected (2)

@@ -1,0 +1,5 @@
+minio: descriptors=33261 descriptor_bytes=3416136 relocations=428898 kinds={1: 103063, 3: 127034, 4: 198801} actual_stores=412513 store_bytes=2062304 skipped_missing_ADDROFF=16385 offset_table_bytes=133044
+minio-edit: descriptors=33261 descriptor_bytes=3416136 relocations=428898 kinds={1: 103063, 3: 127034, 4: 198801} actual_stores=412513 store_bytes=2062304 skipped_missing_ADDROFF=16385 offset_table_bytes=133044
+minio-edit2: descriptors=32428 descriptor_bytes=3339176 relocations=420620 kinds={1: 100211, 3: 124551, 4: 195858} actual_stores=404633 store_bytes=2019376 skipped_missing_ADDROFF=15987 offset_table_bytes=129712
+old export: moved_descriptors=32424 relocation_records_in_moved=420604 actual_stores_in_moved=404617 skipped_missing_ADDROFF_in_moved=15987
+old export: reverse_sites_in_unmoved_descriptors=5 total_stores_explained=404622 details=[(256410, 3, 187814), (256410, 1, 256411), (407003, 1, 1502383), (560115, 1, 560114), (1360602, 1, 1360601)]
