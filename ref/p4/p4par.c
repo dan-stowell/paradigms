@@ -83,7 +83,12 @@ int main(int argc, char **argv) {
 	if (reps < 1) { fprintf(stderr, "P4_REPS must be positive\n"); return 2; }
 	u64 *at = malloc(8 * ((size_t)nitem + 1));
 	omp_set_dynamic(0);
-	int T = omp_get_max_threads();
+	int T = 1;
+	#pragma omp parallel
+	{
+		#pragma omp single
+		T = omp_get_num_threads();
+	}
 	int noPatch = getenv("P4_NOPATCH") && atoi(getenv("P4_NOPATCH"));
 	u8 *code = output(ncode);
 	RelVec *vec = calloc(T, sizeof(RelVec));

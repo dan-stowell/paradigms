@@ -1,0 +1,19 @@
+p4 (1 core): lay out 6.604 ms, emit 105.394 ms (60733909 bytes, 2381252 items), sort relocations 150.904 ms (1780281); 0 errors; reps 1 total 0.112 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 17.933 ms, emit 289.533 ms (60733909 bytes, 2381252 items), sort relocations 285.357 ms (1780281); 0 errors; reps 1 total 0.307 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 12.594 ms, emit 92.823 ms (60733909 bytes, 2381252 items), sort relocations 255.204 ms (1780281); 0 errors; reps 1 total 0.105 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4par (2 threads): lay out 16.667 ms, emit 134.554 ms (60733909 bytes, 2381252 items), sort relocations 175.519 ms (1780281); 0 errors; reps 2 total 0.315 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
