@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -100,12 +101,12 @@ static long long rowsOf(const char *s) {
 }
 
 // ---- a table of columns, served as a stream of record batches (struct arrays) that all point into the mmaps
-enum { BATCH = 122880 }; // DuckDB's row group size: one batch per row group
+enum { BATCH = 122880, STANDARD_VECTOR_SIZE_DK = 2048 }; // DuckDB's row group size: one batch per row group
 typedef struct {
 	char name[64];
 	const char *fmt; // Arrow format of the column
 	const void *data, *bin; // data: values (or u64 offsets for strings); bin: string bytes
-	int fixed2; // u64x2: a fixed-size list of 2 u64
+	struct ArrowArray *lchild, *lchildp[1]; // a list column (a CSR): the struct array of all its values
 } col;
 typedef struct {
 	int ncol;
@@ -133,21 +134,19 @@ static int getNext(struct ArrowArrayStream *st, struct ArrowArray *out) {
 	t->next += len;
 	// one allocation per batch: the struct's children, their buffers, and the u64x2 lists' children
 	struct mem {
-		struct ArrowArray kid[32], gk[32];
-		struct ArrowArray *kidp[32], *gkp[32][1];
-		const void *buf[32][3], *gbuf[32][2], *top[1];
+		struct ArrowArray kid[32];
+		struct ArrowArray *kidp[32];
+		const void *buf[32][3], *top[1];
 	} *m = calloc(1, sizeof *m);
 	for (int i = 0; i < t->ncol; i++) {
 		col *c = &t->c[i];
 		struct ArrowArray *a = &m->kid[i];
 		a->length = len, a->offset = off, a->release = noRelA;
 		m->buf[i][0] = NULL;
-		if (c->fixed2) {
-			a->n_buffers = 1, a->n_children = 1;
-			m->gbuf[i][0] = NULL, m->gbuf[i][1] = c->data;
-			m->gk[i] = (struct ArrowArray){.length = 2 * (off + len), .n_buffers = 2, .buffers = m->gbuf[i], .release = noRelA};
-			m->gkp[i][0] = &m->gk[i];
-			a->children = m->gkp[i];
+		if (c->lchild) { // the offsets are the CSR file itself; the values array is shared by every batch
+			a->n_buffers = 2, a->n_children = 1;
+			m->buf[i][1] = c->data;
+			a->children = c->lchildp;
 		} else if (c->bin) {
 			a->n_buffers = 3;
 			m->buf[i][1] = c->data, m->buf[i][2] = c->bin;
@@ -171,6 +170,40 @@ static void die(const char *what, const char *err) {
 	fprintf(stderr, "%s: %s\n", what, err ? err : "?");
 	exit(1);
 }
+// a primitive column: FILE (its suffix is its type), FILE@k (from element k), FILE.u64x2:lo / :hi (one half, copied:
+// Arrow has no strided arrays). *n: its element count
+static const void *loadPrim(const char *spec, const char **fmt, size_t *n) {
+	char file[512];
+	snprintf(file, sizeof file, "%s", spec);
+	long skip = 0;
+	char *at = strchr(file, '@');
+	if (at) *at = 0, skip = atol(at + 1);
+	char *half = strstr(file, ":lo") ? strstr(file, ":lo") : strstr(file, ":hi");
+	if (half) {
+		int hi = half[1] == 'h';
+		*half = 0;
+		const uint64_t *src = fmap(file, n);
+		*n /= 16;
+		uint64_t *dst = malloc(8 * *n);
+		for (size_t k = 0; k < *n; k++) dst[k] = src[2 * k + hi];
+		*fmt = "L";
+		return dst;
+	}
+	const char *suf = strrchr(file, '.') + 1;
+	int es = 0;
+	if (!strcmp(suf, "u8")) *fmt = "C", es = 1;
+	else if (!strcmp(suf, "u16")) *fmt = "S", es = 2;
+	else if (!strcmp(suf, "u32")) *fmt = "I", es = 4;
+	else if (!strcmp(suf, "i32")) *fmt = "i", es = 4;
+	else if (!strcmp(suf, "i64")) *fmt = "l", es = 8;
+	else if (!strcmp(suf, "u64")) *fmt = "L", es = 8;
+	else if (!strcmp(suf, "u64x2")) *fmt = "d:38,0", es = 16; // a 128-bit key: read as DECIMAL(38,0), i.e. a HUGEINT (k2 << 64 | k1)
+	else die("type", file);
+	const char *d = fmap(file, n);
+	*n = *n / es - skip;
+	return d + skip * es;
+}
+
 // .table / .view: words[0] = NAME, words[1] = ROWS, then col=file
 static void makeView(char **w, int nw) {
 	table *t = calloc(1, sizeof *t);
@@ -184,23 +217,49 @@ static void makeView(char **w, int nw) {
 		char file[512];
 		snprintf(file, sizeof file, "%s", eq + 1);
 		long skip = 0;
-		char *at = strchr(file, '@');
-		if (at) *at = 0, skip = atol(at + 1);
 		size_t n;
-		char *half = strstr(file, ":lo") ? strstr(file, ":lo") : strstr(file, ":hi");
-		if (half) { // one half of a u64x2 file as a u64 column: the one place dk copies (Arrow has no strided arrays)
-			int hi = half[1] == 'h';
-			*half = 0;
-			const uint64_t *src = fmap(file, &n);
-			n /= 16;
-			if (t->rows < 0) t->rows = (int64_t)n;
-			uint64_t *dst = malloc(8 * n);
-			for (size_t k = 0; k < n; k++) dst[k] = src[2 * k + hi];
-			c->data = dst, c->fmt = "L";
+		char *br = strchr(file, '[');
+		if (br) { // name=OFF.u32[f1=file,f2=file,...]: a list of structs over a CSR (Arrow's list: offsets + values)
+			*br = 0;
+			char *fields = br + 1;
+			fields[strcspn(fields, "]")] = 0;
+			c->data = (const char *)fmap(file, &n) + skip * 4;
+			n = n / 4 - skip;
+			if (t->rows < 0) t->rows = (int64_t)n - 1;
+			if ((int64_t)n < t->rows + 1) { fprintf(stderr, "%s: %zu offsets < %lld rows + 1\n", file, n, (long long)t->rows); exit(2); }
+			int nf = 0;
+			struct ArrowSchema *fs = calloc(16, sizeof *fs), **fsp = calloc(16, sizeof *fsp), *ss = calloc(1, sizeof *ss), **ssp = calloc(1, sizeof *ssp);
+			struct ArrowArray *fa = calloc(16, sizeof *fa), **fap = calloc(16, sizeof *fap), *sa = calloc(1, sizeof *sa);
+			const void **fbuf = calloc(32, sizeof *fbuf), **sbuf = calloc(1, sizeof *sbuf);
+			int64_t total = -1;
+			char *sv;
+			for (char *f = strtok_r(fields, ",", &sv); f; f = strtok_r(NULL, ",", &sv), nf++) {
+				char *e = strchr(f, '=');
+				*e = 0;
+				size_t fn;
+				const char *ffmt;
+				if (!strcmp(e + 1, "#")) { // the value's index in the whole values array (a relocation's number)
+					fn = ((const uint32_t *)c->data)[n - 1];
+					uint32_t *iota = malloc(4 * fn);
+					for (size_t r = 0; r < fn; r++) iota[r] = (uint32_t)r;
+					fbuf[2 * nf + 1] = iota, ffmt = "I";
+				} else fbuf[2 * nf + 1] = loadPrim(e + 1, &ffmt, &fn);
+				if (total < 0 || (int64_t)fn < total) total = (int64_t)fn;
+				fs[nf] = (struct ArrowSchema){.format = ffmt, .name = strdup(f), .release = noRelS};
+				fsp[nf] = &fs[nf];
+				fa[nf] = (struct ArrowArray){.n_buffers = 2, .buffers = &fbuf[2 * nf], .release = noRelA};
+				fap[nf] = &fa[nf];
+			}
+			for (int k = 0; k < nf; k++) fa[k].length = total;
+			*ss = (struct ArrowSchema){.format = "+s", .name = "", .n_children = nf, .children = fsp, .release = noRelS};
+			*ssp = ss;
+			*sa = (struct ArrowArray){.length = total, .n_buffers = 1, .buffers = sbuf, .n_children = nf, .children = fap, .release = noRelA};
+			c->lchild = sa, c->lchildp[0] = sa, c->fmt = "+l";
+			s->n_children = 1, s->children = ssp;
 		} else if (!strcmp(file, "#")) {
 			uint32_t *iota = malloc(4 * t->rows);
 			for (int64_t r = 0; r < t->rows; r++) iota[r] = (uint32_t)r;
-			c->data = iota, c->fmt = "I", n = 4 * t->rows;
+			c->data = iota, c->fmt = "I";
 		} else if (strstr(file, ".off.u64")) { // strings: P.off.u64 + P.bin is Arrow's large binary
 			char bin[512];
 			snprintf(bin, sizeof bin, "%.*s.bin", (int)(strstr(file, ".off.u64") - file), file);
@@ -209,25 +268,7 @@ static void makeView(char **w, int nw) {
 			n = n / 8 - 1; // count+1 offsets
 			if (t->rows < 0) t->rows = (int64_t)n;
 		} else {
-			const char *suf = strrchr(file, '.') + 1;
-			int es = 0;
-			if (!strcmp(suf, "u8")) c->fmt = "C", es = 1;
-			else if (!strcmp(suf, "u16")) c->fmt = "S", es = 2;
-			else if (!strcmp(suf, "u32")) c->fmt = "I", es = 4;
-			else if (!strcmp(suf, "i32")) c->fmt = "i", es = 4;
-			else if (!strcmp(suf, "i64")) c->fmt = "l", es = 8;
-			else if (!strcmp(suf, "u64")) c->fmt = "L", es = 8;
-			else if (!strcmp(suf, "u64x2")) c->fmt = "d:38,0", es = 16; // a 128-bit key: read as DECIMAL(38,0), i.e. a HUGEINT (k2 << 64 | k1)
-			else die("type", file);
-			c->data = (const char *)fmap(file, &n) + skip * es;
-			n = n / es - skip;
-			n *= es;
-			if (c->fixed2) {
-				t->grandkids[t->ncol] = (struct ArrowSchema){.format = "L", .name = "", .release = noRelS};
-				t->gkp[t->ncol][0] = &t->grandkids[t->ncol];
-				s->n_children = 1, s->children = t->gkp[t->ncol];
-			}
-			n /= es;
+			c->data = loadPrim(w[i] + (eq + 1 - w[i]), &c->fmt, &n);
 			if (t->rows < 0) t->rows = (int64_t)n;
 			if ((int64_t)n < t->rows) { fprintf(stderr, "%s: %zu elements < %lld rows\n", file, n, (long long)t->rows); exit(2); }
 		}
@@ -243,20 +284,24 @@ static void makeView(char **w, int nw) {
 }
 
 // ---- running statements
-static double cellMs[64];
+static double cellMs[64], cellRep[64][256];
+static long cellFlt[64];
 static char cellName[64][64];
 static int ncell = -1, cellCount; // ncell: the current cell (-1: none)
 static double loadMs;
 static int quiet;
 static duckdb_result run(const char *sql, int keep) {
 	duckdb_result r;
+	struct rusage ru0, ru1;
+	getrusage(RUSAGE_SELF, &ru0);
 	double t0 = now();
 	if (duckdb_query(con, sql, &r) != DuckDBSuccess) {
 		fprintf(stderr, "SQL error: %s\n  in: %.300s\n", duckdb_result_error(&r), sql);
 		exit(1);
 	}
 	double ms = (now() - t0) * 1e3;
-	if (ncell >= 0) cellMs[ncell] += ms;
+	getrusage(RUSAGE_SELF, &ru1);
+	if (ncell >= 0) cellMs[ncell] += ms, cellFlt[ncell] += ru1.ru_minflt - ru0.ru_minflt;
 	if (!quiet) {
 		const char *p = sql;
 		while (*p == ' ' || *p == '\n' || *p == '\t') p++;
@@ -307,44 +352,54 @@ static void dump(const char *file, const char *sql) {
 	printf("  dumped %zu rows to %s\n", rows, file);
 }
 static uint8_t *img;
-static size_t imgSize;
-static uint64_t get64(duckdb_vector v, idx_t i) {
+static size_t imgSize, imgMapped;
+// a column of a chunk as u64s (any unsigned/signed integer width)
+static void col64(duckdb_vector v, idx_t n, uint64_t *out) {
 	duckdb_logical_type lt = duckdb_vector_get_column_type(v);
-	duckdb_type ty = duckdb_get_type_id(lt);
+	int w = widthOf(duckdb_get_type_id(lt));
 	duckdb_destroy_logical_type(&lt);
 	void *d = duckdb_vector_get_data(v);
-	switch (widthOf(ty)) {
-	case 1: return ((uint8_t *)d)[i];
-	case 2: return ((uint16_t *)d)[i];
-	case 4: return ((uint32_t *)d)[i];
-	case 8: return ((uint64_t *)d)[i];
+	switch (w) {
+	case 1: for (idx_t i = 0; i < n; i++) out[i] = ((uint8_t *)d)[i]; break;
+	case 2: for (idx_t i = 0; i < n; i++) out[i] = ((uint16_t *)d)[i]; break;
+	case 4: for (idx_t i = 0; i < n; i++) out[i] = ((uint32_t *)d)[i]; break;
+	case 8: memcpy(out, d, 8 * n); break;
+	default: die("image: column type", "");
 	}
-	die("image: column type", "");
-	return 0;
 }
-// .blob rows (pos, bytes) / .int rows (pos, width, value), pos relative to the image start
+// .blob rows (pos, bytes) / .int rows (pos, width, value), pos relative to the image start. This is the one
+// place dk writes on the query's behalf: SQL has no "store at byte offset", so the rows are the scatter's
+// instructions and this loop is a memcpy per row.
 static void scatter(const char *sql, int ints) {
 	duckdb_result r = run(sql, 1);
+	double t0 = now();
+	struct rusage ru0, ru1;
+	getrusage(RUSAGE_SELF, &ru0);
 	duckdb_data_chunk ch;
+	uint64_t pos[STANDARD_VECTOR_SIZE_DK], wv[STANDARD_VECTOR_SIZE_DK], val[STANDARD_VECTOR_SIZE_DK];
 	while ((ch = duckdb_fetch_chunk(r))) {
 		idx_t n = duckdb_data_chunk_get_size(ch);
-		duckdb_vector p = duckdb_data_chunk_get_vector(ch, 0), b = duckdb_data_chunk_get_vector(ch, 1);
-		for (idx_t i = 0; i < n; i++) {
-			uint64_t pos = get64(p, i);
-			if (ints) {
-				uint64_t w = get64(b, i), v = get64(duckdb_data_chunk_get_vector(ch, 2), i);
-				if (pos + w > imgSize) die("image", "int out of range");
-				memcpy(img + pos, &v, w);
-			} else {
-				duckdb_string_t *s = (duckdb_string_t *)duckdb_vector_get_data(b) + i;
-				uint32_t len = duckdb_string_t_length(*s);
-				if (pos + len > imgSize) die("image", "blob out of range");
-				memcpy(img + pos, duckdb_string_t_data(s), len);
+		col64(duckdb_data_chunk_get_vector(ch, 0), n, pos);
+		if (ints) {
+			col64(duckdb_data_chunk_get_vector(ch, 1), n, wv);
+			col64(duckdb_data_chunk_get_vector(ch, 2), n, val);
+			for (idx_t i = 0; i < n; i++) {
+				if (pos[i] + wv[i] > imgSize) die("image", "int out of range");
+				memcpy(img + pos[i], &val[i], wv[i]);
+			}
+		} else {
+			duckdb_string_t *s = (duckdb_string_t *)duckdb_vector_get_data(duckdb_data_chunk_get_vector(ch, 1));
+			for (idx_t i = 0; i < n; i++) {
+				uint32_t len = duckdb_string_t_length(s[i]);
+				if (pos[i] + len > imgSize) die("image", "blob out of range");
+				memcpy(img + pos[i], duckdb_string_t_data(&s[i]), len);
 			}
 		}
 		duckdb_destroy_data_chunk(&ch);
 	}
 	duckdb_destroy_result(&r);
+	getrusage(RUSAGE_SELF, &ru1);
+	if (ncell >= 0) cellMs[ncell] += (now() - t0) * 1e3, cellFlt[ncell] += ru1.ru_minflt - ru0.ru_minflt;
 }
 
 // ---- the script
@@ -378,9 +433,10 @@ static void parse(char *s) {
 			st->dir = strndup(p + 1, sp ? (size_t)(sp - p - 1) : strlen(p + 1));
 			st->arg = strdup(sp ? sp + 1 : "");
 			// a directive that takes a query continues to the ';'
-			if ((!strcmp(st->dir, "dump") || !strcmp(st->dir, "until") || !strcmp(st->dir, "blob") || !strcmp(st->dir, "int")) &&
+			if ((!strcmp(st->dir, "dump") || !strcmp(st->dir, "until") || !strcmp(st->dir, "blob") || !strcmp(st->dir, "int") || !strcmp(st->dir, "show")) &&
 			    !strchr(st->arg, ';')) {
-				sql = st->arg, sqlLen = strlen(sql);
+				sqlLen = strlen(st->arg);
+				sql = realloc(st->arg, sqlLen + 2), sql[sqlLen++] = '\n', sql[sqlLen] = 0, st->arg = sql;
 				st->line = -1; // collecting
 			}
 			continue;
@@ -427,7 +483,9 @@ static void exec(int from, int to) {
 			}
 			loadMs += (now() - t0) * 1e3;
 		} else if (!strcmp(d, "cell")) {
-			ncell = cellCount++;
+			for (char *e = a + strlen(a); e > a && (e[-1] == ' ' || e[-1] == '\n'); e--) e[-1] = 0;
+			for (ncell = 0; ncell < cellCount && strcmp(cellName[ncell], a); ncell++) {}
+			if (ncell == cellCount) cellCount++;
 			snprintf(cellName[ncell], 64, "%s", a);
 			if (!quiet) printf("-- %s\n", a);
 		} else if (!strcmp(d, "nocell")) {
@@ -458,7 +516,15 @@ static void exec(int from, int to) {
 			i = j;
 		} else if (!strcmp(d, "image")) {
 			imgSize = (size_t)rowsOf(a);
-			img = calloc(imgSize, 1);
+			if (img) munmap(img, imgMapped);
+			// a fresh anonymous mapping each time (its page faults land in the cell that writes it); DK_THP=1: on
+			// 2 MB huge pages (MAP_HUGETLB, needs vm.nr_hugepages), ATTACKS 2
+			size_t hp = 2u << 20;
+			imgMapped = (imgSize + hp - 1) / hp * hp;
+			img = MAP_FAILED;
+			if (getenv("DK_THP")) img = mmap(NULL, imgMapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+			if (img == MAP_FAILED) img = mmap(NULL, imgMapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+			if (img == MAP_FAILED) die("image", "mmap");
 		} else if (!strcmp(d, "blob") || !strcmp(d, "int")) {
 			scatter(a, d[0] == 'i');
 		} else if (!strcmp(d, "imgout")) {
@@ -508,13 +574,40 @@ int main(int argc, char **argv) {
 	snprintf(q, sizeof q, "SET VARIABLE flatdir = '%s'", flatDir);
 	run(q, 0);
 	quiet = getenv("DK_QUIET") != NULL;
-	for (int a = 3; a < argc; a++) {
+	// dk flat threads once.sql... [-- repeated.sql...]: the scripts after "--" run DK_REPS times (default 1), so a
+	// cell can be timed over many in-process runs (CHARTER: make the work meaty, report the range)
+	int reps = getenv("DK_REPS") ? atoi(getenv("DK_REPS")) : 1, a = 3;
+	if (reps < 1) reps = 1;
+	if (reps > 256) reps = 256;
+	for (; a < argc && strcmp(argv[a], "--"); a++) {
 		int from = nprog;
 		parse(readFile(argv[a]));
 		exec(from, nprog);
 	}
+	int from = nprog;
+	for (a++; a < argc; a++) parse(readFile(argv[a]));
+	int nrep = 0, before0[64] = {0};
+	long flt0[64] = {0};
+	if (nprog > from) {
+		for (int rep = 0; rep < reps; rep++) {
+			double before[64];
+			for (int c = 0; c < 64; c++) before[c] = cellMs[c];
+			if (rep) quiet = 1;
+			exec(from, nprog);
+			for (int c = 0; c < cellCount; c++) cellRep[c][rep] = cellMs[c] - before[c];
+			if (!rep) for (int c = 0; c < cellCount; c++) before0[c] = before[c] != cellMs[c], flt0[c] = cellFlt[c];
+		}
+		nrep = reps;
+	}
 	printf("load (arrow views + CREATE TABLE): %.1f ms\n", loadMs);
-	for (int c = 0; c < cellCount; c++) printf("cell %s: %.1f ms\n", cellName[c], cellMs[c]);
+	for (int c = 0; c < cellCount; c++) {
+		if (nrep > 1 && before0[c]) {
+			double *x = cellRep[c];
+			for (int i = 1; i < nrep; i++) for (int j = i; j > 0 && x[j] < x[j - 1]; j--) { double y = x[j]; x[j] = x[j - 1]; x[j - 1] = y; }
+			printf("cell %s: min %.1f median %.1f max %.1f ms over %d reps; %ld minor faults in rep 1, %ld per later rep\n", cellName[c], x[0], x[nrep / 2],
+			       x[nrep - 1], nrep, flt0[c], (cellFlt[c] - flt0[c]) / (nrep - 1));
+		} else printf("cell %s: %.1f ms; %ld minor faults\n", cellName[c], cellMs[c], cellFlt[c]);
+	}
 	printf("total process: %.1f ms\n", (now() - t0) * 1e3);
 	return 0;
 }

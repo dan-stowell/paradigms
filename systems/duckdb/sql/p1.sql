@@ -30,21 +30,18 @@ FROM builtin LEFT JOIN win USING (key);
 .cell 1b
 -- an object's package table, keyed by the package index a relocation carries: 0..npkg-1, then the five specials
 CREATE OR REPLACE TEMP TABLE pkgbase AS
-SELECT o, (CASE WHEN j - p0 < p1 - p0 - 5 THEN j - p0 ELSE 2147483643 + (j - p0) - (p1 - p0 - 5) END)::UINTEGER AS pkg, base
-FROM objpkg_off JOIN objpkg_base ON j >= p0 AND j < p1
+SELECT o, (CASE WHEN t < n - 5 THEN t ELSE 2147483643 + t - (n - 5) END)::UINTEGER AS pkg, base
+FROM (SELECT o, len(bases) AS n, generate_subscripts(bases, 1) - 1 AS t, unnest(bases, recursive := true) FROM obj)
 WHERE base <> 4294967295;
--- each relocation's slot is the one whose row range holds it (an as-of join on the CSR offsets), then the
--- target the object's package table names, then its canonical id
+-- each relocation (a slot's list, unnested) through its object's package table to a slot, then its canonical id
 CREATE OR REPLACE TEMP TABLE reltarget AS
-WITH owner AS (
-  SELECT r, s.obj AS o, pkg, idx
-  FROM rel ASOF JOIN (SELECT rel0, obj FROM slot WHERE rel1 > rel0) s ON rel.r >= s.rel0),
+WITH rel AS (SELECT obj AS o, unnest(rels, recursive := true) FROM srel),
 target AS (
   SELECT r, CASE WHEN pb.base IS NULL THEN 0
-                 WHEN owner.pkg = 2147483644 THEN coalesce(bc.canon, 0) -- package index "builtin"
+                 WHEN rel.pkg = 2147483644 THEN coalesce(bc.canon, 0) -- package index "builtin"
                  ELSE pb.base + idx END AS s
-  FROM owner LEFT JOIN pkgbase pb USING (o, pkg)
-             LEFT JOIN builtin_canon bc ON owner.pkg = 2147483644 AND bc.i = owner.idx)
+  FROM rel LEFT JOIN pkgbase pb USING (o, pkg)
+           LEFT JOIN builtin_canon bc ON bc.i = CASE WHEN rel.pkg = 2147483644 THEN rel.idx END)
 SELECT r, coalesce(canon.canon, 0) AS tgt
 FROM target LEFT JOIN canon ON canon.id = target.s;
 
