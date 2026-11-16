@@ -4,11 +4,13 @@
 // whole template table, which it turns into inline typed records: a segment knows its bytes and its holes. Then,
 // with no message in between, it lays out its items from 0 (a jump is within one function, so local offsets are
 // enough), copies each item's bytes into its own buffer and patches the holes. Main only says go and, at the end,
-// joins the buffers in order (each relocation shifted by its worker's base) and checks the result against the
-// oracle (code byte for byte, relocations as a sorted list).
+// tells each worker its base: the worker writes its bytes and its relocations (shifted by the base) at their
+// offsets of two output files ($P4_OUT or /tmp: goose_p4_code.bin, goose_p4_rel.bin). Main reads them back and
+// checks them against the oracle (code byte for byte, relocations as a sorted list).
 //   p4 /home/exedev/paradigms/data/minio-p4 [workers 1..8]
 // P4_REPS=n: n timed reps after one warm-up rep (buffers reused, as ref/p4/p4.c). P4_HUGE=1: each worker's
-// output on 2 MB pages (flatio.c fresh_pages).
+// output on 2 MB pages (flatio.c fresh_pages). P4_K=k: only the commonest k templates' nodes are emitted, the
+// rest is glue. P4_JOIN=queue: the parts go to main through the queue instead. P4_NOCHECK=1: no oracle check.
 import flat;
 import par;
 
