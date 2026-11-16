@@ -1,5 +1,6 @@
 // p2.c: driver for p2.fut. Loads the flat files, calls the entries, times them, checks against the oracle.
-//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2lazy / 2lazy_look (relocation edges decoded
+//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2hyb / 2seq / 2bat (ATTACKS.md 3:
+//   hybrid level/worklist flood, one sequential worklist, batched levels; knobs in env, below), 2lazy / 2lazy_look (relocation edges decoded
 //   from the rel_* columns inside the flood; the aux CSR of funcdata + kinds 1-3 is built once, untimed, by the
 //   aux_edges entry, as ref/flat/p2lazy.c does). 2lazy takes 1a's canon/builtin from the oracle.
 #include "p2.h"
@@ -22,9 +23,54 @@ int main(int argc, char **argv) {
 	if (strcmp(cell, "2") == 0) {
 		SYNC();
 		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		int64_t levels;
+		fut_check(futhark_entry_reach_levels(ctx, &levels, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), "levels");
+		SYNC();
+		printf("%lld levels\n", (long long)levels);
 		TIMEIT(cell, {
 			if (out) futhark_free_u32_1d(ctx, out);
 			fut_check(futhark_entry_reach(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), cell);
+		});
+	} else if (strcmp(cell, "2hyb") == 0 || strcmp(cell, "2seq") == 0) {
+		// the hybrid flood (ATTACKS.md 3): P2LO (frontier width below which a level is drained sequentially,
+		// default 4096), P2HI (the drain hands back once its stack exceeds this, default 4 x P2LO), P2BUDGET
+		// (or after this many pops, default unbounded). 2seq: one sequential worklist (lo infinite, hi 1 M).
+		const char *e;
+		int seq = strcmp(cell, "2seq") == 0;
+		int64_t lo = (e = getenv("P2LO")) ? atoll(e) : seq ? INT64_MAX : 4096;
+		int64_t hi = (e = getenv("P2HI")) ? atoll(e) : seq ? 1000000 : 4 * lo;
+		int64_t budget = (e = getenv("P2BUDGET")) ? atoll(e) : INT64_MAX;
+		SYNC();
+		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		struct futhark_i64_1d *st;
+		fut_check(futhark_entry_hybrid_stats(ctx, &st, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, lo, hi, budget), "stats");
+		int64_t s[6];
+		futhark_values_i64_1d(ctx, st, s);
+		SYNC();
+		printf("hybrid lo %lld hi %lld budget %lld: %lld data-parallel levels, %lld sequential drains, %lld expanded in levels, %lld pops in drains\n",
+		       (long long)lo, (long long)hi, (long long)budget, (long long)s[0], (long long)s[1], (long long)s[2], (long long)s[3]);
+		TIMEIT(cell, {
+			if (out) futhark_free_u32_1d(ctx, out);
+			fut_check(futhark_entry_reach_hybrid(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, lo, hi, budget), cell);
+		});
+	} else if (strcmp(cell, "2bat") == 0) {
+		// batched levels (ATTACKS.md 3): P2C chunks per round (default 256), P2B pops per chunk (1024),
+		// P2CAP edges per chunk buffer (4096; raised to the widest due row), P2H push-table slots (2048, a power of 2)
+		const char *e;
+		int64_t C = (e = getenv("P2C")) ? atoll(e) : 256, B = (e = getenv("P2B")) ? atoll(e) : 1024;
+		int64_t cap = (e = getenv("P2CAP")) ? atoll(e) : 4096, H = (e = getenv("P2H")) ? atoll(e) : 2048;
+		SYNC();
+		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		struct futhark_i64_1d *st;
+		fut_check(futhark_entry_batch_stats(ctx, &st, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, C, B, cap, H), "stats");
+		int64_t s[6];
+		futhark_values_i64_1d(ctx, st, s);
+		SYNC();
+		printf("batch C %lld B %lld cap %lld H %lld: %lld rounds, %lld symbols expanded (%lld with duplicates), %lld edges walked\n",
+		       (long long)C, (long long)B, (long long)cap, (long long)H, (long long)s[0], (long long)s[2], (long long)s[3], (long long)s[4]);
+		TIMEIT(cell, {
+			if (out) futhark_free_u32_1d(ctx, out);
+			fut_check(futhark_entry_reach_batch(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, C, B, cap, H), cell);
 		});
 	} else {
 		struct futhark_u32_1d *canon = LOAD(u32, "oracle/p1_canon.u32"), *builtin = LOAD(u32, "oracle/p1_builtin.u32");

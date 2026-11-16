@@ -19,9 +19,17 @@ row by scatter + max-scan (binary search per relocation: 459 ms, 1 core).
 **2 reach** - correct (`build/p2_c.exe $D 1 1 2` -> P2 OK; `2lazy` too) - flood over p2_edge: warm 140 / 188 (1),
 155 / 259 (8); 2 MB 97 / 105 (1), **58 / 102 (8)**; e2e 303 (1), 347 (8). Lazy decode inside the flood (ATTACKS 1):
 2 MB 165 / 173 (1), 90 / 137 (8) - 74 lines eager + 63 lazy - easy: rules as scatters of true; forced: level-
-synchronous flood with expand per level (111 levels x ~25 passes), skip rule as a segmented scan of state
+synchronous flood with expand per level (45 levels x ~26 passes = 1,211 parallel ops, counted), skip rule as a segmented scan of state
 functions. ATTACKS 1: expressible, but does not beat the eager C pipeline (108.7 / 30.1): falls down on speed
 (two attempts: segmented-scan and look-back skip rule).
+
+**2 reach, level-free (ATTACKS 3)** - correct (`build/p2_c.exe $D 1 1 2seq` -> P2seq OK; `2hyb`, `2bat` too) -
+one sequential worklist in Futhark (`2seq`): warm 79 / 156 (1), **67 / 102 (8 threads, uses one)** vs the original's
+137 / 171, 156 / 201 in the same window (17:40Z, load 17-20, 4 KB pages); hybrid (`2hyb`, 45 -> 15 levels,
+1,211 -> 437 parallel ops) within noise of the original; batched levels (`2bat`) 1.5-2.5x slower - 155 + 131
+lines - easy: a worklist `loop` outside any map compiles to sequential C; forced: a fixed-size stack (growable =
+refcounts per push, 3x); verdict: the level count is not the cost, the ~26 passes per element are
+(results/levelfree.md).
 
 **3a layout** - correct (`build/p3_c.exe $D 1 1 3a` -> P3a OK; `3a_loop` too) - scan: warm 22 / 25 (1), 10 / 31 (8);
 loop: 14 / 21 (1), **7.3-8.5 / 10.5-12 (8)**; e2e 40 (1, loop), 36 (8) - 86 lines + 26 (merge sort) - easy: the walk

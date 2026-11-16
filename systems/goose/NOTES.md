@@ -26,6 +26,29 @@ Memory cap: `systemd-run --user --scope -p MemoryMax=8G` (Goose reserves 2 GB of
    later reps; the C references' single-run numbers include their table faults. One run of p1 (all of 1a+1b+1c, first
    touch included) is 560 ms of compute (16:15Z, load 2).
 
+## ATTACKS 3 (no supersteps: is the level count the cost?)
+
+Full write-up with counts and both windows: results/levelfree.md. `p2async.goose` keeps p2par's owner partition and
+p2rules.goose's local rules and drops the supersteps: a worker floods its part to a local fixpoint (or until
+`P2FLUSH` ids wait), posts ids straight into the owners' inboxes and any new global fact (signature, method name,
+reflect) to every worker, takes what has arrived with `qpoll`, and goes on; idle, it reports its per-peer sent and
+received batch counts to main and blocks on its inbox. Main stops it when every latest report is idle and
+sent[i][j] == received[j][i] for every pair (a worker only reports when idle and only wakes on a message, so an
+in-flight or unreported message always shows as a mismatch). `systems/goose/levelfree.sh 7` reruns it.
+
+- **The premise was wrong for Goose: p2par has 10 supersteps, not 111.** Each superstep already drains the
+  partition to a local fixpoint, method rule included; the steps are cross-partition waves (221,907, 416,622,
+  126,815, 120,375, 68,606, 79,820, 1,658, 387, 60, 0 ids).
+- Counts, 8 workers: BSP 10 barriers, 560 inbox batches + 160 status/go, 1,036,250 ids; async 0 barriers, 482-687
+  batches + 102-174 idle reports, the same ~1,036 K ids.
+- Times (best flood, min / median / max, 5 and 7 interleaved rounds, load 17-23): 8 workers **async 33.4 / 38.9 /
+  44.2 vs BSP 48.1 / 52.9 / 62.5** (ranges apart), then 28.2 / 37.4 / 46.6 vs 33.8 / 48.0 / 80.0; lazy decode
+  60.4 / 64.6 / 76.6 vs 66.7 / 95.4 / 103.0, then 47.0 / 52.9 / 63.7 vs 64.0 / 84.7 / 119.8; 1 worker the same.
+- Verdict: dropping the barriers is worth ~1.3-1.5x under this load (no worker waits for a descheduled one), but
+  8 workers stay only ~1.3-1.9x faster than 1: per worker 4-20 ms local work, up to 10 ms bucketing and posting
+  ids, 7-23 ms idle; summed work ~70-80 ms against 43 ms on one worker. The partition (busy owner, a million ids
+  through queues) is the limit, not the superstep count.
+
 ## ATTACKS 1 (reach, counting the decode)
 
 - **Expressible: yes, trivially.** The flood's drain loop decodes a live symbol's relocations from rel_pkg/rel_idx/
@@ -110,7 +133,8 @@ sort, plus three message rounds, are most of it.
   then the image left distributed, which is fast, 17-24 ms, but is not one array). Reason: no shared memory, and a queue
   hop copies twice. Distributed is the idiomatic answer and the one reported as the cell.
 - **8-core P2 near C**: CSR and lazy floods both scale ~1.7x over 8 workers (two attempts: one queue type per owner with
-  batched inboxes and BSP; the lazy variant). Reason: per-superstep message rounds; Goose has no shared-memory
+  batched inboxes and BSP; the lazy variant; a third, asynchronous with no supersteps, p2async: 1.3-1.5x faster than BSP
+  under load, still ~1.3-1.9x over 1 worker). Reason: per-superstep message rounds; Goose has no shared-memory
   `par for` (a design note only).
 
 ### Core code excerpt (p2lazy.goose, the lazy part of the flood)
