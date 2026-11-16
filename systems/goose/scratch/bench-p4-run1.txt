@@ -1,0 +1,27 @@
+goose p4 bench: 5 rounds, 2026-11-16T18:36:50Z, load 1.67 2.80 4.76
+round 1 18:36:50 load 1.67
+round 2 18:37:15 load 1.73
+round 3 18:37:41 load 2.25
+round 4 18:38:06 load 1.95
+round 5 18:38:32 load 2.62
+cell cores kind   min / median / max ms
+load - -               1.67 / 1.95 / 2.62
+c-p4 1 warm            105.6 / 106.1 / 107.0
+goose 1 warm           97.1 / 98.3 / 100.6
+goose-wall 1 warm      97.3 / 98.5 / 101.2
+c-p4par 8 warm         17.1 / 18.0 / 21.2
+goose 8 warm           17.6 / 21.3 / 22.9
+goose-wall 8 warm      16.9 / 21.5 / 24.0
+c-p4par 1 warm         98.6 / 103.1 / 104.7
+goose-K0 1 warm        13.3 / 14.2 / 14.4
+goose-K0 8 warm        2.8 / 3.8 / 4.9
+goose-K256 1 warm      44.5 / 45.3 / 45.5
+goose-K256 8 warm      7.0 / 7.5 / 9.4
+goose-K4096 1 warm     63.7 / 64.7 / 66.3
+goose-K4096 8 warm     10.6 / 11.0 / 15.5
+c-p4 1 e2e             592.5 / 595.1 / 604.8
+goose 1 e2e            1255.0 / 1292.8 / 1305.4
+goose 1 e2e-nocheck    655.7 / 660.5 / 685.7
+c-p4par 8 e2e          389.5 / 429.4 / 446.3
+goose 8 e2e            883.4 / 901.1 / 911.4
+goose 8 e2e-nocheck    266.5 / 328.1 / 374.8

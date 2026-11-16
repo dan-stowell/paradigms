@@ -17,6 +17,7 @@ struct Key { k1: u64, k2: u64 }
 extern fn flat_read(path: const u8[:], out: Key[>..]&, elem: i64) -> bool = "flat_read";
 // elements [first, first + count) of a file
 extern fn flat_read_range(path: const u8[:], out: u8[>..]&, elem: i64, first: i64, count: i64) -> bool;
+extern fn flat_read_range(path: const u8[:], out: u16[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 extern fn flat_read_range(path: const u8[:], out: u32[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 extern fn flat_read_range(path: const u8[:], out: u64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 extern fn flat_read_range(path: const u8[:], out: i64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
@@ -44,6 +45,7 @@ fn load(name: const u8[:], out: u64[>..]&) { guard flat_read(flat_path(name), ou
 fn load(name: const u8[:], out: i64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: Key[>..]&) { guard flat_read(flat_path(name), out, 16) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: u8[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 1, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u16[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 2, first, count) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: u32[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 4, first, count) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: u64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: i64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }

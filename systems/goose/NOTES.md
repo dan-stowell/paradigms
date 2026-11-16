@@ -26,6 +26,13 @@ Memory cap: `systemd-run --user --scope -p MemoryMax=8G` (Goose reserves 2 GB of
    later reps; the C references' single-run numbers include their table faults. One run of p1 (all of 1a+1b+1c, first
    touch included) is 560 ms of compute (16:15Z, load 2).
 
+4. **P4 is where shared-nothing costs nothing in the compute, and the file system removes most of the join tax.**
+   Workers owning ranges of whole functions exchange no message between go and done (jumps stay inside a function),
+   and 8 Goose workers emit all 60.7 MB in **17.6 / 21.3 / 22.9 ms** (min/median/max, layout + emit) against OpenMP C's
+   17.1 / 18.0 / 21.2 (within noise; load 2, 18:37Z); 1 worker 97.1 / 98.3 / 100.6 vs plain C 105.6 / 106.1 / 107.0, at the
+   same 698 M instructions per rep. Joining the parts through the queue costs 120-260 ms; having each worker `pwrite`
+   its range of the output file (C sidecar) costs 37-63 ms. Details: "P4" below.
+
 ## ATTACKS 3 (no supersteps: is the level count the cost?)
 
 Full write-up with counts and both windows: results/levelfree.md. `p2async.goose` keeps p2par's owner partition and
@@ -158,6 +165,145 @@ sort, plus three message rounds, are most of it.
 and 3b's loop (p3.goose): `img[base..base + bytes.len].move_from(bytes);` then per relocation
 `match rkind[r] { 1, 2 => { v = ta + radd[r]; } 3, 4 => { ... v = (ta - sect[k]) + radd[r]; } 5, 6, 7 => { v = ta + radd[r] - (P + sz); } ... }`
 and `put(img, base + off, v, sz)`.
+
+## P4: code generation by shape (2026-11-16, MinIO)
+
+`p4.goose` (482 lines, of which the K variant 66, the queue join and the oracle check ~60; `flat.goose`/`par.goose`
+shared, `flatio.c` +40 lines: create a file, `pwrite` a slice at an offset). Check:
+
+    G=/home/exedev/tools/goose/rel/goose-v2026.4-linux-x64/goose; cd systems/goose; $G build p4.goose -o bin/p4
+    D=/home/exedev/paradigms/data/minio-p4
+    systemd-run --user --scope -q -p MemoryMax=10G bin/p4 $D 1      # -> P4 OK
+    systemd-run --user --scope -q -p MemoryMax=10G bin/p4 $D 8      # -> P4 OK
+    for k in 0 256 4096 108833; do P4_K=$k ... bin/p4 $D 8; done   # -> P4 OK each; P4_JOIN=queue -> P4 OK
+
+The check reads the two output files back and compares the code byte for byte with `oracle/p4_code.bin` and the
+relocations, sorted, with `oracle/p4_rel_*` (all 1,780,281). It can fail: one byte of `op_val.i64` changed in a
+symlinked copy of the directory gives `relocation 235420 differs ... P4 FAIL`.
+
+### The shape
+
+- **Workers own ranges of whole functions** (cut at the item quantiles; main reads only `fn_item.u32`). Nodes, glue
+  runs and operands are stored in function order (checked: `scratch/p4ord.c`), so a worker reads *only its ranges*
+  of the item, node, operand, glue and marker files (`flat_read_range`), rebased to 0, plus the whole template table.
+- **No message during the compute.** A jump's target is in the same function, so a worker lays out its items from 0
+  and its rel32s are right without knowing where its range lands; only relocation offsets need the global base,
+  and that is applied at the join. The whole P4 kernel is W independent programs.
+- **Templates as inline typed records.** Each worker turns the template columns into `Seg { bin, len, h0: HoleEnd,
+  h1: HoleEnd, o0 }` per template segment (207,697) and `Hole { at, w, enc, rtype }` (8 bytes) with `at` relative to
+  its segment: a segment knows its bytes and its holes, so the emit has no binary search for a segment's first hole
+  (p4.c does one per node segment). `h0/h1` are `u32 upto holes`, so `for h in sg.h0..sg.h1` indexes `holes`
+  without a check. Operands are `Op { v, a }`, items a fixed-mode `enum Item { Glue { g }, Piece { n, s } }`.
+- **The hole patch is a small typed loop**: a `match` on the encoding, `put` = the low w bytes, byte by byte.
+- **The join is the file system.** Main creates the two output files at their final size and sends each worker its
+  byte base and relocation base; each worker shifts its relocations and `pwrite`s its bytes and relocations at its
+  offsets (flatio.c). The alternative (`P4_JOIN=queue`: each worker sends its buffer and relocations to main, which
+  copies them into one image and shifts the relocations one by one) is kept for comparison.
+
+### Core code (p4.goose)
+
+```
+struct Hole { at: u32, w: u8, enc: u8, rtype: u16 }            // at: offset in its segment
+var holes: Hole[>..] = [];
+type HoleEnd = u32 upto holes;
+struct Seg { bin: i64, len: i64, h0: HoleEnd, h1: HoleEnd, o0: u32 }
+enum Item { Glue { g: u32 }, Piece { n: u32, s: u32 } }    // a glue run, or segment s of node n
+
+fn layout() -> i64 {
+    var pos = 0;
+    for i in items.len {
+        at[i] = pos;
+        pos += match items[i] {
+            Glue x => goff[x.g + 1] - goff[x.g],
+            Piece x => segs[tseg0[ntmpl[x.n]] + x.s].len,
+        };
+    }
+    ...
+        Piece x => {
+            let sg = segs[tseg0[ntmpl[x.n]] + x.s];
+            code[p..p + sg.len].move_from(tbin[sg.bin..sg.bin + sg.len]);
+            let o = nop[x.n] - sg.o0;        // operand of hole h: o + h
+            for h in sg.h0..sg.h1 {
+                let hl = holes[h];
+                let op = ops[o + h];
+                let P = p + hl.at;
+                match hl.enc {
+                    encInt => put(P, op.v, hl.w),
+                    encRel32 => put(P, at[op.v - item0] + op.a - (P + 4), 4),
+                    encReloc => rels.push(Rel { off: P, add: op.a, sym: op.v as! u32, rtype: hl.rtype, siz: hl.w }),
+                    _ => { nerr++; },
+                }
+            }
+        },
+```
+
+### Timings
+
+`systems/goose/bench-p4.sh 5`, 2026-11-16T18:36:50-18:38:57Z, **load 1.7-2.6** (quiet), 5 interleaved rounds,
+min / median / max ms (output in `scratch/bench-p4-run1.txt`). Warm = min of 20 in-process reps of layout + emit
+(Goose: the slowest worker's; main's go-to-last-done wall is the same within 0.5 ms). e2e = one process, one rep,
+including the self-check (C: qsort + memcmp; Goose: read the files back, std `sort`, compare).
+
+| | 1 core / worker warm | 8 warm | 1 e2e | 8 e2e |
+|---|---|---|---|---|
+| C `p4` (plain) | 105.6 / 106.1 / 107.0 | | 593 / 595 / 605 | |
+| C `p4par` (OpenMP, 2 MB output) | 98.6 / 103.1 / 104.7 | 17.1 / 18.0 / 21.2 | | 390 / 429 / 446 |
+| **Goose `p4`** | **97.1 / 98.3 / 100.6** | **17.6 / 21.3 / 22.9** | 1255 / 1293 / 1305 | 883 / 901 / 911 |
+| Goose, e2e without the check | | | 656 / 661 / 686 | 267 / 328 / 375 |
+| Goose K=4096 (commonest templates only) | 63.7 / 64.7 / 66.3 | 10.6 / 11.0 / 15.5 | | |
+| Goose K=256 | 44.5 / 45.3 / 45.5 | 7.0 / 7.5 / 9.4 | | |
+| Goose K=0 (all glue: a copy per function) | 13.3 / 14.2 / 14.4 | 2.8 / 3.8 / 4.9 | | |
+| Futhark (systems/futhark P4) | | 161-216 | | |
+
+Split (one worker): layout 9.0-9.5 ms (C 5.7-5.9: 1.6x), emit 88-92 (C 86-96). 8 workers: layout 1.8-3, emit
+15-25. Scaling 1/2/4/8 workers (18:36Z, load 2): rep wall 97.6 / 56.8 / 31.1 / 17.0 ms min: 5.7x on 8 vCPUs that are
+4 cores x 2 SMT. Under load 4-5 (18:27Z, 3 rounds) 8 workers gave 29-30 ms min vs C 25-33.
+
+Join (after the compute, one worker / 8 workers, 5 runs each, 18:39Z, load 1.9): **files 54-63 / 37-61 ms**, queue
+226-260 / 120-152 ms. e2e without check on 8 = spawn + load 120-190 ms (every worker reads its ranges and builds the
+108,833-template table: 1.86 M holes) + 20 ms compute + the file join + exit. The check is 450-480 ms of Goose's
+e2e: `sort` with a block comparator on 1.78 M 23-byte records, twice, against C's qsort at 105-128 ms.
+
+Counted (perf stat, 22 reps minus 2, per rep, 1 worker / 1 core): instructions **698 M Goose vs 697 M C**, branch
+misses 3.11 M vs 3.23 M (1.3 per piece), dTLB misses 0.23 M vs 0.21 M; L1d misses 10.5 M vs 2.6 M. So the two run
+the same amount of work by different routes: Goose pays a bounds check where C does a binary search.
+
+### The K variant ("commonest K templates only, rest as glue")
+
+`P4_K=k`: each worker ranks the templates by node count (whole `node_tmpl.u32`), and after one full emit (the
+bytes a fallback generator would give) replaces every stretch of non-kept items of a function (glue and the nodes
+of rarer templates) by one new glue run cut from that emit, with its relocations; jumps out of kept nodes are
+re-pointed at (new item, offset). Untimed (load), P4 OK for every K. It changes the number of **pieces**, and the
+time follows the pieces almost linearly:
+
+| K | pieces | 1 worker warm | 8 workers |
+|---|---|---|---|
+| all (108,833) | 2,381,252 (no two glue items are adjacent in the data) | 97-101 | 17.6-22.9 |
+| 4,096 | 1,884,292 | 63.7-66.3 | 10.6-15.5 |
+| 256 | 1,212,922 | 44.5-45.5 | 7.0-9.4 |
+| 0 | 136,634 (one per function) | 13.3-14.4 | 2.8-4.9 |
+
+60.7 MB copied in 13-14 ms (4.4 GB/s with the relocations) is the byte cost; every piece costs **~30-37 ns** on top
+((97 - 13.3) ms / 2.24 M extra pieces = 37 ns; K=256 and 4096: 29 ns). This is ATTACKS 4's "the emit costs pieces,
+not bytes" measured from the other end: the 4,096 commonest templates are 74.6% of nodes but leave 79% of the
+pieces, because what the rest-as-glue merges is the stretches between kept nodes, and kept nodes still have their
+segments interleaved with their children's.
+
+### Per cell: easy / forced / impossible
+
+- **Easy:** the partition. P4 is the first problem where shared-nothing costs nothing in the compute: ranges of
+  whole functions are independent (jumps stay inside a function), so the workers exchange no message between go
+  and done, read only their own slices of the files, and 8 workers match OpenMP C. Inline typed records (Seg with
+  its hole range as `u32 upto holes`) read better than the six template columns and remove p4.c's binary search.
+- **Forced:** one output image. Two shapes tried: (1) the parts sent to main through the queue (two copies of 60.7 MB
+  + 41 MB of relocations, main shifting 1.78 M relocations one at a time): 120-260 ms, 5-13x the compute; (2) the
+  output files as the meeting point, each worker `pwrite`s its range (C sidecar, 40 lines): 37-63 ms. The language
+  has no positioned file write, so (2) goes through flatio.c. Also forced: every worker builds its own copy of the
+  template table (~31 MB of records; spawn+load is 120-190 ms of the e2e).
+- **Impossible:** one image in memory written by all workers in place (no shared memory). Nothing else.
+- **Tried, no effect:** `put` as one slice check plus constant-index stores (gcc could merge them): emit 85-102 vs
+  90-97 ms, within noise (the patch is 7.6% of the emit, ATTACKS 4), reverted to the byte loop. Output on 2 MB pages
+  (`P4_HUGE=1`): within noise, since the buffer is reused across reps (faulted once).
 
 ## Install, status, hello-world, judgment (installer, 15:24Z)
 
