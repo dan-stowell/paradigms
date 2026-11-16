@@ -17,14 +17,23 @@ Two references, measured 2026-11-16T15:33Z (load 0.4):
   per rule): the like-for-like baseline every system is compared with first. `ref/flat/check.sh` runs them and
   checks every oracle.
 
-| problem | floor (8 cores, FLOOR.md model) | hlink 1 core / 8 cores | plain C, flat, 1 core warm | check |
-|---|---|---|---|---|
-| 1a+1b. resolve: join by name, relocation targets | 1.36 (resolve) | 126-136 / 29-33 (resolve phase) | 186-206 (join) + 43-58 (9.4 M targets) | `build/p1 data/minio` -> P1 OK |
-| 1c. content-hash join | (in resolve) | 37-39 / 8-9 (inside deadcode) | 310-380 (untuned: a 400 MB table) | same |
-| 2. reach | 2.78 | 98-103 / 22-23 floods + 7 / 1.5 methods | 41-46 | `build/p2 data/minio` -> P2 OK |
-| 3a. lay out | 0.60 | 85 / 23-25 (layout phase, includes pclntab sizing and the typelink sort) | 8-19 | `build/p3 data/minio` -> P3 OK |
-| 3b. relocate | 4.92 (write) | 102-104 / 15 (write phase, includes pclntab and GC bitmaps) | 59-67 (76 MB, 2.05 M relocations) | same |
-| 4. codegen by shape | | | | |
+| problem | floor (8 cores, FLOOR.md model) | hlink 1 core / 8 cores | plain C, flat, 1 core warm | tuned C, flat (p1par/p2par), 1 / 8 threads | check |
+|---|---|---|---|---|---|
+| 1a+1b. resolve: join by name, relocation targets | 1.36 (resolve) | 125 / 24 (resolve phase, 16:56Z) | 194-203 (join) + 43-44 (9.4 M targets) | 74-77 / **13.9-16.8** (join 8.6-10.5 + targets 5.3-6.3) | `build/p1 data/minio`, `build/p1par` -> P1 OK |
+| 1c. content-hash join | (in resolve) | 37-39 / 8-9 (inside deadcode) | 300-309 (untuned: a 400 MB table) | (Codex writing it) | same |
+| 2. reach | 2.78 | 98-103 / 22-23 floods + 7 / 1.5 methods | 39-43 | 27-30 / **13.0-17.0** | `build/p2 data/minio`, `build/p2par` -> P2 OK |
+| 2'. reach incl. eager decode to CSR | | (= the row above: hlink decodes lazily) | dumpflat's untuned loop 133-139 + flood 39-43 | (Codex measuring p2pipe) | |
+| 3a. lay out | 0.60 | 85 / 23-25 (layout phase, includes pclntab sizing and the typelink sort) | 8-19 | | `build/p3 data/minio` -> P3 OK |
+| 3b. relocate | 4.92 (write) | 102-104 / 15 (write phase, includes pclntab and GC bitmaps) | 59-67 (76 MB, 2.05 M relocations) | | same |
+| 4. codegen by shape | | | | | |
+
+Tuned and plain flat rows re-measured 2026-11-16T15:56Z at load 0.8, 3 interleaved rounds (`/tmp`-free script: the
+loop in JOURNAL 15:57Z); hlink's resolve/deadcode from `COLD=0 ref/hlink/bench.sh minio build/hlink 3` right after.
+
+**kube-apiserver** (second dataset, extracted 2026-11-16T15:55Z, 2.2 GB of flat files, 13.27 M slots): every plain and
+tuned C reference reproduces its oracles (`ref/flat/check.sh data/kube-apiserver`, loaded machine): p1 434 + 88 ms,
+p1c 550 ms, p2 66.5 ms (926,486 live), p3a 30.4 ms, p3b 67.8 ms (72.6 MB, 2.82 M relocations); p1par 26.2 ms and
+p2par 19.6 ms on 8 threads. Its oracles come from hlink alone so far (MinIO's live list was also checked against fclink).
 
 Floors are bottom-up's FLOOR.md model (same CPU model, the 2026-11-13 VM); they count the raw object bytes hlink
 reads, so for the flat files they are an upper bound on the floor.
