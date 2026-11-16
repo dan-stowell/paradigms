@@ -1,0 +1,42 @@
+// Problem 1c, resolve: the content-hash join over the copies the flood reached (ref/flat/README.md).
+// Starts from 1a's canonical ids (the oracle's, so 1c does not depend on 1a).
+
+.type id = unsigned
+
+// per slot: its kind (2: 64-bit hash, 3: longer hash), its mark (1 reached by the flood, 2 only named, 0 neither)
+// and its hash key (kind 2: (8 hash bytes, size); kind 3: (hash bytes 0-7, 8-11))
+.decl slot(g: id, kind: unsigned, mark: unsigned, k1: unsigned, k2: unsigned)
+.input slot(IO=flat, index="true", cols="p1_kind.u8,p1c_mark.u8,p1_hashkey.u64x2")
+.decl canon(g: id, c: id)
+.input canon(IO=flat, index="true", cols="oracle/p1_canon.u32")
+
+// the copies: kind 2 grouped by k1 (with their size), kind 3 by (k1, k2)
+.decl copy2(k1: unsigned, g: id, mark: unsigned, size: unsigned)
+copy2(k1, g, m, s) :- slot(g, 2, m, k1, s), m != 0.
+.decl copy3(k1: unsigned, k2: unsigned, g: id, mark: unsigned)
+copy3(k1, k2, g, m) :- slot(g, 3, m, k1, k2), m != 0.
+
+// the winner: a reached copy beats a named one; a group with no reached copy is not in the output.
+// Kind 2: then the largest, then the lowest id. Kind 3: the lowest id. (An aggregate runs once per tuple of the
+// body before it, so the groups come first: `copy2(k1, _, 1, _), s = max ...` would run it once per copy.)
+.decl group2(k1: unsigned)
+group2(k1) :- copy2(k1, _, 1, _).
+.decl group3(k1: unsigned, k2: unsigned)
+group3(k1, k2) :- copy3(k1, k2, _, 1).
+.decl size2(k1: unsigned, s: unsigned)
+size2(k1, s) :- group2(k1), s = max ss : { copy2(k1, _, 1, ss) }.
+.decl win2(k1: unsigned, w: id, s: unsigned)
+win2(k1, w, s) :- size2(k1, s), w = min g : { copy2(k1, g, 1, s) }.
+.decl win3(k1: unsigned, k2: unsigned, w: id)
+win3(k1, k2, w) :- group3(k1, k2), w = min g : { copy3(k1, k2, g, 1) }.
+
+// every copy goes to its winner, except a named short-hash copy larger than the winner (it keeps itself)
+.decl moved(g: id, w: id)
+moved(g, w) :- copy2(k1, g, m, s), win2(k1, w, ws), g != w, (m = 1 ; s <= ws).
+moved(g, w) :- copy3(k1, k2, g, _), win3(k1, k2, w), g != w.
+
+.decl final(g: id, c: id)
+final(g, w) :- moved(g, w).
+final(g, c) :- canon(g, c), !moved(g, _).
+
+.output final(IO=flat, cols="-,p1c_canon.u32", exitafter="1")

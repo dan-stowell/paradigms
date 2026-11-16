@@ -1,0 +1,35 @@
+// Problem 1b, resolve: every relocation's target (ref/flat/README.md). The target is named as (package index,
+// symbol index); the object's package table gives the id base; then the canonical id from 1a (read from the
+// oracle, so 1b does not depend on 1a).
+
+.type id = unsigned
+
+.decl reloc(g: id, r: unsigned, pkg: unsigned, idx: unsigned)    // relocation r of slot g
+.input reloc(IO=flat, csr="slot_rel.u32", index="true", cols="rel_pkg.u32,rel_idx.u32")
+.decl slotobj(g: id, o: unsigned)
+.input slotobj(IO=flat, index="true", cols="slot_obj.u32")
+.decl objpkg(o: unsigned, t: unsigned, base: id)                  // entry t of object o's package table
+.input objpkg(IO=flat, csr="obj_pkg_off.u32", pos="true", cols="obj_pkg.u32")
+.decl canon(g: id, c: id)
+.input canon(IO=flat, index="true", cols="oracle/p1_canon.u32")
+.decl builtin(i: unsigned, w: id)
+.input builtin(IO=flat, index="true", cols="oracle/p1_builtin.u32")
+
+// the special package indices Self, Builtin, Hashed, Hashed64, None (2147483643..) are entries npkg+0..4
+.decl npkg(o: unsigned, n: unsigned)
+npkg(o, to_unsigned(n) - 5) :- objpkg(o, 0, _), n = count : { objpkg(o, _, _) }.
+.decl entry(r: unsigned, o: unsigned, t: unsigned, sp: unsigned, idx: unsigned)
+entry(r, o, p, 5, idx) :- reloc(g, r, p, idx), p < 2147483643, slotobj(g, o).
+entry(r, o, n + sp, sp, idx) :- reloc(g, r, p, idx), p >= 2147483643, sp = p - 2147483643, slotobj(g, o), npkg(o, n).
+
+.decl target(r: unsigned, s: id)
+target(r, b + idx) :- entry(r, o, t, sp, idx), sp != 1, objpkg(o, t, b), b != 0xFFFFFFFF.
+target(r, s) :- entry(r, o, t, 1, idx), objpkg(o, t, b), b != 0xFFFFFFFF, builtin(idx, s).
+
+.decl reltarget(r: unsigned, c: id)
+reltarget(r, c) :- target(r, s), s != 0, canon(s, c).
+reltarget(r, 0) :- reloc(_, r, _, _), !hastarget(r).
+.decl hastarget(r: unsigned)
+hastarget(r) :- target(r, s), s != 0.
+
+.output reltarget(IO=flat, cols="-,p1_reltarget.u32", exitafter="1")
