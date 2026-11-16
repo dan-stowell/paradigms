@@ -56,11 +56,10 @@ Milestones log:
   kill tests (CP1 split, CP4 killed, CP7: indirection not pieces). Oracle number: **19/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed**.
 
-Now (2026-11-16T18:55Z): M4 done; M4 skeptic fired (reviews/inbox/*-M4.md: triage into REVIEWS.md). No builders
-running. Next, in order: (1) Soufflé P4 (an Opus builder in a worktree; brief = ideas/BUILDER.md + ref/p4/README.md +
-ATTACKS 4; Datalog has no bytes, so the rules compute positions and patch values and a C writer stores bytes, as its
-3b did: that is a finding either way) -> 20/20. (2) A Halide batched-level or async flood vs its 100 pipeline calls
-(M3 review 5). (3) The hole cost (ATTACKS 4): after flattening, 8 M holes ~46 ms: test fewer holes per byte (merge
-adjacent holes of one operand, or holes whose value repeats within a function) as a Codex C job. (4) Quiet reruns of
-the 8-thread grid numbers while nothing else runs (M3 numbers were at load 7-26): systems/*/bench.sh one at a time.
-(5) A Halide cell on the flattened stream (Futhark gained 4.5x).
+Now (2026-11-16T19:06Z): M4 review triaged. Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md)
+and Halide batched-level flood (results/halide-levelfree.md); Codex in /home/exedev/paradigms-c (branch codex-holes:
+ref/p4/p4holes.c, results/codex-holes.md, log codex-holes.log) and /home/exedev/paradigms-g (branch codex-goose-fnoff:
+Goose P4 checks function offsets, log codex-gfn.log); each log ends with "EXIT n". On each: rebuild + rerun its check
+in main, merge, GRID/ATTACKS. Then: (5) a Halide cell on the flattened stream (send to the Halide builder when its
+flood is done); (4) quiet reruns of the 8-thread numbers (systems/*/bench.sh one at a time) once no builder runs;
+(6) problem 4 on kube-apiserver (ref/p4/extract.sh on kube) as its second dataset.
