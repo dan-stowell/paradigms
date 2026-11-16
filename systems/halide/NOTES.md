@@ -92,6 +92,30 @@ longer (every relocation, followed or not). Halide's eager P2 counting its own 1
 a CSR build Halide would do as a histogram + scan + scatter; not built, since the eager flood alone is already
 above the eager C pipeline's 30.1.
 
+## ATTACKS 3 (reach): does batching levels help? No (results/halide-levelfree.md)
+
+Measured 2026-11-16T19:15-19:24Z, load 6-10, every run P2 OK. Rerun: `systems/halide/levelfree.sh counts`, then
+`systems/halide/levelfree.sh 5`.
+- **The calls cost nothing.** `p2 DATA count V`: one flood call on a one-block state is 0.02 ms, so 98 calls are
+  about 2 ms. An empty level on the real state costs 0.63 ms on 1 thread and 0.23 ms on 8. That is the clear, the
+  scan and the scatter over the 325,340-entry block summary that build the next list: 62 / 23 ms of a 304 / 75 ms
+  flood. The rest is the expansion, plus `init` (40 ms on 1 thread, 9 on 8) and prep and methods (15 / 4 ms).
+- **k levels per call** (`levels=K`, variants `flood_L_P_eK` for K = 1, 2, 4, 8, and `flood_f_f_dK`). Forced twice:
+  - A Func cannot call a Func that calls it, so level i's list is built from `stIn`, an input the caller binds to
+    the same buffer as `st`. The list is computed at an outermost extent-1 RVar of level i's own update.
+  - An RDom's bounds may not call a Func, and an input buffer counts as one. A `where w < count` stays in the
+    innermost loop. So the later levels loop to nblk (attempt 1, `_dK`: 1.4-2.1 s) or to a param `cap` (attempt
+    2, `_eK`: unvisited blocks keep their summary byte and come back two levels later, and `nleft` tells the
+    driver). Attempt 2 also drops the clear pass: each block clears its own summary byte as a 17th "symbol".
+- **Result**, interleaved, 5 rounds, ms min / median / max: 1 thread original 294 / 298 / 313, e2 323 / 343 / 405,
+  hybrid e4 (batch only lists < 256 blocks) 299 / 310 / 402, e8 344 / 349 / 351. 8 threads original
+  66 / 83 / 144, e2 83 / 108 / 140, hybrid e4 73 / 95 / 125, e8 75 / 97 / 149. p2par 26.7 / 28.4 / 34.2 and
+  10.3 / 11.6 / 16.3 in the same window. Calls drop from 98 to 17-58; the time does not.
+- Why: the list passes are per level, not per call, and a batched level adds cap x 17 iterations. The same result as
+  Futhark (results/levelfree.md): passes per level, not the number of levels, are the cost.
+- `prlimit --as=12G` (or even 40G) makes the p2 driver segfault at start (probably the address-space reservations
+  of Halide's runtime or the thread pool). Use `systemd-run --user --scope -p MemoryMax=12G`, as bench.sh does.
+
 ## ATTACKS 2 (relocate): huge pages
 
 Yes: a Halide output buffer is whatever memory the caller wraps, so `p3.cpp` maps the 3b image MAP_HUGETLB (2 MB)
