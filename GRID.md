@@ -24,7 +24,7 @@ Two references, measured 2026-11-16T15:33Z (load 0.4):
 | 2. reach | 2.78 | 98-103 / 22-23 floods + 7 / 1.5 methods | 41-46 | `build/p2 data/minio` -> P2 OK |
 | 3a. lay out | 0.60 | 85 / 23-25 (layout phase, includes pclntab sizing and the typelink sort) | 8-19 | `build/p3 data/minio` -> P3 OK |
 | 3b. relocate | 4.92 (write) | 102-104 / 15 (write phase, includes pclntab and GC bitmaps) | 59-67 (76 MB, 2.05 M relocations) | same |
-| 4. codegen by shape | | | | |
+| 4. codegen by shape: emit 136,634 bodies (60.7 MB) from 108,833 byte templates + 7.68 M operands | | fc's tree walker (no separate phase time) | 13-17 (lay out 2.38 M pieces) + 139-147 (emit), load 3.5 | `ref/p4/check.sh` -> P4 OK (`ref/p4/README.md`) |
 
 Floors are bottom-up's FLOOR.md model (same CPU model, the 2026-11-13 VM); they count the raw object bytes hlink
 reads, so for the flat files they are an upper bound on the floor.
