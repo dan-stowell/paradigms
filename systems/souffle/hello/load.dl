@@ -1,0 +1,7 @@
+.decl edge(x:unsigned, y:unsigned)
+.decl root(x:unsigned)
+.decl total(c:number)
+.input edge(IO=file, filename="edge.facts")
+.input root(IO=file, filename="root.facts")
+total(c) :- c = count : edge(_,_).
+.output total(IO=stdout)

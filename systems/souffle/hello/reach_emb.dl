@@ -1,0 +1,11 @@
+// Same program as reach.dl but with no .input: the host (embed.cpp) inserts tuples from a binary file.
+.decl edge(x:unsigned, y:unsigned)
+.decl root(x:unsigned)
+.decl reach(x:unsigned)
+.decl total(c:number)
+.input edge(IO=file, filename="edge.facts")
+.input root(IO=file, filename="root.facts")
+reach(x) :- root(x).
+reach(y) :- reach(x), edge(x,y).
+total(c) :- c = count : reach(_).
+.output total(IO=stdout)
