@@ -9,6 +9,9 @@
 enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16 };
 static u8 *live, *iface, *ifaceDone;
 static inline int tas(u8 *p) { return __atomic_exchange_n(p, 1, __ATOMIC_RELAXED) == 0; }
+// shared flags inside the parallel flood: relaxed atomic loads and stores (plain ones are data races, even same-value)
+#define LD(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
+#define ST1(x) __atomic_store_n(&(x), 1, __ATOMIC_RELAXED)
 
 typedef struct { u32 *a; size_t n, cap; } vec;
 static inline void push(vec *v, u32 x) {
@@ -88,6 +91,9 @@ int main(int argc, char **argv) {
  }
  if(check32("decoded targets",target,nr,"oracle/p1_reltarget.u32")) return 1;
  size_t nx=0, verifiedAux=0;
+ // the timed decoder's check (Codex review): per source, the sum of mix64 over the targets it must decode, from the
+ // oracle-checked targets and dumpflat's aux edges (independent of the timed code and of the aux_* columns)
+ u64 *expH=calloc((size_t)nsl+1,8), *gotH=calloc((size_t)nsl+1,8);
  for(u32 g=1;g<=nsl;g++) {
   extraoff[g]=nx;
   if(!(fl[g]&1) || !(fl[g]&32) || canon[g]!=g) continue;
@@ -107,6 +113,8 @@ int main(int argc, char **argv) {
     }}
   }
   if(a.n!=b.n) {fprintf(stderr,"row %u count mismatch\n",g);return 1;}
+  for(size_t k=0;k<a.n;k++) expH[g]+=mix64(a.a[k]);
+  if(auxMode) for(size_t k=0;k<wantAux.n;k++) expH[g]+=mix64(wantAux.a[k]);
   qsort(a.a,a.n,4,cmp32); qsort(b.a,b.n,4,cmp32);
   if(a.n && memcmp(a.a,b.a,a.n*4)) {fprintf(stderr,"row %u multiset mismatch\n",g);return 1;}
   if(auxMode) {
@@ -137,7 +145,8 @@ int main(int argc, char **argv) {
 	double best = 1e9;
 	size_t nlive = 0;
 	int levels = 0, rounds = 0;
-	for (int rep = 0; rep < reps; rep++) {
+	for (int rep = 0; rep <= reps; rep++) { // rep == reps: untimed, records what the timed decoder decodes
+		const int chk = rep == reps;
 		memset(live, 0, N); memset(ifaceDone, 0, N); memset(sigSeen, 0, nsig); memset(named, 0, nstr + 1);
 		memset(sigTab, 0, hs * 8); memset(refl, 0, T * sizeof(int));
 		for (u32 g = 0; g < N; g++) iface[g] = g <= nsl && (fl[g] & fIface);
@@ -164,6 +173,7 @@ int main(int argc, char **argv) {
 						if (uii && !tas(&ifaceDone[c])) continue;
 						if ((fl[c] & 32) && canon[c] == c) {
 							u32 o = so[c], np = po[o + 1] - po[o] - 5; const u32 *bases = pb + po[o];
+							u64 hsum = 0;
 							for (u32 r = sr[c]; r < sr[c + 1]; r++) {
 								u16 ty = rt[r];
 								if (ty & 32768) continue;
@@ -173,37 +183,40 @@ int main(int argc, char **argv) {
 								if (tt < np + 5 && bases[tt] != 0xffffffffu) x = sp == 1 ? (ri[r] < nb ? builtin[ri[r]] : 0) : bases[tt] + ri[r];
 								u32 t = x ? canon[x] : 0;
 								if (!t) continue;
-								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !iface[t] && tas(&iface[t])) {
+								if (chk) hsum += mix64(t);
+								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !LD(iface[t]) && tas(&iface[t])) {
 									tas(&live[t]);
 									push(nx, t);
-								} else if (!live[t] && tas(&live[t])) push(nx, t);
+								} else if (!LD(live[t]) && tas(&live[t])) push(nx, t);
 							}
 							if (auxMode && (fl[c] & fText))
 								for (u32 r=ast[c]; r<ast[c+1]; r++) {
 									u32 t=decode(ap[r],ai[r],np,bases,builtin,nb,canon);
-									if(t && !live[t] && tas(&live[t])) push(nx,t);
+									if (chk && t) hsum += mix64(t);
+									if(t && !LD(live[t]) && tas(&live[t])) push(nx,t);
 								}
+							if (chk) __atomic_store_n(&gotH[c], hsum | 1ull << 63, __ATOMIC_RELAXED); // a source may be flooded twice: same value
 						}
 						for (u32 e = extraoff[c]; e < extraoff[c + 1]; e++) {
 							u32 t = extra[e];
 							switch (extrak[e]) {
 							case 0:
-								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !iface[t] && tas(&iface[t])) {
+								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !LD(iface[t]) && tas(&iface[t])) {
 									tas(&live[t]);
 									push(nx, t); // (re)flood it as a type converted to an interface
-								} else if (!live[t] && tas(&live[t])) push(nx, t);
+								} else if (!LD(live[t]) && tas(&live[t])) push(nx, t);
 								break;
 							case 1:
-								if (!iface[t] && tas(&iface[t]) && live[t]) push(nx, t);
+								if (!LD(iface[t]) && tas(&iface[t]) && LD(live[t])) push(nx, t);
 								break;
-							case 2: if (!sigSeen[t]) sigSeen[t] = 1; break;
-							case 3: if (!named[t]) named[t] = 1; break;
+							case 2: if (!LD(sigSeen[t])) ST1(sigSeen[t]); break;
+							case 3: if (!LD(named[t])) ST1(named[t]); break;
 							}
 						}
 						if (uii)
 							for (u32 m = moff[c]; m < moff[c + 1]; m++) {
 								u32 t = mTyp[m];
-								if (t && !iface[t] && tas(&iface[t]) && live[t]) push(nx, t);
+								if (t && !LD(iface[t]) && tas(&iface[t]) && LD(live[t])) push(nx, t);
 								push(&meth[w], m);
 							}
 					}
@@ -245,7 +258,7 @@ int main(int argc, char **argv) {
 			if (fr.n == 0) break;
 		}
 		double t1 = now();
-		if (t1 - t0 < best) best = t1 - t0;
+		if (!chk && t1 - t0 < best) best = t1 - t0;
 
 	}
 	nlive = 0;
@@ -255,6 +268,13 @@ int main(int argc, char **argv) {
 	printf("p2lazy%s (%d threads): lazy-decode flood best %.1f ms, %zu live, %d levels in %d rounds\n", auxMode?" --aux":"", T, best * 1e3, nlive, levels, rounds);
 	
 	long bad = check32("live", list, nlive, "oracle/p2_live.u32");
+	size_t nvis = 0, hbad = 0, missed = 0;
+	for (u32 g = 1; g <= nsl; g++) {
+		if (gotH[g]) { nvis++; if ((gotH[g] & ~(1ull << 63)) != (expH[g] & ~(1ull << 63))) hbad++; }
+		else if (live[g] && (fl[g] & 1) && (fl[g] & 32) && canon[g] == g) missed++;
+	}
+	printf("timed decoder: %zu sources decoded, %zu with a wrong edge hash, %zu live sources never decoded\n", nvis, hbad, missed);
+	bad += hbad + missed;
 	printf(bad ? "P2 FAIL\n" : "P2 OK\n");
 	return bad != 0;
 }
