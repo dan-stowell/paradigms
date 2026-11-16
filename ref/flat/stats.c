@@ -1,6 +1,7 @@
 // gcc -O2 -march=native -o build/stats ref/flat/stats.c
 // build/stats /home/exedev/paradigms/data/minio
 // BFS uses FIFO level boundaries, retaining p2.c's interface revisits and method rounds.
+// Unlike hlink, p2.c queues newly live leaves too; these count as frontier entries.
 #include "flat.h"
 
 enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16 };
@@ -124,6 +125,7 @@ static int reach(void) {
 	for (u32 g = 1; g < N; g++)
 		if (live[g]) list[k++] = g;
 	printf("P2 BFS: %d rounds, %llu total levels, %zu live\n", rounds, (unsigned long long)total, nlive);
+	puts("Frontiers include newly live leaves, unlike hlink, and interface revisits.");
 	puts("frontier size | levels | symbol visits (includes interface revisits)");
 	const char *labels[] = {"1", "2-15", "16-255", "256-4095", "4096-65535", "65536+"};
 	for (int b = 0; b < 6; b++)

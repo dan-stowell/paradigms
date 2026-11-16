@@ -27,7 +27,7 @@ Read them next to this file: they are the executable form of the rules below.
 | file | what |
 |---|---|
 | `slot_obj.u32` | per slot: its object (0..nobjs-1). Objects are in hlink's load order; an object's slots are contiguous |
-| `name.off.u64`, `name.bin` | per slot (index = id): its symbol name (not interned; content-addressed symbols mostly have none) |
+| `name.off.u64`, `name.bin` | per slot: its symbol name (not interned; content-addressed symbols mostly have none). **Slot g's name is `name.bin[off[g-1] : off[g]]`** (off[0] = 0; there is no entry for slot 0), not `off[g]..off[g+1]` |
 
 ## Problem 1: resolve
 
@@ -39,7 +39,7 @@ elsewhere (5).
 |---|---|
 | `p1_kind.u8` | per slot: 1..5 as above |
 | `p1_namekey.u64x2` | per slot: the 128-bit key of (name, ABI) if the slot takes part in the join by name, else (0,0). (k1 is never 0 for a real key.) Kinds 4 and 5 take part; kind 1 slots with a key are *candidates* (below); static, unnamed and debug-info symbols have no key |
-| `p1_rank.u32` | per definition (kinds 1, 4): its rank. bit 31: not DUPOK; bit 30: has content (code or data bytes); bit 29: a definition; bits 0-27: min(size, 2^28-1). References: 0 |
+| `p1_rank.u32` | per definition (kinds 1, 4): its rank. bit 31: not DUPOK; bit 30: not DUPOK and has content (text symbols count as having content even with no bytes; DUPOK definitions never have bit 30); bit 29: a definition; bits 0-27: min(size, 2^28-1). References: 0 |
 | `p1_flags.u8` | per slot: bit 0: the record says UsedInIface; bit 1: a reference made only by debug information |
 | `p1_want.u64x2` | keys of names the linker itself looks up (builtins, `main.main`, the entry, `-X` names...): they take part in the join with value 0 and no slot |
 | `p1_builtin.u64x2` | the key of builtin `i` (`nbuiltin` of them), for references with package index "builtin" |
@@ -48,7 +48,7 @@ elsewhere (5).
 | `rel_pkg.u32 rel_idx.u32` | per relocation: the target as the object names it: (package index, symbol index) |
 | `obj_pkg_off.u32`, `obj_pkg.u32` | CSR per object: `npkg+5` bases. Entry `p < npkg`: the id base of that imported package (0xFFFFFFFF: not linked); then 5 entries for the special package indices Self, Builtin, Hashed, Hashed64, None (= 2147483643..2147483647): the base of this object's own block of that kind |
 | `p1_hashkey.u64x2` | per content-addressed slot: kind 2: (the 8 bytes, the symbol's size); kind 3: (hash bytes 0-7, hash bytes 8-11) |
-| `p1c_mark.u8` | per content-addressed slot: 1 if the flood (problem 2) reached it, 2 if it was not reached but a relocation the flood does not follow names it, else 0 |
+| `p1c_mark.u8` | per content-addressed slot: 1 if the flood (problem 2) reached it, in hlink's sense: any of live, pc-table, funcdata or name-needed was set on it (so 807,866 mark-1 slots are not in `oracle/p2_live.u32`; don't rebuild marks from the live set), 2 if it was not reached but a relocation the flood does not follow names it, else 0 |
 
 **1a. The join by name.** Group the slots with a key (kinds 4 and 5) and the wanted keys by key. A kind-1 candidate
 joins a group only if its key is already there (it never creates a group). The winner of a group is the maximum
@@ -97,7 +97,7 @@ Rules (cmd/link's deadcode.go, as hlink does them; `s` ranges over live defined 
     live(m.mtyp), live(m.ifn), live(m.tfn)
                          <- cand(m), (reflect and m.exported) or sig(m.name, m.mtyp) or named(m.name)
 
-`sig(m.name, m.mtyp)` means some live signature id has that (name, type) pair. Oracle: `oracle/p2_live.u32`, the
+`sig(m.name, m.mtyp)` means some live signature id has that (name, type) pair. Id 0 is never live: a method target of 0 (none in MinIO) derives nothing. Oracle: `oracle/p2_live.u32`, the
 sorted ids of every live symbol (663,630 for MinIO: this counts each content-addressed copy and undefined symbol;
 after 1c, 360,376 canonical symbols are live: `oracle/live_names.txt`, which equals fclink's and the stock linker's
 live list).
@@ -117,7 +117,7 @@ order (a unit is an object, or a run of 8192 slots of a big one) and then id ord
 | `p3_bucket_start.u32`, `p3_bucket_minalign.u32` | per bucket (16 entries): its start address and minimum alignment |
 | `p3_data.off.u64`, `p3_data.bin` | per placed symbol: its bytes (may be shorter than its size: the rest is zero; bss buckets: none) |
 | `p3_rel_start.u32` + `p3_rel_off.u32 p3_rel_siz.u8 p3_rel_kind.u8 p3_rel_add.i64 p3_rel_tgt.u32` | CSR per placed symbol: its relocations that write bytes: offset, width (1, 2, 4, 8), kind (below), addend, target slot id |
-| `p3_addr_all.u32` | per id (`nids`): the final address of what it resolves to (0: not in the output) |
+| `p3_addr_all.u32` | per id (`nids`): the final address of what it resolves to (0: not in the output). **An input to 3b only**: it contains 3a's answer (`p3_addr_all[p3_sym[i]] == oracle/p3_addr[i]` for every placed symbol), so a 3a cell must not read it. A 3a+3b pipeline cell builds it from its own 3a addresses and `p1_canon` and says so |
 
 **3a. Layout.** occupied(i) = size rounded up to 2^class, where a text symbol (buckets 1, 2) is at least `minFunc`
 (16) bytes. For each bucket other than typelink: `va = start`; for each unit in order: if the unit has bytes in
