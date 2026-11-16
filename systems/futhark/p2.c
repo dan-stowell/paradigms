@@ -1,5 +1,5 @@
 // p2.c: driver for p2.fut. Loads the flat files, calls the entries, times them, checks against the oracle.
-//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2lazy (relocation edges decoded
+//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2lazy / 2lazy_look (relocation edges decoded
 //   from the rel_* columns inside the flood; the aux CSR of funcdata + kinds 1-3 is built once, untimed, by the
 //   aux_edges entry, as ref/flat/p2lazy.c does). 2lazy takes 1a's canon/builtin from the oracle.
 #include "p2.h"
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 		TIMEIT(cell, {
 			if (out) futhark_free_u32_1d(ctx, out);
 			fut_check(futhark_entry_reach_lazy(ctx, &out, nids, flags, canon, builtin, srel, sobj, poff, pkg, rpkg, ridx, rtype, xod, xk,
-			                                   roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), cell);
+			                                   roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, strcmp(cell, "2lazy_look") == 0), cell);
 		});
 	}
 	size_t n = (size_t)futhark_shape_u32_1d(ctx, out)[0];

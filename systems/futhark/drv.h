@@ -2,6 +2,7 @@
 // hand them to the generated library, time the entry points and check the outputs; all compute is in .fut.
 // Include after the generated header.
 #include "../../ref/flat/flat.h"
+#include <sys/resource.h>
 
 static struct futhark_context *ctx;
 static int threads = 0, reps = 5;
@@ -52,18 +53,24 @@ static void fut_check(int err, const char *what) {
 	}
 #define LOAD(T, file) load_##T(file)
 
-// time `body` reps times; prints the best and the median-free list
+static int cmpd(const void *a, const void *b) { double x = *(const double *)a, y = *(const double *)b; return (x > y) - (x < y); }
+// time `body` reps times; prints every time, then min / median / max
 #define TIMEIT(name, body)                                                                                   \
 	do {                                                                                                     \
-		double best = 1e30;                                                                                  \
+		double ts_[1000];                                                                                    \
+		int n_ = reps < 1000 ? reps : 1000;                                                                  \
+		struct rusage ru0_, ru1_;                                                                            \
 		printf("%-14s", name);                                                                               \
-		for (int rep_ = 0; rep_ < reps; rep_++) {                                                            \
+		getrusage(RUSAGE_SELF, &ru0_);                                                                       \
+		for (int rep_ = 0; rep_ < n_; rep_++) {                                                              \
 			double t0_ = now();                                                                              \
 			body;                                                                                            \
 			SYNC();                                                                                          \
-			double t_ = (now() - t0_) * 1e3;                                                                 \
-			if (t_ < best) best = t_;                                                                        \
-			printf(" %.1f", t_);                                                                             \
+			ts_[rep_] = (now() - t0_) * 1e3;                                                                 \
+			printf(" %.1f", ts_[rep_]);                                                                      \
 		}                                                                                                    \
-		printf("  | best %.2f ms (threads %d)\n", best, threads);                                            \
+		getrusage(RUSAGE_SELF, &ru1_);                                                                       \
+		qsort(ts_, n_, sizeof(double), cmpd);                                                                \
+		printf("  | min %.2f med %.2f max %.2f ms (threads %d) minflt/rep %ld\n", ts_[0], ts_[n_ / 2], ts_[n_ - 1], threads, \
+		       (ru1_.ru_minflt - ru0_.ru_minflt) / n_); \
 	} while (0)

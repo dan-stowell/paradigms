@@ -162,7 +162,10 @@ def sect_base (sect: [8]u32) (t: u32) : u32 =
 def patch [L][R] (img: *[]u8) (image_base: i64) (addr: [L]u32) (bucket: [L]u8) (rstart: []u32)
                  (roff: [R]u32) (rsiz: [R]u8) (rkind: [R]u8) (radd: [R]i64) (rtgt: [R]u32)
                  (addr_all: []u32) (sect: [8]u32) (unreach: u32) (mapinit: u32) =
-  let owner = map (row_of L (\s -> i64.u32 rstart[s])) (iota R)
+  -- each relocation's symbol: scatter every symbol with relocations to its first one, a max-scan fills the
+  -- rest (a binary search per relocation, row_of, was 1.6x slower in 1b)
+  let first = map (\s -> if rstart[s] < rstart[s + 1] then i64.u32 rstart[s] else -1) (iota L)
+  let owner = scatter (replicate R 0i64) first (iota L) |> scan i64.max 0
   -- (value, bytes to write, error) of one relocation
   let value s r : (i64, i64, bool) =
     let a = i64.u32 addr[s]

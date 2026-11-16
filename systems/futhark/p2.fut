@@ -41,10 +41,9 @@ def flood [L] [M] [S] (N: i64) (nsl: i64) (flags: [L]u8) (roots: []u32)
   let iface = map (\c -> fl c & f_iface != 0) (iota N)
   let (front, owner) = dedup (replicate N 0) (map i64.u32 roots |> filter (> 0))
   let live = scatter live front (map (const true) front)
-  let (live, _, _, _, _, _, _, _, _) =
-    loop (live, iface, owner, front, sig_seen, named, reflect, cand, fired) =
-         (live, iface, owner, front, replicate S false, replicate (nstr + 1) false, false,
-          replicate M false, replicate M false)
+  let (live, _, _, _, _, _, _, _) =
+    loop (live, iface, owner, front, sig_seen, named, reflect, pending) =
+         (live, iface, owner, front, replicate S false, replicate (nstr + 1) false, false, replicate 0 0i64)
     while length front > 0 do
       let proc = filter (\c -> fl c & f_def != 0) front
       let reflect = reflect || any (\c -> fl c & f_reflect != 0) proc
@@ -53,13 +52,14 @@ def flood [L] [M] [S] (N: i64) (nsl: i64) (flags: [L]u8) (roots: []u32)
       -- what this level learns
       let gotdef t = fl t & f_gotype != 0 && fl t & f_def != 0
       let ms = expand (\c -> if uii c then i64.u32 (moff[c + 1] - moff[c]) else 0) (\c j -> i64.u32 moff[c] + j) proc
-      let cand = scatter cand ms (map (const true) ms)
       let sig_seen = scatter sig_seen (map2 (\t k -> if k == 2 then sig_rep[t] else -1) dst kind) (map (const true) dst)
       let named = scatter named (map2 (\t k -> if k == 3 then t else -1) dst kind) (map (const true) dst)
-      let call m = cand[m] && !fired[m] &&
-                   ((reflect && m_exp[m] != 0) || named[i64.u32 m_name[m]] || (m_sig[m] >= 0 && sig_seen[m_sig[m]]))
-      let fm = filter call (iota M)
-      let fired = scatter fired fm (map (const true) fm)
+      -- the candidate methods that have not fired yet (each type's methods become candidates once)
+      let call m = (reflect && m_exp[m] != 0) || named[i64.u32 m_name[m]] || (m_sig[m] >= 0 && sig_seen[m_sig[m]])
+      let cands = pending ++ ms
+      let fires = map call cands
+      let fm = zip cands fires |> filter (.1) |> map (.0)
+      let pending = zip cands fires |> filter (\(_, f) -> !f) |> map (.0)
       let to_iface = map3 (\s t k -> if t > 0 && (k == 1 || (k == 0 && uii s && gotdef t)) then t else -1) src dst kind
                      ++ map (\m -> i64.u32 m_mtyp[m]) ms
                      |> filter (> 0)
@@ -74,7 +74,7 @@ def flood [L] [M] [S] (N: i64) (nsl: i64) (flags: [L]u8) (roots: []u32)
       let new = map2 (\t (l, i) -> if (live[t] && !l) || (live[t] && !i && iface[t] && fl t & f_gotype != 0) then t else -1)
                      touched was |> filter (>= 0)
       let (front, owner) = dedup owner new
-      in (live, iface, owner, front, sig_seen, named, reflect, cand, fired)
+      in (live, iface, owner, front, sig_seen, named, reflect, pending)
   in live
 
 def live_list [N] (live: [N]bool) : []u32 = filter (\g -> live[g]) (iota N) |> map u32.i64
@@ -108,6 +108,14 @@ def plain (ty: u16) = ty & 0x8000 == 0 && ty != 22 && ty != 23 && ty != 24 && ty
 def followed [n] (starts: [n]bool) (ty: [n]u16) : [n]bool =
   let after = segmented_scan st_then (0, 1, 2) starts (map st_of ty) |> map (.0)
   in map3 (\i s t -> let before = if s then 0 else after[i - 1] in before == 0 && plain t) (iota n) starts ty
+
+-- the same, for one relocation r of the row starting at s0, by looking back: walk back to a position no
+-- type 26 can reach (state 0 there), then run the machine forward to r. Rows have few 26s, so this is a
+-- step or two, and no scan over the expanded edges.
+def followed_at [n] (ty: [n]u16) (s0: i64) (r: i64) : bool =
+  let q = loop q = r while q > s0 && (ty[q - 1] == 26 || (q - 2 >= s0 && ty[q - 2] == 26)) do q - 1
+  let st = loop st = 0u8 for p in q..<r do if st > 0 then st - 1 else if ty[p] == 26 then 2 else 0
+  in st == 0 && plain ty[r]
 
 def pkg_self = 2147483643u32
 def decode (canon: []u32) (builtin: []u32) (pkg_off: []u32) (pkg: []u32) (o: i64) (p: u32) (idx: u32) : u32 =
@@ -147,7 +155,7 @@ entry reach_lazy [L] [R] [X] [M] [S] (nids: i64) (flags: [L]u8) (canon: []u32) (
                  (xoffdst: []u32) (xkind: [X]u8)
                  (roots: []u32) (sig_name: [S]u32) (sig_type: [S]u32)
                  (moff: []u32) (m_name: [M]u32) (m_mtyp: [M]u32) (m_ifn: [M]u32) (m_tfn: [M]u32)
-                 (m_exp: [M]u8) (nstr: i64) : []u32 =
+                 (m_exp: [M]u8) (nstr: i64) (look: bool) : []u32 =
   let nsl = L - 1
   let xoff = take (L + 2) xoffdst
   let xdst = drop (L + 2) xoffdst :> [X]u32
@@ -160,8 +168,9 @@ entry reach_lazy [L] [R] [X] [M] [S] (nids: i64) (flags: [L]u8) (canon: []u32) (
     let decodes c = flags[c] & f_follow != 0 && canon[c] == u32.i64 c
     let rs = expand (\c -> if decodes c then i64.u32 (slot_rel[c + 1] - slot_rel[c]) else 0)
                     (\c j -> (c, i64.u32 slot_rel[c] + j)) proc
-    let starts = map (\(c, r) -> r == i64.u32 slot_rel[c]) rs
-    let fol = followed starts (map (\(_, r) -> rel_type[r]) rs)
+    -- which relocations to follow: by looking back along the row (look), or by a segmented scan of the skip machine
+    let fol = if look then map (\(c, r) -> followed_at rel_type (i64.u32 slot_rel[c]) r) rs
+              else followed (map (\(c, r) -> r == i64.u32 slot_rel[c]) rs) (map (\(_, r) -> rel_type[r]) rs)
     let rt = map2 (\(c, r) f -> if f then decode canon builtin pkg_off pkg (i64.u32 slot_obj[c]) rel_pkg[r] rel_idx[r] else 0) rs fol
     let rkeep = zip rs rt |> filter (\(_, t) -> t != 0)
     in map (\(c, e) -> (c, i64.u32 xdst[e], xkind[e])) xs ++ map (\((c, _), t) -> (c, i64.u32 t, 0u8)) rkeep

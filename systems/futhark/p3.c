@@ -58,8 +58,12 @@ int main(int argc, char **argv) {
 		if (strcmp(cell, "3b_copy") == 0) entry = futhark_entry_copy_only, check = 0;
 		if (strcmp(cell, "3b_patch") == 0) entry = futhark_entry_patch_only, check = 0;
 		struct futhark_opaque_tup2_arr1d_u8_i64 *out = NULL;
+		// FUT_FRESH=1: empty the runtime's free list each rep, so the image is a fresh allocation whose page
+		// faults are inside the timed region (as ref/flat/p3.c's calloc); else reps 2+ reuse the cached block
+		int fresh = getenv("FUT_FRESH") != NULL;
 		TIMEIT(cell, {
 			if (out) futhark_free_opaque_tup2_arr1d_u8_i64(ctx, out);
+			if (fresh) fut_check(futhark_context_clear_caches(ctx), "clear_caches");
 			fut_check(entry(ctx, &out, nimg, imageBase, addr, bucket, doff, dbin, rstart, roff, rsiz, rkind, radd, rtgt, all, fsect,
 			                unreach, mapinit), cell);
 		});
