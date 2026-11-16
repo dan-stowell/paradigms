@@ -18,3 +18,15 @@ the work but cost a full barrier (or ~25 whole-array passes in Futhark, a supers
 DuckDB) each. A hybrid kills the tail without a worklist: data-parallel levels while the frontier is wide, then one
 sequential worklist drain (~40 K symbols, well under 1 ms) when it falls below a few thousand. Kill test: Futhark or
 Goose flood with that switch vs its original, passes counted.
+
+## Hybrid flood in tuned C (ref/flat/p2hyb.c, lead 17:23Z)
+
+p2par plus a sequential LIFO drain while the frontier is below P2_TAIL (the drain runs until the stack passes
+4 x P2_TAIL). P2 OK. Counts (deterministic up to scheduling, MinIO): tail 0 = p2par: 111 barriers, 678 K pops in
+parallel; tail 256: 64 barriers, 676 K parallel; tail 1,024: 19 barriers, 395 K parallel (42% of pops sequential);
+tail 4,096: 12 barriers, 379 K parallel (44% sequential). So the tiny levels are only 6% of the work, but they are
+*interleaved* with growth: a drain that starts on a small frontier soon reaches wide parts of the graph, and the
+hysteresis that saves the barriers puts ~40% of the work on one thread. Times at load 10-19 (seven helpers
+running) are noise: 8 threads slower than 1 for both; p2hyb 8 threads 56-145 vs p2par 96-258 best-of-20, in the
+same three rounds (ranges overlap). **To time on a quiet machine**; the shape to test next is a drain capped by a
+budget of pops (hand the stack back to the parallel loop after, say, 2 K pops) instead of by stack size.
