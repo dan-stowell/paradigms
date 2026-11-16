@@ -43,6 +43,20 @@ var out: u32[>..<] = [];        // messages to other owners, op | id
 var new_sigs: u32[>..<] = [];
 var new_named: u32[>..<] = [];
 var markable: M[>..<] = [];
+// lazy mode (ATTACKS.md 1): no relocation edges in edst; a live canonical definition's relocations are decoded from
+// the relocation columns (this worker's slots' rows) when it is drained
+var lazy = false;
+let fFollow: u8 = 32;
+var rpkg: u32[>..] = [];
+type REnd = u32 upto rpkg;
+var srel: REnd[>..] = [];       // local slot -> its rows of rpkg/ridx/rtyp
+var ridx: u32[>..] = [];
+var rtyp: u16[>..] = [];
+var sobj: u32[>..] = [];        // local slot -> its object
+var opoff: u32[>..] = [];
+var opkg: u32[>..] = [];
+var canon: u32[>..] = [];       // all slots (1a's oracle)
+var builtin: u32[>..] = [];
 
 checkfree fn sig_add(k: u64) {
     var h = (mix64(k) >> 1) as! i64;
@@ -61,6 +75,29 @@ checkfree fn sig_has(k: u64) -> bool {
         if sigtab[i] == k + 1 { return true; }
         h++;
     }
+}
+
+fn is_plain(t: u16) -> bool { t & 32768 == 0 && (t < 22 || t > 26) && t != 102 }
+
+// row r of local slot c, decoded: its target's canonical id, 0 if none (1b's rule)
+fn target(c: i64, r: i64) -> u32 {
+    let o = sobj[c];
+    let b0 = opoff[o];
+    let np = opoff[o as i64 + 1] - b0 - 5;
+    let p = rpkg[r];
+    let sp = p - 2147483643;
+    let t = if sp < 5 { np + sp } else { p };
+    guard t < np + 5 else { return 0; }
+    let base = opkg[b0 + t];
+    guard base != 0xFFFFFFFF else { return 0; }
+    let x = if sp == 1 { if ridx[r] < builtin.len { builtin[ridx[r]] } else { 0 } } else { base + ridx[r] };
+    return if x != 0 && x < canon.len { canon[x] } else { 0 };
+}
+
+// does the flood decode local slot c's relocations (a canonical definition with something to follow)
+fn decodes(c: i64) -> bool {
+    let g = lo + c;
+    return c < sobj.len && flags[c] & fDef != 0 && flags[c] & fFollow != 0 && g < canon.len && canon[g] == g;
 }
 
 // ---- the local rules; `op` says which of them a message or an edge asks for
@@ -101,6 +138,18 @@ fn drain(limit: i64) {
             idone[c] = 1;
         }
         let plain = if uii { opMark | opIfaceGT } else { opMark };
+        if lazy && decodes(c) {
+            var r = srel[c] as i64;
+            while r < srel[c as i64 + 1] {
+                let ty = rtyp[r];
+                if ty == 26 { r += 3; continue; }
+                if is_plain(ty) {
+                    let t = target(c, r);
+                    if t != 0 { apply(t, plain); }
+                }
+                r++;
+            }
+        }
         for e in eoff[c]..eoff[c as i64 + 1] {
             let t = edst[e];
             match ekind[e] {
@@ -161,18 +210,45 @@ fn load_part(k: i64, W: i64) {
         bounds.push(nids);
         lo = bounds[k];
         hi = bounds[k + 1];
+        load_flags(hi);
         let nsl = off.len - 2;
         let elo = if lo <= nsl { off[lo] } else { off[nsl + 1] };
         let ehi = if hi <= nsl { off[hi] } else { off[nsl + 1] };
         var all: u32[>..] = [];
         load("p2_edge_dst.u32", all);
-        for e in elo..ehi { edst.push(all[e]); }
         var kinds: u8[>..] = [];
         load("p2_edge_kind.u8", kinds);
-        for e in elo..ehi { ekind.push(kinds[e]); }
-        for g in lo..hi + 1 {
-            let x = if g <= nsl { off[g] } else { off[nsl + 1] };
-            eoff.push((x - elo) as EEnd);
+        if !lazy {
+            for e in elo..ehi { edst.push(all[e]); }
+            for e in elo..ehi { ekind.push(kinds[e]); }
+            for g in lo..hi + 1 {
+                let x = if g <= nsl { off[g] } else { off[nsl + 1] };
+                eoff.push((x - elo) as EEnd);
+            }
+        } else {
+            load_rel(nsl, hi);
+            // each row without its relocation edges: its first n kind-0 edges, n = its decodable plain relocations
+            for g in lo..hi {
+                eoff.push(edst.len as EEnd);
+                guard g <= nsl else { continue; }
+                let c = g - lo;
+                var skip = 0;
+                if decodes(c) {
+                    var r = srel[c] as i64;
+                    while r < srel[c + 1] {
+                        let ty = rtyp[r];
+                        if ty == 26 { r += 3; continue; }
+                        if is_plain(ty) && target(c, r) != 0 { skip++; }
+                        r++;
+                    }
+                }
+                for e in off[g]..off[g + 1] {
+                    if kinds[e] == 0 && skip > 0 { skip--; continue; }
+                    edst.push(all[e]);
+                    ekind.push(kinds[e]);
+                }
+            }
+            eoff.push(edst.len as EEnd);
         }
     }
     {
@@ -201,17 +277,6 @@ fn load_part(k: i64, W: i64) {
             moff.push((x - mlo) as MEnd);
         }
     }
-    {
-        var f: u8[>..] = [];
-        load("p2_flags.u8", f);
-        for g in lo..hi {
-            let x = if g < f.len { f[g] } else { 0 };
-            flags.push(x);
-            live.push(0);
-            idone.push(0);
-            iface.push(if x & fIface != 0 { 1 } else { 0 });
-        }
-    }
     load("p2_sig_name.u32", sig_name);
     load("p2_sig_type.u32", sig_type);
     sig_seen.resize(nsig, 0);
@@ -219,6 +284,54 @@ fn load_part(k: i64, W: i64) {
     var hs = 1;
     while hs < 4 * nsig + 64 { hs <<= 1; }
     sigtab.resize(hs, 0);
+}
+
+fn load_flags(hi: i64) {
+    var f: u8[>..] = [];
+    load("p2_flags.u8", f);
+    for g in lo..hi {
+        let x = if g < f.len { f[g] } else { 0 };
+        flags.push(x);
+        live.push(0);
+        idone.push(0);
+        iface.push(if x & fIface != 0 { 1 } else { 0 });
+    }
+}
+
+// this worker's slots' relocation rows, the object of each, the package bases, canon and builtin
+fn load_rel(nsl: i64, hi: i64) {
+    var sr: u32[>..] = [];
+    load("slot_rel.u32", sr);
+    let s0 = min(lo, nsl + 1);
+    let s1 = min(hi, nsl + 1);
+    let rlo = sr[s0];
+    let rhi = sr[s1];
+    load("rel_pkg.u32", rpkg, rlo, rhi - rlo);
+    load("rel_idx.u32", ridx, rlo, rhi - rlo);
+    var ty: u16[>..] = [];
+    load("rel_type.u16", ty);
+    for r in rlo..rhi { rtyp.push(ty[r]); }
+    for g in s0..s1 + 1 { srel.push((sr[g] - rlo) as REnd); }
+    load("slot_obj.u32", sobj, s0, s1 - s0);
+    load("obj_pkg_off.u32", opoff);
+    load("obj_pkg.u32", opkg);
+    load("oracle/p1_canon.u32", canon);
+    load("oracle/p1_builtin.u32", builtin);
+}
+
+// a worker's flood state back to before the roots (for a repeated, timed flood)
+fn reset() {
+    for c in live.len { live[c] = 0; idone[c] = 0; iface[c] = if flags[c] & fIface != 0 { 1 } else { 0 }; }
+    for i in sig_seen.len { sig_seen[i] = 0; }
+    for i in named.len { named[i] = 0; }
+    for i in sigtab.len { sigtab[i] = 0; }
+    reflect = false;
+    facts_new = false;
+    work.clear();
+    out.clear();
+    new_sigs.clear();
+    new_named.clear();
+    markable.clear();
 }
 
 fn owner(t: u32) -> i64 {
