@@ -111,3 +111,16 @@ Soufflé's strengths: expressing the rules (esp. problem 2's conditional method 
 parallel btrees for free. Its weaknesses, measured and cited: text input (9.4 s/10 M rows), per-iteration btree
 merge cost, no parallel speedup on flood, no way to express a prefix-sum layout. Recommended outcome: Soufflé column
 = problems 1 and 2 only via embedded bulk load (idea 1), with layout/relocate done in a host functor.
+
+## From the cells (2026-11-16, measured)
+
+16. **A sort primitive is the missing piece for 3a.** Evidence: layout's non-typelink running sums are range
+    aggregates and cost 56 ms on 8 threads, but the typelink order (sort by string) costs 1.3-7.2 s as O(n²)
+    "sum of sizes before me", even with a numeric 8-byte prefix. Idea: Soufflé's B-tree *is* a sort; a functor or
+    an `ord`-preserving symbol encoding (intern strings in sorted order) would turn it into one range aggregate.
+    Kill test: if the sorted-interning loader drops 3a below 0.3 s on 8 threads, the falls-down is "the symbol
+    table's order", not Datalog.
+17. **Join over columns, not B-trees (ATTACKS 1).** Evidence: reach_lazy decodes only 1.73 M of 9.4 M relocations,
+    but loading the relocation columns into a B-tree costs ~1.5 s of its 2.2 s load. A relation backed by the CSR
+    itself (Ascent's BYODS; a Soufflé functor `@rel(s, k)`) would make the lazy shape lazy end to end. Kill test:
+    e2e under 1 s on 8 threads.

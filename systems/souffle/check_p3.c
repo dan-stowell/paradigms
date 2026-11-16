@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 	int bad = 0;
 	if (argc > 3) {
 		const char *d = flatDir;
-		flatDir = ".";
+		flatDir = argv[3][0] == '/' ? "" : ".";
 		const u32 *got = FMAP(u32, argv[3], &na);
 		flatDir = d;
 		long n = 0;
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 		printf("3a: %ld of %u addresses differ%s\n", n, L, na / 4 != L ? " (length differs)" : "");
 		bad |= n != 0 || na / 4 != L;
 	}
-	flatDir = ".";
+	flatDir = argv[2][0] == '/' ? "" : ".";
 	const u8 *got = FMAP(u8, argv[2], &ng);
 	long n = 0;
 	for (u32 i = 0; i < L; i++) {
