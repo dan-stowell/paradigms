@@ -76,6 +76,8 @@ Ids are canonical slot ids.
 
 | file | what |
 |---|---|
+| `aux_start.u32` | CSR per slot (`nslots+2`), like `slot_rel`: raw AuxFuncdata records for every definition, including noncanonical and non-text slots; references have empty rows |
+| `aux_pkg.u32`, `aux_idx.u32` | per AuxFuncdata record: raw (package index, symbol index), in object record order, before any canonicalization. Decode with the source slot's object package bases and 1a canon/builtins, exactly as relocation targets |
 | `p2_flags.u8` | per slot: 1 def (a definition, not an undefined symbol), 2 text, 4 reflect (calls reflect's Method), 8 gotype, 16 iface (converted to an interface, known from resolve), 32 has something to follow |
 | `p2_edge_off.u32`, `p2_edge_dst.u32`, `p2_edge_kind.u8` | CSR per source (only canonical definitions with flag 32 have rows). Kind 0 plain: a relocation or funcdata the flood follows, dst = target id. Kind 1 useiface: dst is a type converted to an interface (an itab already replaced by its type). Kind 2 ifacemethod: dst = a signature id (an interface method some live code may call). Kind 3 namedmethod: dst = a string id (a method name called by reflection-like generic code) |
 | `p2_sig_name.u32`, `p2_sig_type.u32` | per signature id: (method name string id, function type id) |
@@ -101,6 +103,20 @@ Rules (cmd/link's deadcode.go, as hlink does them; `s` ranges over live defined 
 sorted ids of every live symbol (663,630 for MinIO: this counts each content-addressed copy and undefined symbol;
 after 1c, 360,376 canonical symbols are live: `oracle/live_names.txt`, which equals fclink's and the stock linker's
 live list).
+
+`build/p2lazy DATA REPS --aux` decodes relocation and funcdata targets in the flood.
+Aux edges are followed only for canonical text definitions, with zero targets dropped.
+Setup checks decoded relocation and aux target multisets per source against the existing
+P2 CSR (relocations precede the funcdata suffix); only kinds 1-3 enter the extra CSR.
+Without `--aux`, p2lazy retains its original precomputed funcdata mode. Both modes use
+1a canon/builtin oracles and precomputed flags, roots, interface rules and method tables;
+setup/validation and initial state clearing are outside the flood timing.
+
+To add aux columns without regenerating shared inputs, build with `ref/hlink/build.sh`,
+then run `ref/flat/add-aux.sh WORKLOAD`. It dumps frozen inputs into scratch, compares
+every pre-existing dataset file byte-for-byte (including oracles; the old README is
+copied as extraction metadata), and copies only the three aux files after all comparisons pass. `DATA_ROOT` can
+select a writable dataset root (default: this checkout's `data`).
 
 ## Problem 3: lay out and relocate
 
