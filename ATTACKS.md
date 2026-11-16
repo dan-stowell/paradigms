@@ -95,14 +95,14 @@ already mostly paid outside write.
 the output live on huge pages (Futhark's and Halide's buffers, Goose's arenas, DuckDB's blobs), because on this
 problem that matters as much as the loop.
 
-## 3. Reach: the level count is the cost; drop level synchronization
+## 3. Reach: drop level synchronization where waiting is the cost (C under load, Goose), not where each level is many passes (Futhark)
 
 **Problem.** Reach (2), the same flood as entry 1.
 
 **Before.** Every data-parallel shape of the flood is level-synchronous: expand the frontier, barrier, swap. MinIO's
-reach has **111 levels in 7 rounds** (kube 103). p2par (OpenMP) pays one team barrier per level; Futhark pays ~25
-whole-array passes per level (its lazy flood "falls down": 165 / 90 ms, slower than its own eager flood, NOTES.md);
-Goose pays a message exchange per superstep and scales only 1.7x on 8 workers; DuckDB iterates 45 SQL rounds.
+reach has **111 levels in 7 rounds** (kube 103). p2par (OpenMP) pays one team barrier per level; Futhark pays ~26
+whole-array passes per level (45 levels; its lazy flood, 165 / 90 ms, ties its eager flood once eager's own decode is
+counted, so it is not a falls-down; corrected after the M3 review); Goose pays a message exchange per superstep and scales only 1.7x on 8 workers; DuckDB iterates 45 SQL rounds.
 
 **Observation.** On this shared 8-core VM the barrier is not a constant: with OpenMP's default spinning wait, p2par's
 8-thread flood takes **593-1071 ms instead of 15-27** (MinIO, ambient load from the builders; kube 856-1064 vs 28-103),
