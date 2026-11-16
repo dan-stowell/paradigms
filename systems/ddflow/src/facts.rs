@@ -139,6 +139,7 @@ pub struct Slots {
     nbin: Vec<u8>,
     nk: Vec<u64>,
     hk: Vec<u64>,
+    rank: Vec<u32>,
     base: Vec<u32>, // per object, plus nslots+1 at the end
 }
 impl Slots {
@@ -151,6 +152,7 @@ impl Slots {
             nbin: rd(&format!("{dir}/name.bin")),
             nk: rd_u64(&format!("{dir}/p1_namekey.u64x2")),
             hk: rd_u64(&format!("{dir}/p1_hashkey.u64x2")),
+            rank: rd_u32(&format!("{dir}/p1_rank.u32")),
             base,
         }
     }
@@ -158,9 +160,9 @@ impl Slots {
         let g = g as usize;
         &self.nbin[self.noff[g - 1] as usize..self.noff[g] as usize]
     }
-    fn key(&self, g: u32) -> (u8, &[u8], u64, u64, u64, u64) {
+    fn key(&self, g: u32) -> (u8, &[u8], u64, u64, u64, u64, u32) {
         let i = g as usize;
-        (self.kind[i], self.name(g), self.nk[2 * i], self.nk[2 * i + 1], self.hk[2 * i], self.hk[2 * i + 1])
+        (self.kind[i], self.name(g), self.nk[2 * i], self.nk[2 * i + 1], self.hk[2 * i], self.hk[2 * i + 1], if self.name(g).is_empty() { self.rank[i] } else { 0 })
     }
 }
 
@@ -168,6 +170,57 @@ fn strings(dir: &str) -> Vec<Vec<u8>> {
     let off = rd_u64(&format!("{dir}/p2_str.off.u64"));
     let bin = rd(&format!("{dir}/p2_str.bin"));
     (0..off.len() - 1).map(|i| bin[off[i] as usize..off[i + 1] as usize].to_vec()).collect()
+}
+
+/// The matched index pairs of a shortest edit script between a and b (Myers' O(ND) diff).
+fn myers<T: Eq>(a: &[T], b: &[T]) -> Vec<(usize, usize)> {
+    let (n, m) = (a.len() as isize, b.len() as isize);
+    let off = (n + m + 1) as usize;
+    let mut v = vec![0isize; 2 * off + 1];
+    let mut trace: Vec<Vec<isize>> = vec![]; // trace[d] = v[-d..=d] before step d
+    let at = |k: isize| (k + off as isize) as usize;
+    let mut dmax = 0;
+    'outer: for d in 0..=(n + m) {
+        trace.push(v[at(-d)..=at(d)].to_vec());
+        let mut k = -d;
+        while k <= d {
+            let mut x = if k == -d || (k != d && v[at(k - 1)] < v[at(k + 1)]) { v[at(k + 1)] } else { v[at(k - 1)] + 1 };
+            let mut y = x - k;
+            while x < n && y < m && a[x as usize] == b[y as usize] {
+                x += 1;
+                y += 1;
+            }
+            v[at(k)] = x;
+            if x >= n && y >= m {
+                dmax = d;
+                break 'outer;
+            }
+            k += 2;
+        }
+    }
+    let (mut x, mut y, mut pairs) = (n, m, vec![]);
+    for d in (1..=dmax).rev() {
+        let tv = &trace[d as usize];
+        let g = |k: isize| tv[(k + d) as usize];
+        let k = x - y;
+        let pk = if k == -d || (k != d && g(k - 1) < g(k + 1)) { k + 1 } else { k - 1 };
+        let px = g(pk);
+        let py = px - pk;
+        let (sx, sy) = if pk == k + 1 { (px, py + 1) } else { (px + 1, py) }; // after the edit step
+        while x > sx && y > sy {
+            x -= 1;
+            y -= 1;
+            pairs.push((x as usize, y as usize));
+        }
+        x = px;
+        y = py;
+    }
+    while x > 0 && y > 0 {
+        x -= 1;
+        y -= 1;
+        pairs.push((x as usize, y as usize));
+    }
+    pairs
 }
 
 pub struct Unified {
@@ -198,33 +251,47 @@ pub fn unify(da: &str, db: &str) -> Unified {
             continue;
         }
         objs_differ.push(o);
-        let mut ord: HashMap<_, u32> = HashMap::new();
-        let mut index = HashMap::new();
-        for g in a0..a1 {
-            let k = sa.key(g);
-            let c = ord.entry(k).or_insert(0);
-            index.insert((k, *c), g);
-            *c += 1;
+        // 1. a key that occurs once in each version (a named symbol, a content hash) is the same symbol,
+        //    wherever the compiler put it; 2. the rest (unnamed symbols: DWARF ranges, ...; duplicate keys) are
+        //    aligned in order, as a text diff aligns lines (Myers), between and around those.
+        let ka: Vec<_> = (a0..a1).map(|g| sa.key(g)).collect();
+        let kb: Vec<_> = (b0..b1).map(|g| sb.key(g)).collect();
+        let mut ma = vec![false; ka.len()];
+        let mut mb = vec![false; kb.len()];
+        let mut count: HashMap<_, (u32, u32, usize)> = HashMap::new();
+        for (i, k) in ka.iter().enumerate() {
+            let e = count.entry(*k).or_insert((0, 0, 0));
+            e.0 += 1;
+            e.2 = i;
         }
-        let mut ord: HashMap<_, u32> = HashMap::new();
-        let mut matched = std::collections::HashSet::new();
-        for g in b0..b1 {
-            let k = sb.key(g);
-            let c = ord.entry(k).or_insert(0);
-            idm_b[g as usize] = match index.get(&(k, *c)) {
-                Some(&a) => {
-                    matched.insert(a);
-                    a
-                }
-                None => {
-                    b_only.push(g);
-                    next += 1;
-                    next - 1
-                }
-            };
-            *c += 1;
+        for k in &kb {
+            count.entry(*k).or_insert((0, 0, 0)).1 += 1;
         }
-        a_only.extend((a0..a1).filter(|g| !matched.contains(g)));
+        for (j, k) in kb.iter().enumerate() {
+            let &(ca, cb, i) = &count[k];
+            if ca == 1 && cb == 1 && (!k.1.is_empty() || k.4 != 0) {
+                ma[i] = true;
+                mb[j] = true;
+                idm_b[(b0 as usize) + j] = a0 + i as u32;
+            }
+        }
+        let ra: Vec<usize> = (0..ka.len()).filter(|&i| !ma[i]).collect();
+        let rb: Vec<usize> = (0..kb.len()).filter(|&j| !mb[j]).collect();
+        let (xa, xb): (Vec<_>, Vec<_>) = (ra.iter().map(|&i| ka[i]).collect(), rb.iter().map(|&j| kb[j]).collect());
+        for (i, j) in myers(&xa, &xb) {
+            let (i, j) = (ra[i], rb[j]);
+            ma[i] = true;
+            mb[j] = true;
+            idm_b[(b0 as usize) + j] = a0 + i as u32;
+        }
+        for j in 0..kb.len() {
+            if !mb[j] {
+                b_only.push(b0 + j as u32);
+                idm_b[(b0 as usize) + j] = next;
+                next += 1;
+            }
+        }
+        a_only.extend((0..ka.len()).filter(|&i| !ma[i]).map(|i| a0 + i as u32));
     }
     for k in 0..(idb - nb - 1) {
         idm_b[nb + 1 + k] = (na + 1 + k) as u32;
