@@ -1,0 +1,62 @@
+// Problem 3a, layout (ref/flat/README.md): every placed symbol's address. Datalog has no scan, so every running
+// sum is an aggregate over the earlier members of its group, and the walk over units is a recursion, one unit
+// per iteration.
+
+.decl meta(k: symbol, v: unsigned)
+.input meta(IO=flat, meta="true")
+.decl sym(i: unsigned, b: unsigned, c: unsigned, size: unsigned, u: unsigned)   // placed symbol i, in list order
+.input sym(IO=flat, index="true", cols="p3_bucket.u8,p3_class.u8,p3_size.u32,p3_unit.u32")
+.decl id(i: unsigned, g: unsigned)
+.input id(IO=flat, index="true", cols="p3_sym.u32")
+.decl tlstr(i: unsigned, s: unsigned)
+.input tlstr(IO=flat, index="true", cols="p3_tlstr.u32")
+.decl str(s: unsigned, t: symbol)
+.input str(IO=flat, index="true", cols="p3_str.str")
+.decl bstart(b: unsigned, a: unsigned)
+.input bstart(IO=flat, index="true", cols="p3_bucket_start.u32")
+.decl bmin(b: unsigned, a: unsigned)
+.input bmin(IO=flat, index="true", cols="p3_bucket_minalign.u32")
+
+#define RND(v, a) (((v) + (a) - 1) band bnot ((a) - 1))
+
+// occupied size: rounded up to the alignment; text at least minFunc
+.decl occ(b: unsigned, c: unsigned, u: unsigned, i: unsigned, o: unsigned)
+occ(b, c, u, i, RND(s, 1 bshl c)) :- sym(i, b, c, z, u), b != 6, b != 1, b != 2, s = z.
+occ(b, c, u, i, RND(s, 1 bshl c)) :- sym(i, b, c, z, u), (b = 1 ; b = 2), meta("minFunc", m), s = max(z, m).
+
+// bytes per (unit, bucket, class); per (unit, bucket) with bytes: the total and the largest class with bytes
+.decl ubc(u: unsigned, b: unsigned, c: unsigned, n: unsigned)
+ubc(u, b, c, n) :- occ(b, c, u, _, _), n = sum o : { occ(b, c, u, _, o) }.
+.decl ub(u: unsigned, b: unsigned, top: unsigned, n: unsigned)
+ub(u, b, t, n) :- ubc(u, b, _, z), z > 0, t = max c : { ubc(u, b, c, zz), zz > 0 }, n = sum zz : { ubc(u, b, _, zz) }.
+
+// the walk over the units of each bucket: va(b, u, a) is the address before unit u
+.decl va(b: unsigned, u: unsigned, a: unsigned)
+.decl ubase(b: unsigned, u: unsigned, a: unsigned)
+va(b, 0, a) :- bstart(b, a), b >= 1, b != 6.
+ubase(b, u, RND(v, al)) :- va(b, u, v), ub(u, b, t, _), bmin(b, m), al = max(m, 1 bshl t).
+ubase(b, u, v) :- va(b, u, v), !ub(u, b, _, _).
+va(b, u + 1, x + n) :- ubase(b, u, x), ub(u, b, _, n), meta("nunits", nu), u + 1 < nu.
+va(b, u + 1, x) :- ubase(b, u, x), !ub(u, b, _, _), meta("nunits", nu), u + 1 < nu.
+
+// a class's first address: the unit's base plus the bytes of the larger classes; a symbol's: plus the earlier
+// symbols of its class
+.decl cbase(b: unsigned, c: unsigned, u: unsigned, a: unsigned)
+cbase(b, c, u, x + y) :- ubc(u, b, c, _), ubase(b, u, x), y = sum z : { ubc(u, b, c2, z), c2 > c }.
+.decl addr(i: unsigned, a: unsigned)
+addr(i, x + y) :- occ(b, c, u, i, _), cbase(b, c, u, x), y = sum o : { occ(b, c, u, j, o), j < i }.
+
+// typelinks: sorted by type string, then id; va = round_up(va, 2^class), then += size. Every typelink here has
+// the same class and a size that is a multiple of it, so the address is the rounded start plus the sizes of
+// the typelinks before it (checked: `tlcheck` must be empty)
+.decl tl(i: unsigned, t: symbol, g: unsigned, size: unsigned, c: unsigned)
+tl(i, t, g, z, c) :- sym(i, 6, c, z, _), tlstr(i, s), str(s, t), id(i, g).
+.decl tlcheck(i: unsigned)
+tlcheck(i) :- tl(i, _, _, z, c), (tl(_, _, _, _, c2), c2 != c ; z band ((1 bshl c) - 1) != 0).
+.decl tlstart(a: unsigned)
+tlstart(RND(a, 1 bshl c)) :- bstart(6, a), tl(_, _, _, _, c).
+addr(i, x + y1 + y2) :- tl(i, t, g, _, _), tlstart(x), y1 = sum z : { tl(_, t2, _, z, _), t2 < t },
+                        y2 = sum z : { tl(_, t, g2, z, _), g2 < g }.
+
+.output tlcheck(IO=flat, cols="layout_tlcheck.u32", exitafter="2")
+.output addr(IO=flat, cols="-,p3_addr.u32", exitafter="2")
