@@ -1,0 +1,119 @@
+// Problem 3a, layout, attempt 3 (layout.dl is attempts 1-2): the typelink order by ranks summed over interned
+// prefixes, not by counting pairs. Problem 3a (ref/flat/README.md): every placed symbol's address.
+// sum is an aggregate over the earlier members of its group, and the walk over units is a recursion, one unit
+// per iteration.
+
+.decl meta(k: symbol, v: unsigned)
+.input meta(IO=flat, meta="true")
+.decl sym(i: unsigned, b: unsigned, c: unsigned, size: unsigned, u: unsigned)   // placed symbol i, in list order
+.input sym(IO=flat, index="true", cols="p3_bucket.u8,p3_class.u8,p3_size.u32,p3_unit.u32")
+.decl id(i: unsigned, g: unsigned)
+.input id(IO=flat, index="true", cols="p3_sym.u32")
+.decl tlstr(i: unsigned, s: unsigned)
+.input tlstr(IO=flat, index="true", cols="p3_tlstr.u32")
+.decl bstart(b: unsigned, a: unsigned)
+.input bstart(IO=flat, index="true", cols="p3_bucket_start.u32")
+.decl bmin(b: unsigned, a: unsigned)
+.input bmin(IO=flat, index="true", cols="p3_bucket_minalign.u32")
+
+#define RND(v, a) (((v) + (a) - 1) band bnot ((a) - 1))
+
+// occupied size: rounded up to the alignment; text at least minFunc
+.decl occ(b: unsigned, c: unsigned, u: unsigned, i: unsigned, o: unsigned)
+occ(b, c, u, i, RND(s, 1 bshl c)) :- sym(i, b, c, z, u), b != 6, b != 1, b != 2, s = z.
+occ(b, c, u, i, RND(s, 1 bshl c)) :- sym(i, b, c, z, u), (b = 1 ; b = 2), meta("minFunc", m), s = max(z, m).
+
+// bytes per (unit, bucket, class); per (unit, bucket) with bytes: the total and the largest class with bytes
+.decl ubc(u: unsigned, b: unsigned, c: unsigned, n: unsigned)
+ubc(u, b, c, n) :- occ(b, c, u, _, _), n = sum o : { occ(b, c, u, _, o) }.
+.decl ub(u: unsigned, b: unsigned, top: unsigned, n: unsigned)
+ub(u, b, t, n) :- ubc(u, b, _, z), z > 0, t = max c : { ubc(u, b, c, zz), zz > 0 }, n = sum zz : { ubc(u, b, _, zz) }.
+
+// the walk over the units of each bucket: va(b, u, a) is the address before unit u
+.decl va(b: unsigned, u: unsigned, a: unsigned)
+.decl ubase(b: unsigned, u: unsigned, a: unsigned)
+va(b, 0, a) :- bstart(b, a), b >= 1, b != 6.
+ubase(b, u, RND(v, al)) :- va(b, u, v), ub(u, b, t, _), bmin(b, m), al = max(m, 1 bshl t).
+ubase(b, u, v) :- va(b, u, v), !ub(u, b, _, _).
+va(b, u + 1, x + n) :- ubase(b, u, x), ub(u, b, _, n), meta("nunits", nu), u + 1 < nu.
+va(b, u + 1, x) :- ubase(b, u, x), !ub(u, b, _, _), meta("nunits", nu), u + 1 < nu.
+
+// a class's first address: the unit's base plus the bytes of the larger classes; a symbol's: plus the earlier
+// symbols of its class
+.decl cbase(b: unsigned, c: unsigned, u: unsigned, a: unsigned)
+cbase(b, c, u, x + y) :- ubc(u, b, c, _), ubase(b, u, x), y = sum z : { ubc(u, b, c2, z), c2 > c }.
+.decl addr(i: unsigned, a: unsigned)
+addr(i, x + y) :- occ(b, c, u, i, _), cbase(b, c, u, x), y = sum o : { occ(b, c, u, j, o), j < i }.
+
+// typelinks: sorted by type string (bytewise, then shorter first), then id; va = round_up(va, 2^class), then
+// += size. Every typelink here has the same class and a size that is a multiple of it, so the address is the
+// rounded start plus the sizes of the typelinks before it (checked: `tlcheck` must be empty).
+//
+// Attempt 3: the order without a sort and without comparing pairs. A string's rank (how many strings are smaller)
+// is a sum over its words: at word c, the strings that share its first c words (its prefix) and have a smaller
+// word c. A prefix is a Soufflé record, a cons list [prefix, word], interned by the record table, so equal prefixes
+// are the same value and a prefix is a group key. "How many members of a group have a smaller word" is a binary
+// trie: for each bit j set in my word, the members whose word agrees with mine above j and has 0 at j. Every count
+// is a group-by over a materialized key, so nothing is O(n^2): ~64 tuples per (string, word it shares a prefix on).
+.decl word(s: unsigned, c: unsigned, w: unsigned)       // string s's c-th big-endian 8-byte word
+.input word(IO=flat, words8="p3_str")
+.decl tl(i: unsigned, g: unsigned, s: unsigned, size: unsigned, c: unsigned)
+tl(i, g, s, z, c) :- sym(i, 6, c, z, _), tlstr(i, s), id(i, g).
+.decl tlcheck(i: unsigned)
+// (a class relation first: written as `tl(_, _, _, _, c2), c2 != c` the existence test scans all of tl per typelink)
+.decl tlclass(c: unsigned)
+tlclass(c) :- tl(_, _, _, _, c).
+tlcheck(i) :- tl(i, _, _, z, c), (tlclass(c2), c2 != c ; z band ((1 bshl c) - 1) != 0).
+.decl ts(s: unsigned)
+ts(s) :- tl(_, _, s, _, _).
+
+.type Pre = [up: Pre, w: unsigned]
+.decl node(s: unsigned, c: unsigned, p: Pre)           // s's prefix of c words
+node(s, 0, nil) :- ts(s).
+node(s, c + 1, [p, w]) :- node(s, c, p), word(s, c, w).
+// the members of a prefix group with their next word; a string that ends here has word 0 (shorter sorts first;
+// no type string has a NUL byte, so a real word is never 0 where another string ends)
+.decl mem(p: Pre, s: unsigned, w: unsigned)
+mem(p, s, w) :- node(s, c, p), word(s, c, w).
+mem(p, s, 0) :- node(s, c, p), !word(s, c, _).
+.decl grp(p: Pre)
+grp(p) :- mem(p, _, _).
+.decl gsize(p: Pre, n: unsigned)
+gsize(p, n) :- grp(p), n = to_unsigned(count : { mem(p, _, _) }).
+.decl tm(p: Pre, s: unsigned, w: unsigned)             // members of groups with more than one string
+tm(p, s, w) :- mem(p, s, w), gsize(p, n), n > 1.
+
+.decl lev(j: unsigned)
+lev(0).
+lev(j + 1) :- lev(j), j < 63.
+.decl pm(p: Pre, j: unsigned, q: unsigned, s: unsigned)    // member s's word, its bits above j
+pm(p, j, w bshr j, s) :- tm(p, s, w), lev(j).
+.decl pk(p: Pre, j: unsigned, q: unsigned)
+pk(p, j, q) :- pm(p, j, q, _).
+.decl cnt(p: Pre, j: unsigned, q: unsigned, n: unsigned)
+cnt(p, j, q, n) :- pk(p, j, q), n = to_unsigned(count : { pm(p, j, q, _) }).
+.decl below(s: unsigned, p: Pre, n: unsigned)            // members of group p with a smaller word than s's
+below(s, p, n) :- tm(p, s, w), n = sum k : { lev(j), (w bshr j) band 1 = 1, cnt(p, j, (w bshr j) - 1, k) }.
+.decl rank(s: unsigned, r: unsigned)
+rank(s, r) :- ts(s), r = sum n : { below(s, _, n) }.
+
+// the address: the sizes of the typelinks with a smaller (rank, id), by the same trie over the rank's bits,
+// plus the typelinks with the same string and a smaller id (1,125 repeats; a range of an index)
+.decl tlr(r: unsigned, g: unsigned, z: unsigned)
+tlr(r, g, z) :- tl(_, g, s, z, _), rank(s, r).
+.decl rm(j: unsigned, q: unsigned, g: unsigned, z: unsigned)
+rm(j, r bshr j, g, z) :- tlr(r, g, z), lev(j), j < 32.
+.decl rk(j: unsigned, q: unsigned)
+rk(j, q) :- rm(j, q, _, _).
+.decl rsum(j: unsigned, q: unsigned, t: unsigned)
+rsum(j, q, t) :- rk(j, q), t = sum z : { rm(j, q, _, z) }.
+.decl tlstart(a: unsigned)
+tlstart(RND(a, 1 bshl c)) :- bstart(6, a), tl(_, _, _, _, c).
+addr(i, x + y1 + y2) :- tl(i, g, s, _, _), rank(s, r), tlstart(x),
+                        y1 = sum t : { lev(j), j < 32, (r bshr j) band 1 = 1, rsum(j, (r bshr j) - 1, t) },
+                        y2 = sum z : { tlr(r, g2, z), g2 < g }.
+
+.output tlcheck(IO=flat, cols="layout_tlcheck.u32")
+.output gsize(IO=flat, cols="-,gs.u32")
+.output rank(IO=flat, cols="-,rank.u32", exitafter="3")
+.output addr(IO=flat, cols="-,p3_addr.u32", exitafter="2")

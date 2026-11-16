@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bench.sh [rounds=5]: rebuild nothing; rerun every Soufflé cell on MinIO, 1 and 8 threads, interleaved, and print
+# bench.sh [rounds=5] (ONLY='3a|3a-rank' runs just those cells): rebuild nothing; rerun every Soufflé cell on MinIO, 1 and 8 threads, interleaved, and print
 # one line per (cell, threads, warm|e2e) with min/median/max ms over the rounds, after checking each output
 # against its oracle. warm = flatio's "compute" (rules only: inputs already bulk-loaded into the B-trees, output
 # writing excluded); e2e = process start to exit (reading the flat files, building the indexes, rules, writing).
@@ -22,6 +22,7 @@ cells=(
 	"2 reach $D cmp -s $O/p2_live.u32 $D/oracle/p2_live.u32"
 	"2-lazy reach_lazy $here/build/lazyfacts cmp -s $O/p2_live.u32 $D/oracle/p2_live.u32"
 	"3a layout $D $here/build/check_p3 $D $D/oracle/p3_image.bin $O/p3_addr.u32"
+	"3a-rank layout_rank $D $here/build/check_p3 $D $D/oracle/p3_image.bin $O/p3_addr.u32"
 	"3b relocate $D $here/build/check_p3 $D $O/p3_image.out"
 )
 tmp=$(mktemp -d)
@@ -29,6 +30,7 @@ echo "# $(date -u +%FT%TZ) $(uptime)"
 for ((r = 0; r < n; r++)); do
 	for c in "${cells[@]}"; do
 		read -r cell bin fd check <<<"$c"
+		[[ -n "${ONLY:-}" && ! "$cell" =~ ^(${ONLY})$ ]] && continue
 		for j in 1 8; do
 			t0=$(date +%s%N)
 			line=$(prlimit --as=6000000000 "$here/build/$bin" -j$j -F "$fd" -D "$O" 2>&1 >/dev/null | grep '^flatio:')

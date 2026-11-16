@@ -29,7 +29,12 @@ still bulk-loaded into a B-tree (the engine joins only over indexes).
 **3a layout** — correct (`check_p3 $D oracle/p3_image.bin out/p3_addr.u32` -> 0 differ) · 1 thr warm 7222-7589,
 e2e 7367-7717 · 8 thr warm 1339-1784, e2e 1474-1933 · 45 lines · forced: running sums as range aggregates over
 earlier group members, unit walk as 1,763-iteration recursion, typelink sort as O(n²) "sum of sizes before me"
-(numeric 8-byte prefix + string compare: 28 s -> 7.2 s); **falls down on speed** (~500x C; no sort/scan in Datalog).
+(numeric 8-byte prefix + string compare: 28 s -> 7.2 s). **Attempt 3** (layout_rank.dl, 85 lines; `build/layout_rank
+-j8 -F $D -D out && build/check_p3 $D $D/oracle/p3_image.bin out/p3_addr.u32` -> P3 OK): typelink rank = sum over
+interned prefix records of a radix-256 count trie, no pairs, no C · 17:56Z load 11-13: 1 thr warm 1712-1930-3086,
+e2e 1893-2061-3409 · 8 thr warm 1725-1937-3541, e2e 1922-2128-3790 (attempt 2 same window: 8270 / 3388 median) ·
+**slow (~100x plain C, ~400x p3a_par), no longer falls down**: the sort stays in Datalog; 8 threads bound by the
+1,763-iteration unit-walk recursion.
 
 **3b relocate** — correct (`check_p3 $D out/p3_image.out` -> P3 OK) · rules: 1 thr warm 1054-1115, e2e 2086-2139 ·
 8 thr warm 320-451, e2e 1205-1374 · image assembly (C writer): 54-56 / 18-29 ms on 4 KB pages; on 2 MB pages

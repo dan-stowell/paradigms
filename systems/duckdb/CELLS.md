@@ -22,6 +22,16 @@ small relations · impossible: a fast round (no index persists across statements
 round); a recursive CTE (the method rules need global sets). ~150x tuned C. ATTACKS 1: eager decode+flood ~3.56 s,
 lazy 3.44-3.54-3.69 s on 8 threads (tie; 1.2x on 1 thread): SQL expresses decode-on-reach but each round's decode
 is a hash join against all of canon, so it does not pay; ~100x the eager C pipeline (30.1 ms).
+**Attempt 3** (sql/p2rec.sql, 54 lines; `./dk $D 8 sql/load2.sql sql/p2rec.sql && cmp out/p2_live.u32
+$D/oracle/p2_live.u32` -> P2 ok): one WITH RECURSIVE per flood (plain closure; used-in-interface closure) inside the
+C reference's 7 method rounds, edges deduplicated and split inner/leaf, pruned as they are consumed · 18:00Z load
+6.6-10.9, 5 interleaved rounds: 8 thr warm prep + flood **577-643-871 + 1438-1666-2234** (attempt 2 same window:
+112-128-175 + 2362-2698-3159), e2e 2168-2336-3401 (2502-2709-3104); 1 thr 2058-2104-2220 + 2761-2821-3134 (201-221-250 +
+2879-3375-3804), e2e 5060-5249-7048 (3708-4503-5067) · flood 1.6x faster on 8 threads, cell total ~1.2x (8) / 0.7x (1)
+· **falls down** (three attempts): a recursive CTE's every iteration rescans its edge table (2.7 M inner edges; 35 BFS
+levels in round 1 alone, frontiers 16-24 K), and DuckDB has no index join for frontier-sized probes (ART used only
+for <=50-row build sides) and no O(1) array lookup (`getvariable` list indexing copies the list: 1,000 probes 7.7 s).
+~140x tuned C.
 
 **3a. lay out** — correct (`cmp out/p3_addr.u32`) · warm 304-315-322 / **217-246-263**; e2e 408-415 / 325-335 ·
 35 lines · easy: occupied sizes and in-class positions are window sums · forced: the unit chain

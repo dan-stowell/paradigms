@@ -8,6 +8,17 @@ has no bytes) and the untimed P2-lazy setup that p2lazy.c also does untimed.
 
 ## Surprises
 
+- **Datalog sorts the typelinks after all, with no pair counting and no C (3a attempt 3, `layout_rank.dl`).** A
+  string's rank is a sum over its words of "members of my prefix group with a smaller word", where a prefix is a
+  Soufflé *record* (`[up, w]`, a cons list interned by the record table, so equal prefixes are equal values and a
+  prefix is a group key) and "smaller word" is a radix-256 trie of group-by counts. 871 K trie tuples instead of
+  ~10^9 pair visits. 3a median 8270 -> 1930 ms on 1 thread, 3388 -> 1937 on 8 (bench 17:56Z, load 11-13, 5
+  interleaved runs). The typelink part went from ~95% of the cell (~7 s) to ~1.1 s / ~0.65 s; on 8 threads the
+  cell is now bound by the 1,763-iteration unit-walk recursion (~0.6 s of per-iteration overhead), not the sort.
+  Two traps found on the way: a binary (64-level) trie was 7 M tuples and lost to the old O(n²) version on 8
+  threads; and an expression in an aggregate's body atom (`cnt(p, j, (w bshr j) - 1, k)`) makes Soufflé
+  materialize the body with only a prefix of the key bound (100 s+), so every key is spelled out as its own relation.
+
 - **Lazy decode is expressible and wins against Soufflé's own eager shape, but not against C (ATTACKS 1).** The rule
   `plain(s, t) :- live(s), source(s), rel(s, p, i, ty), plainty(ty), slotobj(s, o), objpkg(o, p, b), canon(b + i, t)`
   is evaluated semi-naively, so only live sources' relocations are decoded (1.73 M `plain` tuples of 9.4 M
@@ -47,6 +58,8 @@ generated main runs once); the warm times are >= 0.3 s, most >= 1 s.
 | 2 reach (reach, pre-decoded CSR) | 1227 / 1317 / 1467 | 2571 / 2713 / 2921 | 431 / 462 / 579 | 1242 / 1294 / 1429 | 39-43 / 13-17 |
 | 2' reach, lazy decode (reach_lazy) | 2905 / 3124 / 3214 | 4637 / 4797 / 4982 | 960 / 1069 / 1610 | 2312 / 2478 / 3081 | 52.6 / 13.6-15.4 (p2lazy) |
 | 3a layout (layout) | 7222 / 7337 / 7589 | 7367 / 7480 / 7717 | 1339 / 1625 / 1784 | 1474 / 1774 / 1933 | 8-19 / - |
+| 3a layout, typelink ranks (layout_rank), 17:56Z load 11-13 | 1712 / 1930 / 3086 | 1893 / 2061 / 3409 | 1725 / 1937 / 3541 | 1922 / 2128 / 3790 | 8-19 / 3.9-5.0 (p3a_par) |
+| 3a layout (layout), same window as layout_rank | 7647 / 8270 / 9097 | 7800 / 8427 / 9310 | 2860 / 3388 / 7055 | 3006 / 3604 / 7302 | |
 | 3b relocate (relocate; rules) | 1054 / 1079 / 1115 | 2086 / 2109 / 2139 | 320 / 366 / 451 | 1205 / 1302 / 1374 | 59-67 / 13.4-29 |
 | 3b image assembly (flatio, C, 4 KB pages) | 54.2 / 54.4 / 55.9 | | 18.0 / 26.1 / 28.5 | | |
 
@@ -64,6 +77,7 @@ build/resolve_c -j8 -F $D -D out && cmp out/p1c_canon.u32 $D/oracle/p1c_canon.u3
 build/reach -j8 -F $D -D out && cmp out/p2_live.u32 $D/oracle/p2_live.u32
 build/reach_lazy -j8 -F build/lazyfacts -D out && cmp out/p2_live.u32 $D/oracle/p2_live.u32
 build/layout -j8 -F $D -D out && build/check_p3 $D $D/oracle/p3_image.bin out/p3_addr.u32   # 3a
+build/layout_rank -j8 -F $D -D out && build/check_p3 $D $D/oracle/p3_image.bin out/p3_addr.u32   # 3a attempt 3 (P3 OK)
 build/relocate -j8 -F $D -D out && build/check_p3 $D out/p3_image.out                       # 3b
 ```
 `bench.sh` runs all of these each round and complains on stderr if one fails.
@@ -106,8 +120,24 @@ the sort by type string is "the sum of the sizes of the typelinks before me", O(
 symbols (Soufflé compares symbols as strings): 28 s / 5.0 s. Attempt 2 adds an 8-byte big-endian prefix of each
 type string as a number (loader column `p3_str.key8`) so most pairs are a numeric range: 7.2 s / 1.3 s, still 95% of
 the cell. Also forced: the typelink round-up only commutes with the sum because every MinIO typelink is class 3 with
-a size that is a multiple of 8 (checked by the rule `tlcheck`, empty). Verdict: correct but ~500x C: **falls down on
-speed** (two attempts; the O(n²) "rank by counting" is what Datalog without sort has).
+a size that is a multiple of 8 (checked by the rule `tlcheck`, empty). Verdict after two attempts was "falls down on
+speed" (~500x C; the O(n²) "rank by counting").
+
+**3a attempt 3** (layout_rank.dl 85 [116]; the units part unchanged). The order without a sort and without pairs,
+all in Soufflé: (1) the loader shows each type string as its big-endian 8-byte words (`words8="p3_str"`: bytes as
+numbers, like `key8`; no comparison in C); (2) `node(s, c, p)`: s's prefix of c words as a record
+`[prefix, word]`, interned, so a prefix is a group; (3) a string's rank = sum over the groups it shares with another
+string of the members with a smaller next word (a string that ends there has word 0: shorter first); (4) "smaller
+word" = for each byte L, the members with equal bytes above L and a smaller byte at L, from count per (group, L,
+bytes above, byte): a radix-256 trie, so a sum ranges over <= 255 distinct bytes, never over members; (5) the
+address = the sizes of typelinks with a smaller rank (the same trie over the rank's 3 bytes) + same string, smaller
+id (a range). Forced: every key spelled out as a relation (an expression inside an aggregate's atom took 100 s+);
+tlcheck rewritten (`tl(_, _, _, _, c2), c2 != c` scanned all of tl per typelink: now a class relation). Tried and
+dropped: a binary 64-level trie (7 M tuples; 2.6 s at 1 thread under load but slower than the O(n²) one on 8). Result:
+P3 OK, 1930 / 1937 ms median (1 / 8 threads) vs 8270 / 3388 for attempt 2 in the same window. Still ~100x the plain C
+(8-19 ms) and ~400x the tuned C (p3a_par 3.9-5.0 ms), but the sort stayed in Datalog and it no longer dominates.
+**Verdict: correct, slow; no longer "falls down".** 8 threads do not help: the unit walk is a 1,763-iteration
+recursion (each iteration a parallel region, ~0.6 s at -j8) and the trie is a chain of small strata.
 
 **3b relocate** (relocate.dl 31 [40]). Easy: each relocation kind is one or two rules; the section base is a `max`
 aggregate over 8 values; errors are a relation. Forced: the image itself (bytes) is assembled by flatio's writer in
@@ -132,6 +162,17 @@ plain(s, t) :- live(s), source(s), rel(s, p, i, ty), plainty(ty), p < 2147483643
                slotobj(s, o), objpkg(o, p, b), b != 0xFFFFFFFF, canon(b + i, t), t != 0.
 live(t)    :- plain(_, t).
 iface(t)   :- iface(s), gotype(s), plain(s, t), gotype(t).
+```
+3a attempt 3, a type string's rank (layout_rank.dl):
+```
+node(s, 0, nil) :- ts(s).
+node(s, c + 1, [p, w]) :- node(s, c, p), word(s, c, w).
+mem(p, s, w) :- node(s, c, p), word(s, c, w).
+mem(p, s, 0) :- node(s, c, p), !word(s, c, _).
+pd(p, s, L, v bshr 8, v band 255) :- tm(p, s, w), lev(L), v = w bshr (8 * L).
+dc(p, L, hi, d, n) :- dk(p, L, hi, d), n = to_unsigned(count : { pd(p, _, L, hi, d) }).
+bl(s, p, L, n) :- pd(p, s, L, hi, d), n = sum k : { dc(p, L, hi, d2, k), d2 < d }.
+rank(s, r) :- ts(s), r = sum n : { bl(s, _, _, n) }.
 ```
 3a, a symbol's address (layout.dl):
 ```

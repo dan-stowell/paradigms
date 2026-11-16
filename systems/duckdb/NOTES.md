@@ -7,6 +7,12 @@ statement and per `.cell`, and writes results out as raw arrays or into an image
 
 ## Surprises
 
+- **P2 attempt 3: one recursive CTE per flood is 1.6x faster than the level loop, and that is all.** sql/p2rec.sql
+  (exact) runs the C reference's 7 method rounds, each with two WITH RECURSIVE floods; the flood went 2362-2698-3159
+  -> 1438-1666-2234 ms on 8 threads, but its prep (dedup + split of the edges) costs 0.6 s, so the cell is ~1.2x
+  (2.3 vs 2.8 s) and on 1 thread it is slower (4.9 vs 3.6 s). The reason is the engine: every iteration of a recursive
+  CTE re-runs a hash join whose probe side is the whole edge table. See "P2 attempt 3" below.
+
 - **The CSRs are Arrow lists, for free.** `slot_rel.u32` + `rel_*.u32` is exactly Arrow's list layout (offsets +
   child arrays), so dk hands DuckDB `srel.rels`, `sym.out`, `sym.meths`, `obj.bases`, `sym3b.rels` as
   `LIST(STRUCT(...))` columns with no copy, and `unnest(rels, recursive := true)` turns a symbol into its
@@ -28,7 +34,8 @@ statement and per `.cell`, and writes results out as raw arrays or into an image
 
 | file | what |
 |---|---|
-| `dk.c` (build: `./build.sh`) | the host: `.table NAME ROWS col=file ...` (Arrow view + CREATE TABLE), `col=OFF.u32[f=file,...]` a list column over a CSR, `col=#` a row index, `.cell`, `.repeat/.until` (a loop driven from outside: SQL has no loop), `.dump`, `.image/.blob/.int/.imgout` (the 3b scatter), `.show`; `DK_REPS` (repeat the scripts after `--`), `DK_THP` (image on 2 MB pages), `DK_STMTS` (time per statement over all rounds) |
+| `dk.c` (build: `./build.sh`) | the host: `.table NAME ROWS col=file ...` (Arrow view + CREATE TABLE), `col=OFF.u32[f=file,...]` a list column over a CSR, `col=#` a row index, `.cell`, `.repeat/.until` (a loop driven from outside: SQL has no loop), `.dump`, `.image/.blob/.int/.imgout` (the 3b scatter), `.show`; `DK_REPS` (repeat the scripts after `--`), `DK_THP` (image on 2 MB pages), `DK_STMTS` (time per statement over all rounds), `DK_ALLROUNDS` (print every `.repeat` round) |
+| `sql/p2rec.sql` | P2 attempt 3: recursive-CTE floods per method round; `p2levels.py` (BFS level sizes), `x_artjoin.sql` (ART index vs hash join) are its evidence |
 | `sql/load1.sql p1.sql` | P1: 1a, 1b, 1c |
 | `sql/load2.sql p2prep.sql p2loop.sql` | P2 from the p2_* files |
 | `sql/p2aux.sql p2eager.sql p2lazy.sql` | ATTACKS 1: P2 from the relocation columns (after P1), eager or lazy decode |
@@ -43,6 +50,7 @@ statement and per `.cell`, and writes results out as raw arrays or into an image
     cd systems/duckdb && ./build.sh && D=/home/exedev/paradigms/data/minio
     ./dk $D 8 sql/load1.sql sql/p1.sql && for f in p1_canon p1_builtin p1_reltarget p1c_canon; do cmp out/$f.u32 $D/oracle/$f.u32 && echo ok $f; done
     ./dk $D 8 sql/load2.sql sql/p2prep.sql sql/p2loop.sql && cmp out/p2_live.u32 $D/oracle/p2_live.u32 && echo P2 ok
+    ./dk $D 8 sql/load2.sql sql/p2rec.sql && cmp out/p2_live.u32 $D/oracle/p2_live.u32 && echo P2 rec ok   # attempt 3
     ./dk $D 8 sql/load1.sql sql/p1.sql sql/load2.sql sql/p2prep.sql sql/p2aux.sql sql/p2lazy.sql sql/p2loop.sql && cmp out/p2_live.u32 $D/oracle/p2_live.u32 && echo P2 lazy ok   # (p2eager.sql likewise)
     ./dk $D 8 sql/load3.sql sql/p3a.sql && cmp out/p3_addr.u32 $D/oracle/p3_addr.u32 && echo 3a ok
     ./dk $D 8 sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql && python3 -I check3b.py $D out/p3_image.bin       # P3b OK
@@ -63,6 +71,8 @@ All pass (2026-11-16T16:40Z-16:47Z): 1a, 1b, 1c, P2 (three ways), 3a, 3b isolate
 | 1b | 1405-1449-1470 | **272-314-375** | (in P1) | (in P1) | 43-44 | 5.3-6.3 | ~50x |
 | 1c | 563-595-632 | **128-165-190** | (in P1) | (in P1) | 57-61 | 7.2-8.9 | ~18x |
 | 2 (prep + loop) | 207-212-251 + 2915-3206-3492 | **103-103-116 + 1965-2273-2354** | 3463-3625-3875 | 2367-2554-2567 | 39-43 | 13.0-17.0 | ~150x |
+| 2 attempt 3 (p2rec, 18:00Z load 6.6-10.9) | 2058-2104-2220 + 2761-2821-3134 | **577-643-871 + 1438-1666-2234** | 5060-5249-7048 | 2168-2336-3401 | 39-43 | 13.0-17.0 | ~140x |
+| 2 attempt 2, same window | 201-221-250 + 2879-3375-3804 | 112-128-175 + 2362-2698-3159 | 3708-4503-5067 | 2502-2709-3104 | | | |
 | 3a | 304-315-322 | **217-246-263** | 408-415-439 | 325-335-448 | 8-19 | (none) | ~15-30x plain C |
 | 3b (4 KB pages) | 789-827-1142 | **339-362-368** | 1583-1637-1786 | 687-750-956 | 48.6-56 | 13.4-29 | ~25x |
 | 3b (2 MB pages) | 813-832-937 | **309-321-332** | | | 23.9-30 | 5.4-12 | ~50x |
@@ -95,6 +105,29 @@ persistent index, so a round costs ~25 statements x (1-10 ms) regardless of how 
 attempts: (1) edges by a bucketed range join, 16.9 s prep; (2) edges as lists + the rules' flag tests as small
 relations (`gt`, `rf`) instead of joins with the 5.2 M symbols. A recursive CTE cannot express it (the method
 rules need the global sig/named/reflect sets, and a recursive CTE may reference itself once).
+
+**P2 attempt 3 (sql/p2rec.sql, 54 lines + `.repeat`), a different shape: whole floods as recursive CTEs.** The
+method rules need global sets, so one CTE cannot hold everything, but they only matter between floods: the C
+reference (p2.c) floods to a fixpoint, then decides the calls, 7 rounds on MinIO. So a round is: (1) the plain
+closure of the seeds in one WITH RECURSIVE (DuckDB keeps the recursion's dedup table across its iterations); (2) the
+signatures, names and reflect the new live code names (three INSERTs); (3) the used-in-interface closure in a second
+WITH RECURSIVE over `ie` (gotype -> gotype plain edges and type -> method type), expanding only live, unexpanded
+types; (4) the callable candidates, whose mtyp/ifn/tfn are the next seeds. Tuning, each measured: edges deduplicated
+(8.15 M -> 5.18 M) and split into inner (target has edges: 2.73 M, walked by the recursion) and leaf (added by one
+join afterwards): the round-1 closure 1.0-2.0 s -> 0.47-0.53 s under load ~20; the working edge set `ew` and the
+interface edges `iel` pruned as their targets become live/expanded, so no recursion carries an anti join against
+the growing live set (that rebuilt live's hash table per iteration: the first version took 3.7 s); `rf` instead of a
+join with `sym` for reflect; seeds not filtered against live (a live seed has no edges left in `ew`). Not kept:
+sorting the edges by src (zonemaps prune nothing: frontiers are spread over the id range; within noise). Result,
+exact: flood 1.6x faster than attempt 2 on 8 threads, cell ~1.2x; 1 thread slower (prep 2.1 s).
+Why it stops there (both measured): (a) **every iteration of a recursive CTE re-runs its join with the edge table as
+the probe side**, a full scan of 2.7 M rows however small the frontier; round 1 alone is 35 BFS levels (frontiers
+16 to 24 K, `p2levels.py`), all 7 rounds ~100+ iterations, so the cost is levels x edges, as in attempts 1-2;
+(b) **no lookup that is not a scan or a hash build**: an ART index on `src` is used for a join only when the build side
+is tiny (`x_artjoin.sql`, synthetic 5 M edges, `duckdb < x_artjoin.sql`: 40-row frontier 2 ms with the index vs 9-19 ms; 2,000-row frontier 12 vs 15 ms, even
+with `dynamic_or_filter_threshold` and `index_scan_max_count` raised), and a dense array as a `getvariable` LIST
+copies the list per call (1,000 probes 7.7 s). The frontier-against-a-persistent-index shape is therefore not
+available, and batching levels would need E^k edges. **Verdict: falls down** after three attempts, ~140x tuned C.
 
 **3a (layout).** Mostly easy: occupied sizes, per-(unit, bucket, class) sums and every in-class position are window
 sums. Forced: "va = round_up(va, align); va += n" over the units is a fold, not a prefix sum (a round-up does not

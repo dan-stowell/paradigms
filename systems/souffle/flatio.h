@@ -233,6 +233,28 @@ void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable&
 		stats.load += msSince(t0);
 		return;
 	}
+	// words8="P": the string table P as (string id, word index, word): each string's bytes as big-endian 8-byte
+	// words, the last one zero-padded, so numeric order on words is bytewise order (a string of n bytes has
+	// ceil(n / 8) words). The bytes as numbers, nothing more: no comparison or order is computed here.
+	if (!opt(d, "words8").empty()) {
+		if constexpr (arity == 3) {
+			std::string base = opt(d, "words8");
+			size_t ob, bb;
+			const uint64_t* off = (const uint64_t*)mapFile(dir + "/" + base + ".off.u64", ob);
+			const uint8_t* bin = mapFile(dir + "/" + base + ".bin", bb);
+			std::vector<T> v;
+			for (size_t s = 0; s + 1 < ob / 8; s++)
+				for (uint64_t a = off[s], c = 0; a < off[s + 1]; a += 8, c++) {
+					uint64_t w = 0;
+					for (size_t j = 0; j < 8; j++) w = w << 8 | (a + j < off[s + 1] ? bin[a + j] : 0);
+					v.push_back(T{(RamDomain)s, (RamDomain)c, (RamDomain)w});
+				}
+			bulkLoad(rel, v);
+			stats.tuples += v.size();
+		} else throw std::runtime_error("flatio: words8 needs arity 3");
+		stats.load += msSince(t0);
+		return;
+	}
 	std::vector<Col> cols;
 	size_t nv = 0;
 	for (auto& f : split(opt(d, "cols")))
