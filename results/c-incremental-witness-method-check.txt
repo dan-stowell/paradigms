@@ -1,0 +1,9 @@
+A: 106079 raw rows, 106079 distinct rows
+minio-edit: 106079 raw rows, 106079 distinct mapped rows; actual minus 0, plus 0
+  meth_minus: all six columns empty (0 bytes)
+  meth_plus: all six columns empty (0 bytes)
+minio-edit2: 106079 raw rows, 106079 distinct mapped rows; actual minus 0, plus 0
+  meth_minus: all six columns empty (0 bytes)
+  meth_plus: all six columns empty (0 bytes)
+Nonempty method-row fixture: exit 3, explicit unsupported diagnostic; no result silently returned
+METHOD CHECK OK

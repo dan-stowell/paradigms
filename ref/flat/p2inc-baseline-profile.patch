@@ -1,0 +1,178 @@
+--- p2inc-baseline.c
++++ p2inc-profile-baseline.c
+@@ -177,6 +177,45 @@
+ 		}                                                                              \
+ 	} while (0)
+ 
++// PROFILE_SUPPORT is deliberately a separate build: per-target accounting is not timed.
++#ifdef PROFILE_SUPPORT
++static u64 *profReads[6], *profCalls[6];
++static const char *profNames[]={"delete-live", "delete-iface", "delete-condition", "rederive-live", "rederive-iface", "add-condition"};
++static int profPhase;
++static void profDump(void) {
++ printf("profile memory slots %u methods %u worklist capacity %zu (%zu bytes)\n",N+1,nmeth,wcap,8*wcap);
++ static FILE *detail; static unsigned updateNumber;
++ if(getenv("PROFILE_TSV") && !detail) {
++  detail=fopen(getenv("PROFILE_TSV"),"w"); if(!detail) { perror("PROFILE_TSV"); exit(2); }
++  fprintf(detail,"update\tphase\ttarget\treverse_reads\tchecks\n");
++ }
++ if(detail) {
++  for(int k=0;k<6;k++) for(u32 x=0;x<((k==2 || k==5)?nmeth:N+1);x++)
++   if(profCalls[k][x]) fprintf(detail,"%u\t%s\t%u\t%llu\t%llu\n",updateNumber,profNames[k],x,(unsigned long long)profReads[k][x],(unsigned long long)profCalls[k][x]);
++  fflush(detail);
++ }
++ updateNumber++;
++ for(int k=0;k<6;k++) {
++  u32 n=(k==2 || k==5)?nmeth:N+1; u64 reads=0,calls=0;
++  for(u32 x=0;x<n;x++) { reads+=profReads[k][x]; calls+=profCalls[k][x]; }
++  printf("profile %s reads %llu calls %llu\n",profNames[k],(unsigned long long)reads,(unsigned long long)calls);
++  for(int j=0;j<12;j++) {
++   u32 best=0; for(u32 x=0;x<n;x++) if(profReads[k][x]>profReads[k][best]) best=x;
++   if(!profReads[k][best]) break;
++   printf("profile target %s %u reads %llu checks %llu\n",profNames[k],best,(unsigned long long)profReads[k][best],(unsigned long long)profCalls[k][best]);
++   profReads[k][best]=0;
++  }
++  memset(profReads[k],0,8*n); memset(profCalls[k],0,8*n);
++ }
++}
++#define PROFILE_FN(fn,k) static int fn##Impl(u32 x); static int fn(u32 x) { u64 before=cRev; int result=fn##Impl(x); profReads[k][x]+=cRev-before; profCalls[k][x]++; return result; }
++PROFILE_FN(supLive,0)
++PROFILE_FN(supIface,1)
++PROFILE_FN(condWF,2+3*profPhase)
++PROFILE_FN(derivLive,3)
++PROFILE_FN(derivIface,4)
++#endif
++
+ // ---------------------------------------------------------------- additive rules (the flood)
+ static inline void setLive(u32 x) {
+ 	if (x && !live[x]) { live[x] = 1; ordL[x] = ++clk; posL[x] = 0; cSet++; push(LIVE, x); }
+@@ -235,6 +274,9 @@
+ // re-checking x whenever one of its supports is retracted, leaves only facts with a chain of decreasing stamps
+ // down to a root (or a flag): derivable. Everything else is retracted, then step 2 rederives what has a support
+ // with a larger stamp (a cycle-free path that was not the first one found).
++#ifdef PROFILE_SUPPORT
++#define supLive supLiveImpl
++#endif
+ static int supLive(u32 x) {
+ 	if (!useOrder) return 0;
+ 	cChecks++;
+@@ -252,6 +294,12 @@
+ 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (called[revm[i]] && ordM[revm[i]] < o) return 1;
+ 	return 0;
+ }
++#ifdef PROFILE_SUPPORT
++#undef supLive
++#endif
++#ifdef PROFILE_SUPPORT
++#define supIface supIfaceImpl
++#endif
+ static int supIface(u32 x) {
+ 	if (!useOrder) return 0;
+ 	cChecks++;
+@@ -270,6 +318,9 @@
+ 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (mtyp[revm[i]] == x && typeDone[mown[revm[i]]] && ordT[mown[revm[i]]] < o) return 1;
+ 	return 0;
+ }
++#ifdef PROFILE_SUPPORT
++#undef supIface
++#endif
+ static int forceKill;
+ static inline void killLive(u32 x) {
+ 	if (x && live[x] && (forceKill || !supLive(x))) { live[x] = 0; cKilled++; suspect(x); push(KL, x); }
+@@ -295,6 +346,9 @@
+ // its condition needs a live source asserting it with a stamp below m's. A count alone is not enough: the
+ // remaining sources may be m's own targets (a cycle through the method). Plain DRed: never (retract, rederive).
+ static inline int srcOK(u32 s, u8 k, u64 v, u32 o) { return live[s] && (flags[s] & fDef) && ordL[s] < o && !removed(s, k, v); }
++#ifdef PROFILE_SUPPORT
++#define condWF condWFImpl
++#endif
+ static int condWF(u32 m) {
+ 	if (!useOrder) return 0;
+ 	cChecks++;
+@@ -312,6 +366,9 @@
+ 		if (pool[a].alive && ((pool[a].kind == 2 && pool[a].val == key) || (pool[a].kind == 3 && pool[a].val == n)) && live[pool[a].src] && ordL[pool[a].src] < o) return 1;
+ 	return 0;
+ }
++#ifdef PROFILE_SUPPORT
++#undef condWF
++#endif
+ static void sigDec(u64 k) {
+ 	sigent *s = sig(k);
+ 	--s->cnt;
+@@ -354,6 +411,9 @@
+ }
+ 
+ // ---------------------------------------------------------------- rederivation checks
++#ifdef PROFILE_SUPPORT
++#define derivLive derivLiveImpl
++#endif
+ static int derivLive(u32 x) {
+ 	if (isRoot[x]) return 1;
+ 	FOR_PREDS(x, s, k, if (k == 0 && live[s] && (flags[s] & fDef)) return 1;);
+@@ -361,6 +421,12 @@
+ 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (called[revm[i]]) return 1;
+ 	return 0;
+ }
++#ifdef PROFILE_SUPPORT
++#undef derivLive
++#endif
++#ifdef PROFILE_SUPPORT
++#define derivIface derivIfaceImpl
++#endif
+ static int derivIface(u32 x) {
+ 	if (flags[x] & fIface) return 1;
+ 	FOR_PREDS(x, s, k, if (live[s] && (flags[s] & fDef) && (k == 1 || (typeDone[s] && ISTYPE(x)))) return 1;);
+@@ -368,6 +434,9 @@
+ 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (mtyp[revm[i]] == x && typeDone[mown[revm[i]]]) return 1;
+ 	return 0;
+ }
++#ifdef PROFILE_SUPPORT
++#undef derivIface
++#endif
+ 
+ // ---------------------------------------------------------------- the diff
+ typedef struct {
+@@ -416,6 +485,9 @@
+ 
+ // apply minus then plus as one update
+ static void update(const side *mi, const side *pl) {
++#ifdef PROFILE_SUPPORT
++ profPhase=0;
++#endif
+ 	epoch++;
+ 	nsusp = nmsusp = 0;
+ 	// 1. over-delete, with the old flags
+@@ -437,6 +509,9 @@
+ 	for (size_t i = 0; i < pl->nf; i++) killLive(pl->fid[i]), killIface(pl->fid[i]);
+ 	forceKill = 0;
+ 	drain();
++#ifdef PROFILE_SUPPORT
++ profPhase=1;
++#endif
+ 	// the new flags, edges, roots
+ 	for (size_t i = 0; i < mi->nf; i++) flags[mi->fid[i]] = 0;
+ 	for (size_t i = 0; i < pl->nf; i++) flags[pl->fid[i]] = pl->fval[i];
+@@ -680,7 +755,10 @@
+ 	ordL = calloc(N + 1, 4), ordI = calloc(N + 1, 4), ordT = calloc(N + 1, 4), ordM = calloc(nmeth, 4);
+ 	if (argc > 4 && strcmp(argv[4], "plain") == 0) useOrder = 0;
+ 	called = calloc(nmeth, 1), namedCnt = calloc(nstrU + 1, 4), expanded = calloc(N + 1, 4);
+-	double tsetup = now() - ts;
++	#ifdef PROFILE_SUPPORT
++ for(int k=0;k<6;k++) { profReads[k]=calloc((k==2 || k==5)?nmeth:N+1,8); profCalls[k]=calloc((k==2 || k==5)?nmeth:N+1,8); }
++#endif
++ double tsetup = now() - ts;
+ 
+ 	// ---- the previous link: flood A with the same rules (its state is what an update maintains)
+ 	double t0 = now();
+@@ -719,7 +797,10 @@
+ 			       "reverse entries %llu, support checks %llu\n",
+ 			       dir ? "B->A" : "A->B", t * 1e3, r, (unsigned long long)cKilled, (unsigned long long)cRestored,
+ 			       (unsigned long long)cSet, (unsigned long long)cEdges, (unsigned long long)cRev, (unsigned long long)cChecks);
+-			bad += dir ? checkLive("B->A vs A oracle", liveA, nlA) : checkLive("A->B vs B oracle (unified ids)", liveB, nlb);
++			#ifdef PROFILE_SUPPORT
++            profDump();
++#endif
++            bad += dir ? checkLive("B->A vs A oracle", liveA, nlA) : checkLive("A->B vs B oracle (unified ids)", liveB, nlb);
+ 		}
+ 	if(reps) printf("best update A->B %.3f ms, B->A %.3f ms\n", best[0] * 1e3, best[1] * 1e3);
+ 	// FUZZ=K: K random diffs of random size (up to 200 edges removed from live sources, up to 200 added, all

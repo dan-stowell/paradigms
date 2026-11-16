@@ -9,6 +9,8 @@
 //   keep every random edge/flag/root edit; fork isolated scratch checks after each step;
 //   interleave B1/B2 forward+reverse patches every 20 steps (new ID slots never coexist).
 //   FRESH_B=1: flood B facts before first timed B->A; EVICT=1: touch 1 GiB before each update.
+//   LIFO=1: ablation without BFS stamps; COUNTS=1: optional smaller-stamp count experiment.
+//   -DPROFILE_SUPPORT: per-target reverse-read/check diagnostics (not a timing build).
 //
 // The rules are p2.c's (data/README.md). The state kept between links, all derived by the same rules: live, iface,
 // typeDone (live, iface, type descriptor: its type edges and methods have been applied), called (per method),
@@ -29,10 +31,13 @@
 // Why not support counts: liveness is cyclic (a function and its closure keep each other alive), so a count of
 // live predecessors never reaches zero for a dead cycle. The same holds for the method rule: a sig's remaining
 // sources can be the method's own targets, which is why a method's condition is checked by stamps, not counts
-// (found by the fuzzer). Why not "recompute when a live edge is removed": every real edit removes live edges (the
+// (found by the fuzzer). COUNTS counts only smaller-stamp plain predecessors, so it is cycle-safe;
+// it is an opt-in experiment because its maintenance did not beat witnesses clearly.
+// Why not "recompute when a live edge is removed": every real edit removes live edges (the
 // edited function's GC-locals symbols are renamed), so that policy would always recompute. Why stamps: textbook
-// DRed over-deletes 594 K of 663 K live ids for edit 2 (a retracted source of reflect/sig/named retracts every
-// method call it may justify, and everything downstream of those); with stamps the cone is 26 K.
+// DRed over-deletes 594 K of 663 K live ids for edit 2. Witnesses avoid repeated support scans, including
+// method-condition scans. FIFO flooding gives shorter initial proof chains; updates keep those stamps
+// without a whole-graph restamp. See results/c-incremental.md for measured cones and ablations.
 // Method-table diffs are not supported (exit 3; neither edit has one).
 #include "flat.h"
 #include <sys/wait.h>
@@ -56,10 +61,20 @@ static u8 *mexp;
 static u8 *live, *iface, *typeDone, *called, *isRoot;
 // derivation order: a fact's stamp is the clock when it was set, so it was derived from facts with smaller stamps
 static u32 clk, *ordL, *ordI, *ordT, *ordM;
-// where the last support check of x found its support in x's reverse list: entries before it can never support x
-// again while x keeps its stamp (a retracted predecessor comes back only with a larger stamp), so the scan resumes
-// there; reset when x is stamped anew. This bounds the checks of x to one pass over its predecessors per stamp.
-static u32 *posL, *posI;
+// Where the last support check found its proof in x's reverse list. During deletion, earlier entries
+// cannot become supports; a retracted predecessor returns with a larger stamp. Resume there, resetting
+// when x is stamped anew. Restoring an earlier edge between updates can make a skipped
+// support valid again; missing it only over-deletes, and rederivation scans the whole current list.
+static u32 *posL, *posI, *posM;
+// A witness names one edge or method; it is validated against current facts and
+// the target stamp before it can keep anything alive. Zero means no cached proof.
+enum { W_NONE, W_EDGE, W_OVERLAY, W_METHOD, W_TYPE, W_REFLECT };
+typedef struct { u32 id; u32 kind; } witness;
+static witness *witL, *witI, *witM;
+static int witnesses = 1;
+static int counts, breadthFirst = 1;
+static u32 *smallL;
+static int condWF(u32 m);
 static int useOrder = 1; // argv[4] "plain": textbook DRed (retract everything downstream, then rederive)
 static u64 cChecks;
 static u32 *namedCnt, reflectCnt;
@@ -177,12 +192,69 @@ static inline int removed(u32 s, u8 k, u64 v) {
 		}                                                                              \
 	} while (0)
 
+// PROFILE_SUPPORT is deliberately a separate build: per-target accounting is not timed.
+#ifdef PROFILE_SUPPORT
+static u64 *profReads[6], *profCalls[6];
+static const char *profNames[]={"delete-live", "delete-iface", "delete-condition", "rederive-live", "rederive-iface", "add-condition"};
+static int profPhase;
+static void profDump(void) {
+ printf("profile memory slots %u methods %u worklist capacity %zu (%zu bytes)\n",N+1,nmeth,wcap,8*wcap);
+	static FILE *detail; static unsigned updateNumber;
+	if(getenv("PROFILE_TSV") && !detail) {
+		detail=fopen(getenv("PROFILE_TSV"),"w"); if(!detail) { perror("PROFILE_TSV"); exit(2); }
+		fprintf(detail,"update\tphase\ttarget\treverse_reads\tchecks\n");
+	}
+	if(detail) {
+		for(int k=0;k<6;k++) for(u32 x=0;x<((k==2 || k==5)?nmeth:N+1);x++)
+			if(profCalls[k][x]) fprintf(detail,"%u\t%s\t%u\t%llu\t%llu\n",updateNumber,profNames[k],x,(unsigned long long)profReads[k][x],(unsigned long long)profCalls[k][x]);
+		fflush(detail);
+	}
+	updateNumber++;
+	for(int k=0;k<6;k++) {
+		u32 n=(k==2 || k==5)?nmeth:N+1; u64 reads=0,calls=0;
+		for(u32 x=0;x<n;x++) { reads+=profReads[k][x]; calls+=profCalls[k][x]; }
+		printf("profile %s reads %llu calls %llu\n",profNames[k],(unsigned long long)reads,(unsigned long long)calls);
+		for(int j=0;j<12;j++) {
+			u32 best=0; for(u32 x=0;x<n;x++) if(profReads[k][x]>profReads[k][best]) best=x;
+			if(!profReads[k][best]) break;
+			printf("profile target %s %u reads %llu checks %llu\n",profNames[k],best,(unsigned long long)profReads[k][best],(unsigned long long)profCalls[k][best]);
+			profReads[k][best]=0;
+		}
+		memset(profReads[k],0,8*n); memset(profCalls[k],0,8*n);
+	}
+}
+#define PROFILE_FN(fn,k) static int fn##Impl(u32 x); static int fn(u32 x) { u64 before=cRev; int result=fn##Impl(x); profReads[k][x]+=cRev-before; profCalls[k][x]++; return result; }
+PROFILE_FN(supLive,0)
+PROFILE_FN(supIface,1)
+PROFILE_FN(condWF,2+3*profPhase)
+PROFILE_FN(derivLive,3)
+PROFILE_FN(derivIface,4)
+#endif
+
+// Optional experiment: exact number of current plain predecessors whose live
+// stamp is smaller. Changes to live/source flags remove contributions immediately,
+// before dependent survival checks; a new stamp recounts incoming edges once.
+static void countDead(u32 x) {
+	if(!counts || !(flags[x]&fDef)) return;
+	FOR_EDGES(x,k,v, if(k==0 && live[v] && ordL[x]<ordL[v]) { if(!smallL[v]) abort(); --smallL[v]; });
+}
+static void countNew(u32 x) {
+	if(!counts) return;
+	smallL[x]=0;
+	FOR_PREDS(x,s,k, if(k==0 && live[s] && (flags[s]&fDef) && ordL[s]<ordL[x]) ++smallL[x];);
+}
 // ---------------------------------------------------------------- additive rules (the flood)
 static inline void setLive(u32 x) {
-	if (x && !live[x]) { live[x] = 1; ordL[x] = ++clk; posL[x] = 0; cSet++; push(LIVE, x); }
+	if (x && !live[x]) { live[x] = 1; ordL[x] = ++clk; posL[x] = 0; witL[x].kind = W_NONE; countNew(x); cSet++; push(LIVE, x); }
 }
 static inline void setIface(u32 x) {
-	if (x && !iface[x]) { iface[x] = 1; ordI[x] = ++clk; posI[x] = 0; if (live[x]) push(IFACE, x); }
+	if (x && !iface[x]) { iface[x] = 1; ordI[x] = ++clk; posI[x] = 0; witI[x].kind = W_NONE; if (live[x]) push(IFACE, x); }
+}
+static void liveBy(u32 x, u32 kind, u32 id) {
+	if (x && !live[x]) { setLive(x); witL[x]=(witness){id,kind}; }
+}
+static void ifaceBy(u32 x, u32 kind, u32 id) {
+	if (x && !iface[x]) { setIface(x); witI[x]=(witness){id,kind}; }
 }
 static inline int cond(u32 m) {
 	return (reflectCnt && mexp[m]) || sig((u64)mname[m] << 32 | mtyp[m])->cnt || namedCnt[mname[m]];
@@ -191,15 +263,18 @@ static void tryCall(u32 m) {
 	if (called[m] || !typeDone[mown[m]] || !cond(m)) return;
 	called[m] = 1;
 	ordM[m] = ++clk;
-	setLive(mtyp[m]), setLive(mifn[m]), setLive(mtfn[m]);
+	posM[m]=0; witM[m].kind=W_NONE;
+	// Capture the condition's proof before publishing its consequences.
+	if(witnesses) condWF(m);
+	liveBy(mtyp[m],W_METHOD,m), liveBy(mifn[m],W_METHOD,m), liveBy(mtfn[m],W_METHOD,m);
 }
 static void typeAct(u32 x) {
 	if (typeDone[x]) return;
 	typeDone[x] = 1;
 	ordT[x] = ++clk;
-	FOR_EDGES(x, k, v, if (k == 0 && ISTYPE((u32)v)) setIface((u32)v););
+	FOR_EDGES(x, k, v, if (k == 0 && ISTYPE((u32)v)) ifaceBy((u32)v,W_TYPE,x););
 	if (x <= nslA)
-		for (u32 m = moff[x]; m < moff[x + 1]; m++) setIface(mtyp[m]), tryCall(m);
+		for (u32 m = moff[x]; m < moff[x + 1]; m++) ifaceBy(mtyp[m],W_METHOD,m), tryCall(m);
 }
 static void sigInc(u64 k) {
 	sigent *s = sig(k);
@@ -216,8 +291,8 @@ static void reflectInc(void) {
 }
 static void edgeOn(u32 x, u8 k, u64 v) {
 	switch (k) {
-	case 0: setLive((u32)v); if (typeDone[x] && ISTYPE((u32)v)) setIface((u32)v); break;
-	case 1: setIface((u32)v); break;
+	case 0: liveBy((u32)v,W_EDGE,x); if (typeDone[x] && ISTYPE((u32)v)) ifaceBy((u32)v,W_TYPE,x); break;
+	case 1: ifaceBy((u32)v,W_EDGE,x); break;
 	case 2: sigInc(v); break;
 	case 3: namedInc((u32)v); break;
 	}
@@ -230,49 +305,87 @@ static void expandLive(u32 x) {
 	if (ISTYPE(x) && iface[x]) typeAct(x);
 }
 
+static int hasEdge(u32 s, u8 k, u64 v) {
+	if(s<=nslA) {
+		// CSR rows are sorted by kind/value, so a binary search validates the proof.
+		u32 lo=eoff[s], hi=eoff[s+1];
+		while(lo<hi) { u32 e=lo+(hi-lo)/2; if(ekind[e]<k || (ekind[e]==k && eval[e]<v)) lo=e+1; else hi=e; }
+		if(lo<eoff[s+1] && ekind[lo]==k && eval[lo]==v) return !removed(s,k,v);
+	}
+	for(u32 a=addHead[s];a;a=pool[a].next) if(pool[a].alive && pool[a].kind==k && pool[a].val==v) return 1;
+	return 0;
+}
+static int witnessLive(u32 x) {
+	witness w=witL[x]; u32 s=w.id;
+	if(w.kind==W_METHOD) return called[s] && ordM[s]<ordL[x];
+	return w.kind==W_EDGE && live[s] && (flags[s]&fDef) && ordL[s]<ordL[x] && hasEdge(s,0,x);
+}
+static int witnessIface(u32 x) {
+	witness w=witI[x]; u32 s=w.id;
+	if(w.kind==W_METHOD) return typeDone[mown[s]] && ordT[mown[s]]<ordI[x];
+	if(w.kind==W_TYPE) return typeDone[s] && live[s] && (flags[s]&fDef) && ISTYPE(x) && ordT[s]<ordI[x] && hasEdge(s,0,x);
+	return w.kind==W_EDGE && live[s] && (flags[s]&fDef) && ordL[s]<ordI[x] && hasEdge(s,1,x);
+}
 // ---------------------------------------------------------------- retraction
 // a well-founded support: a derivation from a true fact with a smaller stamp. Keeping x when it has one, and
 // re-checking x whenever one of its supports is retracted, leaves only facts with a chain of decreasing stamps
 // down to a root (or a flag): derivable. Everything else is retracted, then step 2 rederives what has a support
 // with a larger stamp (a cycle-free path that was not the first one found).
+#ifdef PROFILE_SUPPORT
+#define supLive supLiveImpl
+#endif
 static int supLive(u32 x) {
 	if (!useOrder) return 0;
 	cChecks++;
 	if (isRoot[x]) return 1;
+	if(counts && smallL[x]) return 1;
+	if(witnesses && witnessLive(x)) return 1;
 	u32 o = ordL[x];
-	if (x <= nslA)
+	if (!counts && x <= nslA)
 		for (u32 r = roff[x] + posL[x]; r < roff[x + 1]; r++) {
 			u32 s = rsrc[r];
 			cRev++;
-			if (rkind[r] == 0 && live[s] && (flags[s] & fDef) && ordL[s] < o && !removed(s, 0, x)) { posL[x] = r - roff[x]; return 1; }
+			if (rkind[r] == 0 && live[s] && (flags[s] & fDef) && ordL[s] < o && !removed(s, 0, x)) { posL[x] = r - roff[x]; witL[x]=(witness){s,W_EDGE}; return 1; }
 		}
-	for (u32 a = raddHead[x]; a; a = pool[a].rnext)
-		if (pool[a].alive && pool[a].kind == 0 && live[pool[a].src] && (flags[pool[a].src] & fDef) && ordL[pool[a].src] < o) return 1;
+	if(witnesses && x<=nslA) posL[x]=roff[x+1]-roff[x];
+	for (u32 a = counts ? 0 : raddHead[x]; a; a = pool[a].rnext)
+		if (pool[a].alive && pool[a].kind == 0 && live[pool[a].src] && (flags[pool[a].src] & fDef) && ordL[pool[a].src] < o) { witL[x]=(witness){pool[a].src,W_EDGE}; return 1; }
 	if (x <= nslA)
-		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (called[revm[i]] && ordM[revm[i]] < o) return 1;
+		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (called[revm[i]] && ordM[revm[i]] < o) { witL[x]=(witness){revm[i],W_METHOD}; return 1; }
 	return 0;
 }
+#ifdef PROFILE_SUPPORT
+#undef supLive
+#endif
+#ifdef PROFILE_SUPPORT
+#define supIface supIfaceImpl
+#endif
 static int supIface(u32 x) {
 	if (!useOrder) return 0;
 	cChecks++;
 	if (flags[x] & fIface) return 1;
+	if(witnesses && witnessIface(x)) return 1;
 	u32 o = ordI[x];
 #define IOK(s, k) (live[s] && (flags[s] & fDef) && (((k) == 1 && ordL[s] < o) || ((k) == 0 && typeDone[s] && ISTYPE(x) && ordT[s] < o)))
 	if (x <= nslA)
 		for (u32 r = roff[x] + posI[x]; r < roff[x + 1]; r++) {
 			u32 s = rsrc[r];
 			cRev++;
-			if (IOK(s, rkind[r]) && !removed(s, rkind[r], x)) { posI[x] = r - roff[x]; return 1; }
+			if (IOK(s, rkind[r]) && !removed(s, rkind[r], x)) { posI[x] = r - roff[x]; witI[x]=(witness){s,rkind[r]==1?W_EDGE:W_TYPE}; return 1; }
 		}
+	if(witnesses && x<=nslA) posI[x]=roff[x+1]-roff[x];
 	for (u32 a = raddHead[x]; a; a = pool[a].rnext)
-		if (pool[a].alive && IOK(pool[a].src, pool[a].kind)) return 1;
+		if (pool[a].alive && IOK(pool[a].src, pool[a].kind)) { witI[x]=(witness){pool[a].src,pool[a].kind==1?W_EDGE:W_TYPE}; return 1; }
 	if (x <= nslA)
-		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (mtyp[revm[i]] == x && typeDone[mown[revm[i]]] && ordT[mown[revm[i]]] < o) return 1;
+		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (mtyp[revm[i]] == x && typeDone[mown[revm[i]]] && ordT[mown[revm[i]]] < o) { witI[x]=(witness){revm[i],W_METHOD}; return 1; }
 	return 0;
 }
+#ifdef PROFILE_SUPPORT
+#undef supIface
+#endif
 static int forceKill;
 static inline void killLive(u32 x) {
-	if (x && live[x] && (forceKill || !supLive(x))) { live[x] = 0; cKilled++; suspect(x); push(KL, x); }
+	if (x && live[x] && (forceKill || !supLive(x))) { live[x] = 0; countDead(x); cKilled++; suspect(x); push(KL, x); }
 }
 static inline void killIface(u32 x) {
 	if (x && iface[x] && (forceKill || !supIface(x))) { iface[x] = 0; suspect(x); push(KI, x); }
@@ -294,24 +407,55 @@ static void typeDeact(u32 x) {
 // Is called method m still supported by facts with smaller stamps? Its type is (typeDone: else it was uncalled);
 // its condition needs a live source asserting it with a stamp below m's. A count alone is not enough: the
 // remaining sources may be m's own targets (a cycle through the method). Plain DRed: never (retract, rederive).
-static inline int srcOK(u32 s, u8 k, u64 v, u32 o) { return live[s] && (flags[s] & fDef) && ordL[s] < o && !removed(s, k, v); }
+#ifdef PROFILE_SUPPORT
+#define condWF condWFImpl
+#endif
 static int condWF(u32 m) {
 	if (!useOrder) return 0;
 	cChecks++;
 	u32 o = ordM[m];
-	u64 key = (u64)mname[m] << 32 | mtyp[m];
-	sigent *se = sig(key);
-	if (se->cnt)
-		for (u32 i = 0; i < se->slen; i++) { cRev++; if (srcOK(sigsrc[se->sstart + i], 2, key, o)) return 1; }
-	u32 n = mname[m];
-	if (namedCnt[n])
-		for (u32 i = nsoff[n]; i < nsoff[n + 1]; i++) { cRev++; if (srcOK(namesrc[i], 3, n, o)) return 1; }
-	if (mexp[m] && reflectCnt)
-		for (u32 i = 0; i < nrefl; i++) { cRev++; u32 r = reflsrc[i]; if (live[r] && (flags[r] & (fDef | fReflect)) == (fDef | fReflect) && ordL[r] < o) return 1; }
-	for (u32 a = 1; a <= npool; a++) // added edges asserting it
-		if (pool[a].alive && ((pool[a].kind == 2 && pool[a].val == key) || (pool[a].kind == 3 && pool[a].val == n)) && live[pool[a].src] && ordL[pool[a].src] < o) return 1;
+	u64 key=(u64)mname[m]<<32 | mtyp[m]; u32 n=mname[m];
+	sigent *se=sig(key);
+	witness w=witM[m];
+	if(witnesses && w.kind==W_OVERLAY) {
+		addEnt *a=&pool[w.id]; u32 r=a->src;
+		if(a->alive && live[r] && (flags[r]&fDef) && ordL[r]<o) return 1;
+	}
+	if(witnesses && w.kind && w.kind!=W_OVERLAY) {
+		u32 r=w.id;
+		if(live[r] && (flags[r]&fDef) && ordL[r]<o &&
+     ((w.kind==W_REFLECT && mexp[m] && (flags[r]&fReflect)) ||
+      (w.kind==W_EDGE && !removed(r,2,key)) ||
+      (w.kind==W_TYPE && !removed(r,3,n)))) return 1;
+	}
+	// One concatenated cursor for the immutable signature/name/reflect lists.
+	// During deletion facts only disappear. Reset on a new method stamp.
+	u32 total=se->slen+(nsoff[n+1]-nsoff[n])+nrefl;
+	for(u32 i=witnesses?posM[m]:0;i<total;i++) {
+		u32 r,kind;
+		if(i<se->slen) { r=sigsrc[se->sstart+i]; kind=W_EDGE; }
+		else if(i<total-nrefl) { r=namesrc[nsoff[n]+i-se->slen]; kind=W_TYPE; }
+		else { r=reflsrc[i-(total-nrefl)]; kind=W_REFLECT; }
+		cRev++;
+		int ok=live[r] && (flags[r]&fDef) && ordL[r]<o;
+		if(kind==W_EDGE) ok=ok && !removed(r,2,key);
+		else if(kind==W_TYPE) ok=ok && !removed(r,3,n);
+		else ok=ok && mexp[m] && (flags[r]&fReflect);
+		if(ok) { posM[m]=i; witM[m]=(witness){r,kind}; return 1; }
+	}
+	posM[m]=total;
+	for(u32 a=1;a<=npool;a++) {
+		u32 r=pool[a].src; u8 k=pool[a].kind;
+		if(pool[a].alive && (flags[r]&fDef) && live[r] && ordL[r]<o &&
+    ((k==2 && pool[a].val==key) || (k==3 && pool[a].val==n))) {
+			witM[m]=(witness){a,W_OVERLAY}; return 1;
+		}
+	}
 	return 0;
 }
+#ifdef PROFILE_SUPPORT
+#undef condWF
+#endif
 static void sigDec(u64 k) {
 	sigent *s = sig(k);
 	--s->cnt;
@@ -335,8 +479,9 @@ static void edgeOff(u32 x, u8 k, u64 v) {
 }
 
 static void drain(void) {
-	while (wn) {
-		u64 it = wl[--wn];
+	size_t head=0;
+	while (breadthFirst ? head<wn : wn>0) {
+		u64 it = breadthFirst ? wl[head++] : wl[--wn];
 		u32 x = (u32)it;
 		switch ((int)(it >> 32)) {
 		case LIVE: if (live[x]) expandLive(x); break;
@@ -351,9 +496,13 @@ static void drain(void) {
 		case KI: typeDeact(x); break;
 		}
 	}
+	wn=0;
 }
 
 // ---------------------------------------------------------------- rederivation checks
+#ifdef PROFILE_SUPPORT
+#define derivLive derivLiveImpl
+#endif
 static int derivLive(u32 x) {
 	if (isRoot[x]) return 1;
 	FOR_PREDS(x, s, k, if (k == 0 && live[s] && (flags[s] & fDef)) return 1;);
@@ -361,6 +510,12 @@ static int derivLive(u32 x) {
 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (called[revm[i]]) return 1;
 	return 0;
 }
+#ifdef PROFILE_SUPPORT
+#undef derivLive
+#endif
+#ifdef PROFILE_SUPPORT
+#define derivIface derivIfaceImpl
+#endif
 static int derivIface(u32 x) {
 	if (flags[x] & fIface) return 1;
 	FOR_PREDS(x, s, k, if (live[s] && (flags[s] & fDef) && (k == 1 || (typeDone[s] && ISTYPE(x)))) return 1;);
@@ -368,6 +523,9 @@ static int derivIface(u32 x) {
 		for (u32 i = revoff[x]; i < revoff[x + 1]; i++) if (mtyp[revm[i]] == x && typeDone[mown[revm[i]]]) return 1;
 	return 0;
 }
+#ifdef PROFILE_SUPPORT
+#undef derivIface
+#endif
 
 // ---------------------------------------------------------------- the diff
 typedef struct {
@@ -395,12 +553,12 @@ static int inA(u32 s, u8 k, u64 v) {
 	for (u32 e = eoff[s]; e < eoff[s + 1]; e++) if (ekind[e] == k && eval[e] == v) return 1;
 	return 0;
 }
-static void edgeRemove(u32 s, u8 k, u64 v) {
+static void edgeRemoveImpl(u32 s, u8 k, u64 v) {
 	if (inA(s, k, v)) { remFind(s, k, v, 1)->alive = 1; maybeRem[s] = 1; return; }
 	for (u32 a = addHead[s]; a; a = pool[a].next)
 		if (pool[a].alive && pool[a].kind == k && pool[a].val == v) pool[a].alive = 0;
 }
-static void edgeAdd(u32 s, u8 k, u64 v) {
+static void edgeAddImpl(u32 s, u8 k, u64 v) {
 	if (inA(s, k, v)) { remFind(s, k, v, 1)->alive = 0; return; }
 	if ((size_t)npool + 1 >= poolcap) {
 		poolcap = poolcap ? 2 * poolcap : 16;
@@ -414,8 +572,22 @@ static void edgeAdd(u32 s, u8 k, u64 v) {
 	if (k <= 1) a->rnext = raddHead[(u32)v], raddHead[(u32)v] = npool;
 }
 
+static void edgeRemove(u32 s,u8 k,u64 v) {
+	if(counts && k==0 && live[s] && (flags[s]&fDef) && live[v] && ordL[s]<ordL[v] && hasEdge(s,k,v)) {
+		if(!smallL[v]) abort(); --smallL[v];
+	}
+	edgeRemoveImpl(s,k,v);
+}
+static void edgeAdd(u32 s,u8 k,u64 v) {
+	int add=counts && k==0 && live[s] && (flags[s]&fDef) && live[v] && ordL[s]<ordL[v] && !hasEdge(s,k,v);
+	edgeAddImpl(s,k,v);
+	if(add) ++smallL[v];
+}
 // apply minus then plus as one update
 static void update(const side *mi, const side *pl) {
+#ifdef PROFILE_SUPPORT
+	profPhase=0;
+#endif
 	epoch++;
 	nsusp = nmsusp = 0;
 	// 1. over-delete, with the old flags
@@ -437,6 +609,9 @@ static void update(const side *mi, const side *pl) {
 	for (size_t i = 0; i < pl->nf; i++) killLive(pl->fid[i]), killIface(pl->fid[i]);
 	forceKill = 0;
 	drain();
+#ifdef PROFILE_SUPPORT
+	profPhase=1;
+#endif
 	// the new flags, edges, roots
 	for (size_t i = 0; i < mi->nf; i++) flags[mi->fid[i]] = 0;
 	for (size_t i = 0; i < pl->nf; i++) flags[pl->fid[i]] = pl->fval[i];
@@ -677,9 +852,15 @@ int main(int argc, char **argv) {
 	addHead = calloc(N + 1, 4), raddHead = calloc(N + 1, 4);
 	live = calloc(N + 1, 1), iface = calloc(N + 1, 1), typeDone = calloc(N + 1, 1), isRoot = calloc(N + 1, 1);
 	posL = calloc(N + 1, 4), posI = calloc(N + 1, 4);
+	posM=calloc(nmeth,4); witL=calloc(N+1,sizeof(witness)); witI=calloc(N+1,sizeof(witness)); witM=calloc(nmeth,sizeof(witness));
+	breadthFirst=getenv("LIFO")==NULL;
+	counts=getenv("COUNTS")!=NULL; if(counts) smallL=calloc(N+1,4);
 	ordL = calloc(N + 1, 4), ordI = calloc(N + 1, 4), ordT = calloc(N + 1, 4), ordM = calloc(nmeth, 4);
 	if (argc > 4 && strcmp(argv[4], "plain") == 0) useOrder = 0;
 	called = calloc(nmeth, 1), namedCnt = calloc(nstrU + 1, 4), expanded = calloc(N + 1, 4);
+#ifdef PROFILE_SUPPORT
+	for(int k=0;k<6;k++) { profReads[k]=calloc((k==2 || k==5)?nmeth:N+1,8); profCalls[k]=calloc((k==2 || k==5)?nmeth:N+1,8); }
+#endif
 	double tsetup = now() - ts;
 
 	// ---- the previous link: flood A with the same rules (its state is what an update maintains)
@@ -711,6 +892,9 @@ int main(int argc, char **argv) {
 			int dir=di ^ freshB;
 			if(getenv("EVICT")) evict();
 			cEdges = cRev = cKilled = cRestored = cSet = cChecks = 0;
+#ifdef PROFILE_SUPPORT
+			for(int k=0;k<6;k++) { memset(profReads[k],0,8*((k==2 || k==5)?nmeth:N+1)); memset(profCalls[k],0,8*((k==2 || k==5)?nmeth:N+1)); }
+#endif
 			double t = now();
 			if (dir == 0) update(&mi, &pl); else update(&pl, &mi);
 			t = now() - t;
@@ -719,6 +903,9 @@ int main(int argc, char **argv) {
 			       "reverse entries %llu, support checks %llu\n",
 			       dir ? "B->A" : "A->B", t * 1e3, r, (unsigned long long)cKilled, (unsigned long long)cRestored,
 			       (unsigned long long)cSet, (unsigned long long)cEdges, (unsigned long long)cRev, (unsigned long long)cChecks);
+#ifdef PROFILE_SUPPORT
+			profDump();
+#endif
 			bad += dir ? checkLive("B->A vs A oracle", liveA, nlA) : checkLive("A->B vs B oracle (unified ids)", liveB, nlb);
 		}
 	if(reps) printf("best update A->B %.3f ms, B->A %.3f ms\n", best[0] * 1e3, best[1] * 1e3);

@@ -1,0 +1,168 @@
+p2inc (DRed + derivation-order supports): setup 414.6 ms, flood A (same rules, worklist) 184.1 ms, 2197091 edges read
+check A: 663630 oracle entries, 0 differ -> OK
+diff: edges -135 +99, flags -73 +44, roots -0 +0
+check fresh B: 651320 oracle entries, 0 differ -> OK
+update B->A	7.527 ms	rep 0	over-deleted 9406 live, rederived 1101 directly, set 21716, edges read 108128, reverse entries 278411, support checks 103586
+profile memory slots 5205480 methods 106079 worklist capacity 1048576 (8388608 bytes)
+profile delete-live reads 24106 calls 21324
+profile target delete-live 1236038 reads 650 checks 1
+profile target delete-live 1241273 reads 316 checks 1
+profile target delete-live 1102088 reads 183 checks 4
+profile target delete-live 1103510 reads 177 checks 1
+profile target delete-live 1241558 reads 166 checks 1
+profile target delete-live 1095242 reads 158 checks 1
+profile target delete-live 1240464 reads 124 checks 1
+profile target delete-live 1233572 reads 116 checks 1
+profile target delete-live 1240675 reads 89 checks 1
+profile target delete-live 1240676 reads 89 checks 1
+profile target delete-live 1240677 reads 89 checks 1
+profile target delete-live 1240678 reads 89 checks 1
+profile delete-iface reads 4367 calls 3519
+profile target delete-iface 1233572 reads 116 checks 1
+profile target delete-iface 5450 reads 84 checks 1
+profile target delete-iface 5260 reads 80 checks 6
+profile target delete-iface 1233555 reads 57 checks 1
+profile target delete-iface 5439 reads 54 checks 2
+profile target delete-iface 1091426 reads 51 checks 1
+profile target delete-iface 1233573 reads 48 checks 1
+profile target delete-iface 5454 reads 46 checks 1
+profile target delete-iface 1247426 reads 42 checks 1
+profile target delete-iface 5458 reads 40 checks 1
+profile target delete-iface 5437 reads 39 checks 8
+profile target delete-iface 1317368 reads 39 checks 1
+profile delete-condition reads 77038 calls 76592
+profile target delete-condition 2286 reads 912 checks 2
+profile target delete-condition 2366 reads 911 checks 1
+profile target delete-condition 6905 reads 911 checks 1
+profile target delete-condition 6921 reads 911 checks 1
+profile target delete-condition 2278 reads 909 checks 2
+profile target delete-condition 18904 reads 908 checks 7
+profile target delete-condition 18910 reads 908 checks 7
+profile target delete-condition 18919 reads 908 checks 7
+profile target delete-condition 18963 reads 908 checks 7
+profile target delete-condition 18989 reads 908 checks 7
+profile target delete-condition 19029 reads 908 checks 7
+profile target delete-condition 19033 reads 907 checks 6
+profile rederive-live reads 25904 calls 10167
+profile target rederive-live 1236038 reads 650 checks 1
+profile target rederive-live 1241273 reads 316 checks 1
+profile target rederive-live 1233572 reads 232 checks 2
+profile target rederive-live 1102088 reads 182 checks 1
+profile target rederive-live 1103510 reads 177 checks 1
+profile target rederive-live 1241558 reads 166 checks 1
+profile target rederive-live 1095242 reads 158 checks 1
+profile target rederive-live 1240464 reads 124 checks 1
+profile target rederive-live 1233555 reads 114 checks 2
+profile target rederive-live 1091426 reads 102 checks 2
+profile target rederive-live 1233573 reads 96 checks 2
+profile target rederive-live 1240675 reads 89 checks 1
+profile rederive-iface reads 27654 calls 10281
+profile target rederive-iface 1236038 reads 650 checks 1
+profile target rederive-iface 1241273 reads 316 checks 1
+profile target rederive-iface 1233572 reads 232 checks 2
+profile target rederive-iface 1102088 reads 182 checks 1
+profile target rederive-iface 1103510 reads 177 checks 1
+profile target rederive-iface 1241558 reads 166 checks 1
+profile target rederive-iface 1095242 reads 158 checks 1
+profile target rederive-iface 1240464 reads 124 checks 1
+profile target rederive-iface 1233555 reads 114 checks 2
+profile target rederive-iface 1091426 reads 102 checks 2
+profile target rederive-iface 1233573 reads 96 checks 2
+profile target rederive-iface 5454 reads 92 checks 2
+profile add-condition reads 119342 calls 2151
+profile target add-condition 36904 reads 175 checks 1
+profile target add-condition 36905 reads 175 checks 1
+profile target add-condition 10358 reads 146 checks 1
+profile target add-condition 22685 reads 144 checks 1
+profile target add-condition 22797 reads 143 checks 1
+profile target add-condition 22801 reads 143 checks 1
+profile target add-condition 2494 reads 142 checks 1
+profile target add-condition 22706 reads 140 checks 1
+profile target add-condition 22718 reads 140 checks 1
+profile target add-condition 22742 reads 140 checks 1
+profile target add-condition 36906 reads 140 checks 1
+profile target add-condition 36907 reads 140 checks 1
+check B->A vs A oracle: 663630 oracle entries, 0 differ -> OK
+update A->B	11.444 ms	rep 0	over-deleted 20412 live, rederived 1 directly, set 8102, edges read 100176, reverse entries 303580, support checks 222417
+profile memory slots 5205480 methods 106079 worklist capacity 1048576 (8388608 bytes)
+profile delete-live reads 52824 calls 45809
+profile target delete-live 1236038 reads 650 checks 1
+profile target delete-live 2121263 reads 539 checks 1
+profile target delete-live 2114571 reads 464 checks 1
+profile target delete-live 1241273 reads 316 checks 1
+profile target delete-live 1968953 reads 293 checks 1
+profile target delete-live 2110315 reads 222 checks 1
+profile target delete-live 1102088 reads 182 checks 1
+profile target delete-live 1103510 reads 177 checks 1
+profile target delete-live 1241558 reads 166 checks 1
+profile target delete-live 2124599 reads 164 checks 1
+profile target delete-live 2131225 reads 161 checks 1
+profile target delete-live 1095242 reads 158 checks 1
+profile delete-iface reads 10420 calls 7740
+profile target delete-iface 2131225 reads 171 checks 45
+profile target delete-iface 791455 reads 167 checks 1
+profile target delete-iface 2093376 reads 146 checks 1
+profile target delete-iface 2131293 reads 129 checks 1
+profile target delete-iface 1233572 reads 116 checks 1
+profile target delete-iface 5450 reads 84 checks 1
+profile target delete-iface 5260 reads 80 checks 1
+profile target delete-iface 1973961 reads 70 checks 1
+profile target delete-iface 2087908 reads 67 checks 3
+profile target delete-iface 1233555 reads 57 checks 1
+profile target delete-iface 1091426 reads 51 checks 1
+profile target delete-iface 2093371 reads 49 checks 6
+profile delete-condition reads 91827 calls 167861
+profile target delete-condition 18904 reads 908 checks 7
+profile target delete-condition 18910 reads 908 checks 7
+profile target delete-condition 18919 reads 908 checks 7
+profile target delete-condition 18963 reads 908 checks 7
+profile target delete-condition 18989 reads 908 checks 7
+profile target delete-condition 19029 reads 908 checks 7
+profile target delete-condition 19033 reads 907 checks 6
+profile target delete-condition 19112 reads 907 checks 6
+profile target delete-condition 19119 reads 907 checks 6
+profile target delete-condition 19122 reads 907 checks 6
+profile target delete-condition 19125 reads 907 checks 6
+profile target delete-condition 19130 reads 907 checks 6
+profile rederive-live reads 61946 calls 22374
+profile target rederive-live 1236038 reads 650 checks 1
+profile target rederive-live 2121263 reads 539 checks 1
+profile target rederive-live 2114571 reads 464 checks 1
+profile target rederive-live 2131225 reads 322 checks 2
+profile target rederive-live 1241273 reads 316 checks 1
+profile target rederive-live 1968953 reads 293 checks 1
+profile target rederive-live 2093376 reads 292 checks 2
+profile target rederive-live 2131293 reads 258 checks 2
+profile target rederive-live 1233572 reads 232 checks 2
+profile target rederive-live 2110315 reads 222 checks 1
+profile target rederive-live 1102088 reads 182 checks 1
+profile target rederive-live 1103510 reads 177 checks 1
+profile rederive-iface reads 62763 calls 22464
+profile target rederive-iface 1236038 reads 650 checks 1
+profile target rederive-iface 2121263 reads 539 checks 1
+profile target rederive-iface 2114571 reads 464 checks 1
+profile target rederive-iface 2131225 reads 322 checks 2
+profile target rederive-iface 1241273 reads 316 checks 1
+profile target rederive-iface 1968953 reads 293 checks 1
+profile target rederive-iface 2093376 reads 292 checks 2
+profile target rederive-iface 2131293 reads 258 checks 2
+profile target rederive-iface 1233572 reads 232 checks 2
+profile target rederive-iface 2110315 reads 222 checks 1
+profile target rederive-iface 1102088 reads 182 checks 1
+profile target rederive-iface 1103510 reads 177 checks 1
+profile add-condition reads 23800 calls 1007
+profile target add-condition 22685 reads 144 checks 1
+profile target add-condition 22797 reads 143 checks 1
+profile target add-condition 22801 reads 143 checks 1
+profile target add-condition 2494 reads 142 checks 1
+profile target add-condition 22706 reads 140 checks 1
+profile target add-condition 22718 reads 140 checks 1
+profile target add-condition 22742 reads 140 checks 1
+profile target add-condition 1055 reads 139 checks 1
+profile target add-condition 22651 reads 139 checks 1
+profile target add-condition 22705 reads 139 checks 1
+profile target add-condition 22717 reads 139 checks 1
+profile target add-condition 22739 reads 139 checks 1
+check A->B vs B oracle (unified ids): 651320 oracle entries, 0 differ -> OK
+best update A->B 11.444 ms, B->A 7.527 ms
+P2INC OK
