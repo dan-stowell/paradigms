@@ -27,3 +27,10 @@
 5. ATTACKS 2's "TLB reach, not faults" for the join is asserted, not counted -> **accept**: codex-review5 C -> **measured**: both: first run faults and TLB; warm 2.81x fewer L1 dTLB misses, 2.46x fewer walks, timing within noise; 'not faults' withdrawn in ATTACKS 2.
 6. None found.
 2026-11-16 codex-review5 follow-up to 20261116T1930-codex-skeptic-full.md: accept Halide oracle-prefill weakness (poison + skipped-unit rejection), accept Goose one-array verdict scope (measured checked file assembly), accept unproven TLB-only attribution (join-gated perf shows faults on first execution and TLB reduction after warmup). Evidence and qualifications: results/codex-review5.md. Source review remains read-only in sibling clone.
+2026-11-16 20261116T2020-codex-skeptic-inc.md (focused on ATTACKS 5 / p2inc / DD):
+1. Fuzzer recomputes before each reversal, so chained maintained edit sequences are untested -> **accept**: Codex job codex-p2inc-chain (chained random sequences, check after each step); caveat added to ATTACKS 5.
+2. ATTACKS 5 Obs 2 still foregrounded DD's 555 ms; C edit-2 maintenance vs p2par ranges overlap -> **accept, fixed** (Obs 2 rewritten with the quiet 59/29 ms and comparators; Obs 3 says within noise of 8-thread recompute).
+3. 3 us is a warm repeat; setup 365 ms + initial flood excluded; B->A compared against recomputing B -> **accept**: first-update numbers and setup stated in Obs 3; bench fix (recompute A for B->A) in codex-p2inc-chain.
+4. History-dependent work (edit 2 retractions 32 K first, 20 K on repeats) -> **accept**: codex-p2inc-chain reports fresh-state first-update work and time as the representative number, separately from page warmth.
+5. Incremental relink not measured end to end; method-table changes unsupported in p2inc -> **accept**: identity, maintained resolve and relayout are running (builders, codex-relayout); end-to-end sequence after they land; codex-p2inc-chain checks whether the edits change method tables.
+6. None found.

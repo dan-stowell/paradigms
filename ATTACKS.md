@@ -232,18 +232,22 @@ edit 2 for 73 real changes.
 **Observation 2: an additive edit updates 35-400x faster than recompute; a retracting one does not.** DD, lead rebuilt
 and reran 19:55Z (edit 1, 1 worker: update 1.33-1.40 ms, P2 OK on both versions and from scratch). Bench 19:40Z, load
 4.4-5.6, medians: reach update edit 1 **1.4 ms (1 worker) vs C p2 52 / p2par 31 (1 thread), 9.0 (8 workers) vs p2par
-20.5**; resolve update edit 1 **0.7 ms vs p1 287 / p1par 22**. Edit 2: reach update **65 ms (1) / 555 ms (8): slower than
-C recompute**; retracting 12 K reachable ids withdraws each derivation round by round through 45 loop rounds. DD's own
+20.5**; resolve update edit 1 **0.7 ms vs p1 287 / p1par 22**. Edit 2 (quiet rerun 20:12Z, Observation 3): reach update **59 ms (1 worker) / 29 ms (8)**: slower than 1-core C
+recompute on 1 worker (p2 43), faster on 8 workers than 1-core p2 but 2x slower than 8-thread p2par (14) (the 555 ms first
+measured on 8 workers was load); retracting 12 K reachable ids withdraws each derivation round by round through 45 loop rounds. DD's own
 full run is 60-100x C (2.7 s / 1.6 s) and holds 2.7 GB of arrangements.
 
 **Observation 3: in plain C, maintenance wins both edits, retractions included, if deletions use derivation
 stamps** ([results/c-incremental.md](results/c-incremental.md), `ref/flat/p2inc.c`, 1 core, reading the stored diff
 `data/minio-edit{,2}/diff/`). Bench 20:12Z, load 0.7-1.7, 5 interleaved rounds, medians: edit 1 update **3 µs** (DD
 1.4 ms, p2 45 ms, p2par 17 ms on 8); edit 2 update **9.5 ms A->B / 5.2 ms B->A** (p2 43, p2par 14 on 8, DD 59 on 1
-worker / 29 on 8). Deletion is DRed (delete, rederive) where a fact survives the delete step if it has a derivation
+worker / 29 on 8): 4.5x 1-core recompute, but **within noise of 8-thread recompute** (ranges 9.5-16.6 vs 13.0-18.3).
+These are repeat updates with state warm: the first update from a fresh state is 38 µs (edit 1) and 18.7 ms (edit 2
+A->B), and the state costs 365 ms to build plus a 60-90 ms initial flood, paid once per session, not per edit. Deletion is DRed (delete, rederive) where a fact survives the delete step if it has a derivation
 from a true fact with a smaller stamp (the clock when it was set): edit 2 retracts 32 K ids for 12 K real deaths;
 textbook DRed retracts 594 K and takes 123 ms (3x recompute). Checked on both edits and directions and by 300
-random diffs per edit against a from-scratch flood (the fuzzer found two bugs the edits did not: a method kept by a
+random diffs per edit against a from-scratch flood (each fuzz diff starts from a recomputed state, so chained
+maintained sequences are not yet covered: skeptic-inc, 20:22Z) (the fuzzer found two bugs the edits did not: a method kept by a
 sig count whose remaining sources were its own targets, and a lost re-check across removals in one update). The
 same quiet window corrects DD's 8-worker edit-2 update: 29 ms, not 555 (that was load).
 
