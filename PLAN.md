@@ -56,10 +56,11 @@ Milestones log:
   kill tests (CP1 split, CP4 killed, CP7: indirection not pieces). Oracle number: **19/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed**.
 
-Now (2026-11-16T18:51Z): M4 review triaged. Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md)
-and Halide batched-level flood (results/halide-levelfree.md); Codex in /home/exedev/paradigms-c (branch codex-holes:
-ref/p4/p4holes.c, results/codex-holes.md, log codex-holes.log) and /home/exedev/paradigms-g (branch codex-goose-fnoff:
-Goose P4 checks function offsets, log codex-gfn.log); each log ends with "EXIT n". On each: rebuild + rerun its check
-in main, merge, GRID/ATTACKS. Then: (5) a Halide cell on the flattened stream (send to the Halide builder when its
-flood is done); (4) quiet reruns of the 8-thread numbers (systems/*/bench.sh one at a time) once no builder runs;
-(6) problem 4 on kube-apiserver (ref/p4/extract.sh on kube) as its second dataset.
+Now (2026-11-16T19:00Z): Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md) and Halide
+batched-level flood (results/halide-levelfree.md); Sonnet installer for a new column, Differential Dataflow
+(systems/ddflow, incremental relink); Codex in /home/exedev/paradigms-c (branch codex-holes, results/codex-holes.md, log
+codex-holes.log) and /home/exedev/paradigms-k (branch codex-kube-p4: every P4 cell on data/kube-p4, results/codex-kube-p4.md,
+log codex-kp4.log); each log ends with "EXIT n". Done: Goose P4 offset check merged; kube-apiserver P4 data extracted
+(ref/p4/README.md). On each finish: rebuild + rerun its check in main, merge, GRID/ATTACKS. Then: a Halide cell on
+the flattened P4 stream (to the Halide builder after its flood); DD's incremental relink as a real cell (P1+P2 under
+an edit: which symbols change between two MinIO builds); quiet reruns of the 8-thread numbers once no builder runs.
