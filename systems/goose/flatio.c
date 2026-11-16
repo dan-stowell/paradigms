@@ -100,3 +100,39 @@ int64_t minor_faults(uint8_t thread) {
 	getrusage(thread ? RUSAGE_THREAD : RUSAGE_SELF, &r);
 	return (int64_t)r.ru_minflt;
 }
+
+// ---- the output file (problem 4): workers that share no memory still share the file system. Main creates the
+// file at its final size; each worker writes its own bytes at its own offset (pwrite), as a linker's workers write
+// their ranges of the output file.
+static int open_flags(gs_slice s, int flags) {
+	char buf[4096];
+	if (s.len <= 0 || s.len >= (int64_t)sizeof buf) return -1;
+	memcpy(buf, s.data, (size_t)s.len);
+	buf[s.len] = 0;
+	return open(buf, flags, 0644);
+}
+
+uint8_t flat_create(gs_slice path, int64_t size) {
+	int fd = open_flags(path, O_WRONLY | O_CREAT | O_TRUNC);
+	if (fd < 0) return 0;
+	int r = ftruncate(fd, size);
+	close(fd);
+	return r == 0;
+}
+
+// writes a slice of elem-byte elements at byte offset at of an existing file
+uint8_t flat_write_at(gs_slice path, gs_slice data, int64_t elem, int64_t at) {
+	int fd = open_flags(path, O_WRONLY);
+	if (fd < 0) return 0;
+	int64_t want = data.len * elem, done = 0;
+	while (done < want) {
+		ssize_t k = pwrite(fd, data.data + done, (size_t)(want - done), at + done);
+		if (k <= 0) { close(fd); return 0; }
+		done += k;
+	}
+	close(fd);
+	return 1;
+}
+
+// the same for a slice of another element type (a Goose slice is passed by value: one C name per type)
+uint8_t flat_write_rels(gs_slice path, gs_slice data, int64_t elem, int64_t at) { return flat_write_at(path, data, elem, at); }
