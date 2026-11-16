@@ -74,3 +74,4 @@ reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a se
 - 2026-11-16T17:19:34Z relocation histogram (results/relkinds.*): 8 (kind,width) pairs, rel32 56%, top 100 targets = 30% of 2.05 M.
 - 2026-11-16T17:20:30Z Codex: codex-p4par (tuned C P4) launched in paradigms-c; codex-kube relaunched with full access (sandbox blocked the systemd bus).
 - 2026-11-16T17:23:23Z p2hyb (sequential tail flood): 111 -> 12 barriers but ~44% of pops go sequential; times noise at load 19.
+- 2026-11-16T17:28:24Z prior art: ideas/copy-and-patch.md (8 ideas for P4 with kill tests); CP1/CP4 queued for Codex.
