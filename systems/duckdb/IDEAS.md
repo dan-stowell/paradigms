@@ -27,3 +27,12 @@ join that detects a dense build key; expect 1b and 3b to drop several-fold.
 round rebuilds hash tables on `live`, `iface`, `canon`. The lazy decode (ATTACKS 1) loses to the eager one for this
 reason. **Idea:** keep the big relations' hash tables (or a sorted index) alive across statements; kill test: the
 same rules in a system that does (Soufflé's B-trees, Differential Dataflow's arrangements).
+
+## 4. P2 as an outer method loop around the engine's own recursive CTE
+
+**Evidence** (17:10Z, load 3.7, `sql/x_plainclosure.sql` after load2 + p2prep): the plain-edge closure alone from the
+roots (265,350 symbols, no method or interface rules) as one `WITH RECURSIVE ... UNION` statement: 425 ms on 8
+threads, 998 ms on 1 — inside one statement, so no per-statement cost per level. **Idea:** drive only the method
+rules from outside (few outer rounds), each round extending the closure with a recursive CTE seeded by the newly
+live; the gotype -> iface propagation is a second closure over plain edges between gotypes. Kill test: beat the
+2.0-2.4 s of p2loop.sql at 8 threads with P2 still exact.
