@@ -141,3 +141,4 @@ stayed at 4 backed entries but 3 and 4 gained measured extensions. Not stalled. 
 next gains are outside it: Differential Dataflow asks whether a relink after a small edit needs most of this work at
 all (builder running), and a Halide cell on the flattened P4 stream tests whether ATTACKS 4 transfers (builder running).
 - 2026-11-16T19:40Z full-grid skeptic triaged (5 accepted: Halide P3a poison check, Goose P3b disjoint-file write, ATTACKS 2 TLB counters -> Codex codex-review5; GRID Futhark P2 levels fixed).
+- 2026-11-16T19:54Z Halide P4 on the flattened stream merged (results/halide-p4flat.md): D emit 42 / 15 ms (3.8x / 1.5x its template emit), H1 13-16 / 6 ms; lead rebuilt + reran p4f all on MinIO and kube, 8 threads: P4 OK every checked variant (D 43.9 / 15.0, H1 16.0 median). Caveat: C's timed emit also collects relocations run by run; Halide copies prepared relocation columns.
