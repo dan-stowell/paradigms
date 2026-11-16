@@ -41,13 +41,14 @@ Milestones log:
 
 - 2026-11-16T15:40Z M0: MinIO frozen; flat files + oracles for problems 1-3 (ref/flat/README.md) extracted by hlink -dumpflat; plain 1-core C references reproduce every oracle exactly (ref/flat/check.sh); hlink's phase times on this VM in GRID.md (149 ms whole link, 8 cores); floors from bottom-up FLOOR.md. Oracle number: 0/20 paradigm cells (C column filled), 0 ATTACKS backed.
 
-Now (2026-11-16T16:28Z, lead session paradigms-46): M1/M2 in flight. **A /clear or session end kills the session's
-subagents**: the builders below run inside paradigms-46; if it is gone, relaunch them with ideas/RESUME.md (one Opus agent
-per worktree, prompt = "You are the <sys> cell builder ... worktree <path> ... follow ideas/RESUME.md").
-Builders (worktrees .claude/worktrees/): souffle agent-a04daa.., futhark agent-a86aa6.., halide agent-a45ed3.., goose
-agent-a8177a.., duckdb agent-a66651... Each replies when done; then rerun its oracle check, merge its branch, paste CELLS.md
-into GRID.md. Codex running: codex-f (paradigms-c, results/codex-f.md) = p1compact, "p1par's join is bound by passes over
-the dense key array, 15% keyed"; codex-g (paradigms-d, results/codex-g.md) = p2async, a barrier-free flood vs p2par under
-load. When each lands: fetch origin/codex-X, rerun its check myself, merge, update IDEAS/ATTACKS.
-Owed: nothing from reviews (attack1 items done 16:27Z). Next lead idea once helpers report: a milestone pass (LOOP.md) when
-the first builders' cells merge (M1 = every paradigm one correct cell).
+Now (2026-11-16T16:45Z, lead session paradigms-46): M1/M2 in flight. Merged: Goose, Futhark (GRID columns), codex-e/f/g.
+**A /clear or session end kills the session's subagents**: still running inside paradigms-46: builders souffle
+(.claude/worktrees/agent-a04daa..), halide (agent-a45ed3..), duckdb (agent-a66651..); if the session is gone, relaunch
+each with ideas/RESUME.md (prompt = "You are the <sys> cell builder ... worktree <path> ... follow ideas/RESUME.md").
+When a builder replies: rebuild its cells from source, rerun every check, merge its branch, fill its GRID column by table
+position (the C table has rows with the same names: edit only the rows under "## The paradigms").
+Codex: codex-h (paradigms-e, results/codex-h.md) splits p1compact's two changes (dense single pass vs partition-local
+candidates) to explain its 1.5x. Then: M1 milestone pass (LOOP.md "At each milestone": oracle number, GRID, JOURNAL
+paragraph, skeptic reviewer from a second clone, STATUS, MORNING) once Soufflé/Halide/DuckDB merge.
+Open threads: ATTACKS 3 quiet-machine run (p2async vs p2par passive, nothing else running); Futhark's
+glibc.malloc.hugetlb=2 tunable tried on the C refs and the other paradigms.
