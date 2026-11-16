@@ -26,9 +26,18 @@ table() {  # table PROBLEM GENERATOR TYPENAME: the C table of variants of one ge
 }
 
 for p in $probs; do
-    $CXX -fno-rtti -I$H/include "$here/gen_$p.cpp" $H/lib/libHalide_GenGen.a -L$H/lib -lHalide -lpthread -ldl -Wl,-rpath,$H/lib -o gen_$p
+    $CXX -fno-rtti -I$H/include -I"$here" "$here/gen_$p.cpp" $H/lib/libHalide_GenGen.a -L$H/lib -lHalide -lpthread -ldl -Wl,-rpath,$H/lib -o gen_$p
     rm -f ${p}_variants.inc ${p}_*.list
     case $p in
+    p1)
+        gen p1 counts counts
+        for par in false true; do
+            gen p1 resolve resolve_${par:0:1} par=$par
+            gen p1 reltarget reltarget_${par:0:1} par=$par
+            gen p1 contentjoin contentjoin_${par:0:1} par=$par
+        done
+        { cat p1_variants.inc; table p1 resolve resolves; table p1 reltarget reltargets; table p1 contentjoin cjoins; } > p1_variants.h
+        ;;
     p3)
         for c in 0 1 2 3; do for w in 0 1; do gen p3 layout layout_c${c}_w$w csched=$c wsched=$w; done; done
         for rf in 0 1; do for par in false true; do for vec in 0 32; do
