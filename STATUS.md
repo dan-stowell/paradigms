@@ -1,11 +1,12 @@
 # STATUS (at most ten lines; updated at every milestone and whenever Dan is needed)
 
-2026-11-16T19:35Z. **Grid full: 20/20 cells** (+ DuckDB 3, GraphBLAS 2), **4 ATTACKS backed** (3 and 4 extended today).
-Soufflé P4 correct but ~70x / ~130x C; its finding: set semantics silently merged 37,703 duplicate relocations.
-Every P4 cell is also correct on kube-apiserver. Halide batched levels: 1.0-1.2x slower (per-level passes are the cost).
-P4 hole cost is record traversal, not stores: baking integers into prepared blobs 1.5x; merging stores is noise.
-Running: Differential Dataflow (new column: incremental relink after a real edit), Halide on the flattened P4 stream.
-Skeptic fired on 5e179fe.
+2026-11-16T20:20Z. **Grid full: 20/20 cells** (+ DuckDB 3, GraphBLAS 2, Differential Dataflow 2), **5 ATTACKS backed**.
+**Surprise, up: relinking after a real edit.** A 5-line MinIO edit changes 31 symbols of 9.7 M facts; a C maintained
+flood (ref/flat/p2inc.c) updates reach in **3 us** (vs 43-45 ms recompute); a deleting edit (12 K symbols die) in
+5.5-9.5 ms. Textbook delete-and-rederive is 3x slower than recompute; derivation-order stamps fix it. ATTACKS 5.
+Prerequisite: stable symbol identity (positional ids shift on any edit; recovering identity costs 0.7-1.1 s today).
+Also today: Soufflé P4 (set semantics dropped 37,703 duplicate relocations), Halide flat-stream P4 3.8x, hole cost = traversal.
+Next: layout + relocate after an edit (do addresses have to move?), quiet reruns.
 
 ## Decisions for Dan
 - None. (vm.nr_hugepages is 1536 now; not persistent across a reboot.)

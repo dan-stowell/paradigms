@@ -62,13 +62,11 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T20:02Z): grid full (20/20), 5 ATTACKS backed (5 = incremental relink, DD column). All reviews
-triaged (REVIEWS.md). Running: the DD Opus builder in worktree /home/exedev/paradigms/.claude/worktrees/agent-aa18026fc1e40ed2c
-(branch worktree-agent-aa18026fc1e40ed2c) writing ref/flat/p2inc.c (C maintained flood: additions by worklist,
-deletions by a justified strategy) over a stored unified diff (data/minio-edit{,2}/diff/), report results/c-incremental.md.
-When its last commit adds results/c-incremental.md: merge, rebuild p2inc, rerun its check on both edits, time 3 rounds
-vs ddflow inc, update ATTACKS 5's evidence. Next, in order: (1) layout + relocate after an edit (ATTACKS 5 open
-question): how many addresses move after edit 1/2 with the current layout, and with per-package padding (slack after
-each package's text) — a Codex C job on data/minio vs data/minio-edit{,2} (ids unified by ddflow's map). (2) Quiet
-reruns of the 8-thread grid numbers when nothing runs (systems/*/bench.sh one at a time, taskset). (3) Next skeptic
-after (1).
+Now (2026-11-16T20:20Z): grid full (20/20), 5 ATTACKS backed. Nothing running. Next, in order:
+(1) Layout + relocate after an edit (ATTACKS 5's open question), as a Codex C job in /home/exedev/paradigms-c: with
+the unified id map (data/minio-edit{,2}/diff/, README there; ddflow writediff), how many live symbols' addresses
+(p3_addr) and how many relocated bytes change after edit 1/2 with the current layout; then with per-package slack
+(pad each package's text/data so a package that grows within its slack moves nothing else): bytes of slack needed,
+addresses moved, relocations to repatch, and a C incremental 3a+3b timed vs ref/flat/p3. Check: patched image equals
+B's oracle image in the produced regions. (2) Quiet reruns of the 8-thread grid numbers while nothing runs
+(systems/*/bench.sh one at a time, taskset; load now ~1). (3) Skeptic after (1).

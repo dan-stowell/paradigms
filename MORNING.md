@@ -1,4 +1,4 @@
-# MORNING, 2026-11-16T19:35Z (grid full: 20/20)
+# MORNING, 2026-11-16T20:20Z (grid full: 20/20; ATTACKS 5: incremental relink)
 
 ## The grid (MinIO, ms, 1 / 8 threads, warm; load 7-26 during M3, so 8-thread numbers are upper bounds)
 
@@ -18,6 +18,13 @@ oracles (results/codex-kube.md); 1-thread times grow 1.5-2.5x for ~1.4x the data
 P4 cell correct unchanged; emit grows 1.0-1.2x for 1.23x the bytes (kube has 0.86x the templates).
 
 ## Surprises
+- **New, up (the biggest of the day):** a relink after a real edit barely changes. Edit 1 (5 lines added to one
+  function) touches 31 symbols of 9.7 M facts and 3 live ids; a plain-C maintained flood updates reach in **3 us**
+  (recompute 43-45 ms; Differential Dataflow 1.4 ms). Edit 2 (console start-up deleted, 12,320 ids die): **5.5-9.5 ms**
+  vs 43 recompute; textbook DRed is 123 ms, so the deletion strategy (derivation-order stamps) is the attack.
+  Positional symbol ids are the obstacle: 3 added slots renumber every later object (ATTACKS 5, results/c-incremental.md).
+- **New, up:** Halide on the flattened P4 stream emits in 42 / 15 ms (3.8x / 1.5x its template emit); with integer
+  holes baked in, 13 / 6 ms (results/halide-p4flat.md; its timed region copies prepared relocations, C's builds them).
 - **New, down (a trap):** Soufflé P4's first version lost 37,703 relocations: a Datalog relation is a set, a linker's
   relocation list is a multiset, and exact duplicates merge silently. Only the count check caught it.
 - **New, down (the premise again):** Halide's ~100 pipeline calls cost ~2 ms of 300; batching 2-8 levels per call is
@@ -41,6 +48,7 @@ P4 cell correct unchanged; emit grows 1.0-1.2x for 1.23x the bytes (kube has 0.8
   C that drains them sequentially moves ~44% of the work to one thread (the small levels lead into wide ones).
 
 ## ATTACKS.md
+- **New 5. Relink: maintain the answer after an edit; first make symbol identity stable** (DD column, then C p2inc).
 - **New 4. Code generation by shape: the emit costs indirection per piece; flatten the stream, merge templates by width**
   (first written as "pieces, not bytes"; corrected the same hour by codex-cp7's control, see ATTACKS.md).
 - **3 extended:** measured in Futhark, Goose, Halide (batched levels: no gain) and in C as p2hyb.
@@ -56,7 +64,9 @@ merged hole stores (within noise).
 - M3 skeptic: 5 findings, all accepted (Halide 3b fresh images now checked; ATTACKS 3 retitled to its measured scope;
   Halide's kube anomaly was load; page-reuse caveat on Goose P1 / Futhark 3b warm numbers). M4 skeptic: 6 findings,
   all accepted and closed (Goose P4 now checks function offsets; Goose's 'tie' qualified by its join cost; Halide
-  batched levels measured). Skeptic on the full grid fired 19:35Z.
+  batched levels measured). Full-grid skeptic: 5 accepted and closed
+  (Halide P3a poisoned-output check; Goose P3b one file from 8 workers 77 ms, so it no longer falls down as a relocate;
+  ATTACKS 2's 'TLB, not faults' withdrawn: both, counted).
 
 ## Decisions for you
 None.
