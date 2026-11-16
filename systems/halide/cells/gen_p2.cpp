@@ -31,12 +31,12 @@ enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16, fFollow = 32
 static const int BLK = 16;
 
 struct Layout {
-    Expr nid, nsig, nstr, nmeth, nblk, nidp, LIVE, IFACE, EXP, DONE, SCR, SIG, NAMED, REFL, CAND, CALLED, SCRM, SUM, total;
+    Expr nid, nsig, nstr, nmeth, nblk, nidp, LIVE, IFACE, EXP, DONE, SCR, SIG, NAMED, REFL, CAND, CALLED, SCRM, SUM, CNT, total;
     Layout(Expr nid_, Expr nsig_, Expr nstr_, Expr nmeth_) : nid(nid_), nsig(nsig_), nstr(nstr_), nmeth(nmeth_) {
         nblk = (nid + BLK - 1) / BLK, nidp = nblk * BLK;
         LIVE = 0, IFACE = nidp, EXP = 2 * nidp, DONE = 3 * nidp, SCR = 4 * nidp;
         SIG = 5 * nidp, NAMED = SIG + nsig, REFL = NAMED + nstr + 1, CAND = REFL + 1, CALLED = CAND + nmeth;
-        SCRM = CALLED + nmeth, SUM = SCRM + nmeth, total = SUM + 2 * nblk;
+        SCRM = CALLED + nmeth, SUM = SCRM + nmeth, CNT = SUM + 2 * nblk, total = CNT + 4;
     }
 };
 
@@ -54,7 +54,10 @@ static Expr bit(Expr v, int b) { return (v & u8(b)) != 0; }
 // the list of blocks whose summary byte (st(base + b)) is set: a scan over the blocks, then a scatter. Parallel:
 // the scan blocked by hand (scan within chunks of 2^12 in parallel, a serial scan of the chunk totals): a scan is
 // a loop-carried update, which Halide runs serially as written.
-static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool par) {
+// at: where its pieces are computed (root, or inside a stage of st for a level batched into the same call; then
+// list and count are internal Funcs computed there too).
+static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool par, LoopLevel at = LoopLevel::root(),
+                      bool internal = false) {
     Var b("b"), j("j"), ch("ch");
     Func pos("pos");
     auto flagged = [&](Expr x) { return select(x < nblk, i32(st(base + min(x, nblk - 1)) != 0), 0); };
@@ -62,7 +65,7 @@ static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool
         RDom r(0, nblk, "rb");
         pos(b) = 0;
         pos(r) = select(r > 0, pos(max(r - 1, 0)), 0) + flagged(r);
-        pos.compute_root();
+        pos.compute_at(at);
     } else {
         const int C = 1 << 12;
         Expr nch = (nblk + C - 1) / C;
@@ -74,9 +77,9 @@ static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool
         off(ch) = 0;
         off(rc) = off(rc - 1) + inc(C - 1, rc - 1);
         pos(b) = off(b / C) + inc(b % C, b / C);
-        inc.compute_root().parallel(ch);
+        inc.compute_at(at).parallel(ch);
         inc.update().parallel(ch);
-        off.compute_root();
+        off.compute_at(at);
     }
     list(b) = 0;
     RDom rl(0, nblk, "rl");
@@ -85,6 +88,7 @@ static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool
     list(clamp(pos(rlc) - 1, 0, nblk - 1)) = rlc;
     count() = pos(nblk - 1);
     if (par) hj::parChunks(list.update().allow_race_conditions(), rl, 1 << 14);  // distinct positions
+    if (internal) list.compute_at(at), count.compute_at(at);
 }
 
 // The initial state: IFACE from the flags, the roots LIVE and their blocks in list 0.
@@ -112,11 +116,21 @@ public:
 
 // One level: expand every symbol that needs it in the blocks of list `act` (parity p); the blocks of the targets
 // that will need expanding go to list 1 - p.
+// levels = k > 1 (ATTACKS 3, results/halide-levelfree.md): k levels in one call. A Func cannot call a Func that
+// calls it, so the list of level i (built from st after level i - 1) cannot be a Func of st. It is built from
+// `stIn`, which the caller binds to the same buffer as st, and computed inside level i's own stage (at an
+// outermost RVar of extent 1), so it runs after level i - 1 has finished; level i's block loop runs to its count.
 class Flood : public Generator<Flood> {
 public:
     GeneratorParam<bool> lazy{"lazy", true};  // decode relocations here (true) or read p2_edge (false)
     GeneratorParam<bool> par{"par", false};
     GeneratorParam<int> chunk{"chunk", 16};   // blocks per parallel task
+    GeneratorParam<int> levels{"levels", 1};  // levels per call
+    GeneratorParam<bool> inlineInfo{"inlineInfo", false};
+    // endclear: no clear pass; a block's own summary byte is cleared once its symbols are done (a 17th "symbol"),
+    // and levels 2..k visit at most `cap` blocks of their list (an RDom's bounds may be params, never data); the
+    // rest keep their summary byte and are picked up two levels later (nleft counts them for the caller)
+    GeneratorParam<bool> endclear{"endclear", false};
     SIZES
     Input<int> parity{"parity"};
     // The blocks to visit. (A where on an outer RVar is an if around the innermost loop, re-tested for every op,
@@ -125,6 +139,7 @@ public:
     // Halide turns into a loop bound is one on the innermost RVar that has a where.)
     Input<Buffer<int32_t, 1>> act{"act"};
     Input<int> nact{"nact"};
+    Input<int> cap{"cap"};  // endclear: the most blocks a level after the first visits
     Input<Buffer<uint8_t, 1>> fl{"fl"};
     // lazy: the relocation columns and the 1a answer
     Input<Buffer<uint32_t, 1>> canon{"canon"};
@@ -143,36 +158,53 @@ public:
     Input<Buffer<uint32_t, 1>> moff{"moff"};
     Input<Buffer<uint32_t, 1>> mtyp{"mtyp"};
     Input<Buffer<uint32_t, 1>> sigrep{"sigrep"};  // a signature's representative (equal (name, type) pairs)
+    Input<Buffer<uint8_t, 1>> stIn{"stIn"};      // the same buffer as st (read only for the lists of levels 2..k)
     Output<Buffer<uint8_t, 1>> st{"st"};
     Output<Buffer<int32_t, 1>> next{"next"};      // the blocks of the next level
     Output<Buffer<int32_t, 0>> nnext{"nnext"};
+    Output<Buffer<int32_t, 0>> nleft{"nleft"};   // endclear: blocks of the last level's list not visited
 
     Var x{"x"};
 
     void generate() {
         Layout L(nid, nsig, nstr, nmeth);
         Expr nsl = fl.dim(0).extent() - 1, nb = builtin.dim(0).extent(), R = rpkg.dim(0).extent();
-        Expr p = parity, SUMN = L.SUM + (1 - p) * L.nblk;
         auto flag = [&](Expr t) { return select(t <= nsl, fl(clamp(t, 0, nsl)), u8(0)); };
         auto has = [&](Expr region, Expr id) { return st(region + id) != 0; };
-
         st(x) = undef<uint8_t>();
+        Var v("v");
+        Func stF("stF");
+        stF(v) = stIn(v);
+        int nu = 0;  // updates defined so far
+        for (int lev = 0; lev < levels; lev++) {
+        std::string sx = std::to_string(lev);
+        Expr p = (parity + lev) % 2, SUMN = L.SUM + (1 - p) * L.nblk;
+        Func actF("act" + sx), cnt("cnt" + sx);
+        if (lev == 0) actF(v) = act(v);
         // update 0: clear the next level's block summary
-        RDom rz(0, L.nblk, "rz");
-        st(SUMN + min(rz, L.nblk - 1)) = u8(0);  // (min: the parallel split runs past the end)
-        if (par) hj::parChunks(st.update(0).allow_race_conditions(), rz, 1 << 15);  // (the clamped tail rewrites a 0)
-
-        // update 1: the expansion, RDom (phase, op, symbol in block, block in the list)
-        RDom rk(0, 3, 0, 1 << 26, 0, BLK, 0, nact, "rk");
+        if (!endclear) {
+            RDom rz(0, L.nblk, "rz" + sx);
+            st(SUMN + min(rz, L.nblk - 1)) = u8(0);  // (min: the parallel split runs past the end)
+            if (par) hj::parChunks(st.update(nu).allow_race_conditions(), rz, 1 << 15);  // (the clamped tail rewrites a 0)
+            nu++;
+        }
+        const int NZ = endclear ? BLK + 1 : BLK;
+        // update 1: the expansion, RDom (phase, op, symbol in block, block in the list, [the level's list])
+        LoopLevel at;  // (set below, once the RDom exists)
+        if (lev > 0) blockList(stF, L.SUM + p * L.nblk, L.nblk, actF, cnt, par, at, true);
+        // (a where w < count stays an if in the innermost loop: the extent must be the count itself)
+        RDom rk = lev == 0 ? RDom(0, 3, 0, 1 << 26, 0, NZ, 0, nact, "rk0")
+                           : RDom({{0, 3}, {0, 1 << 26}, {0, NZ}, {0, endclear ? Expr(cap) : L.nblk}, {0, 1}}, "rk" + sx);
+        if (lev > 0) at.set(LoopLevel(st, rk[4])), rk.where(rk.w < cnt());
         Expr ph = rk.x, op = rk.y;
         // (promises, not clamps: a clamp makes bounds inference size `info` for every block the id could be in)
-        Expr b = unsafe_promise_clamped(act(rk.w), 0, L.nblk - 1), c = b * BLK + rk.z;
+        Expr b = unsafe_promise_clamped(actF(rk.w), 0, L.nblk - 1), c = b * BLK + rk.z;
         // What a symbol's ops need from the inputs, once per symbol. Indexed by the loop's own (symbol in block,
         // block in list): indexed by the id, bounds inference would size it for every block the id could be in.
-        Func info("info");
+        Func info("info" + sx);
         Var zv("zv"), wv("wv");
         {
-            Expr cv = unsafe_promise_clamped(act(wv), 0, L.nblk - 1) * BLK + zv;
+            Expr cv = unsafe_promise_clamped(actF(wv), 0, L.nblk - 1) * BLK + zv;
             Expr cc = clamp(cv, 0, nsl), f = flag(cv);
             Expr nr = lazy ? select(bit(f, fFollow) && canon(cc) == u32(cv), i32(srel(cc + 1) - srel(cc)), 0) : Expr(0);
             Expr o = unsafe_promise_clamped(i32(sobj(cc)), 0, pkgOff.dim(0).extent() - 2);
@@ -184,7 +216,8 @@ public:
         Expr nr = I(0), nx = I(1), nm = I(2), rel0 = I(3), x0 = I(4), m0 = I(5), base = I(6), npk = I(7), flc = u8(I(8));
         Expr isDef = c <= nsl && bit(flc, fDef);
         Expr uii = bit(flc, fGoType) && has(L.IFACE, c);
-        Expr needs = isDef && has(L.LIVE, c) && (!has(L.EXP, c) || (uii && !has(L.DONE, c)));
+        Expr clearZ = rk.z == BLK;  // (endclear only)
+        Expr needs = !clearZ && isDef && has(L.LIVE, c) && (!has(L.EXP, c) || (uii && !has(L.DONE, c)));
         // The methods, and a last op that sets DONE, count only for a type converted to an interface (uii).
         // IFACE can arrive on c during its own expansion (another thread, or a self edge): the loop bound was
         // fixed at entry, so the ops actually run are those of the layout without them, and every iteration maps
@@ -194,7 +227,7 @@ public:
         // uii read there, lost 6 to 2,106 live symbols in parallel runs: DONE without the method or iface work.)
         nm = select(uii, nm, 0);
         Expr nops = 2 + nr + nx + select(uii, 2 * nm + 1, 0);
-        rk.where(op < select(needs, nops, 0));
+        rk.where(op < select(needs, nops, clearZ, 1, 0));
 
         // the op's target
         Expr selfOp = op == 1 + nr + nx + 2 * nm, doneOp = uii && op == nops - 1 && !selfOp;
@@ -238,13 +271,20 @@ public:
                             candOp, L.CAND + m, scr);
         Expr site1 = select(setIface, L.IFACE + ti, scr);
         Expr site2 = select(setLive || (plainOp && setIface), L.LIVE + ti, scr);
-        Expr site = unsafe_promise_clamped(select(ph == 0, site0, ph == 1, site1, site2), 0, L.total - 1);
-        st(site) = u8(1);
+        Expr site = unsafe_promise_clamped(select(clearZ, L.SUM + p * L.nblk + b, ph == 0, site0, ph == 1, site1, site2), 0, L.total - 1);
+        st(site) = select(clearZ, u8(0), u8(1));
 
-        blockList(st, SUMN, L.nblk, next, nnext, par);
-
-        info.compute_at(st, rk.z);
-        if (par) hj::parChunks(st.update(1).allow_race_conditions(), rk.w, chunk);  // only constant stores race
+        if (lev == 0 || !inlineInfo) info.compute_at(st, rk.z);  // (RVar names are unique per level)
+        if (par) hj::parChunks(st.update(nu).allow_race_conditions(), rk.w, chunk);  // only constant stores race
+        nu++;
+        }
+        blockList(st, L.SUM + ((parity + levels) % 2) * L.nblk, L.nblk, next, nnext, par);  // the last level's pushes
+        if (endclear) {
+            RDom rs(0, L.nblk, "rs");
+            nleft() = sum(i32(st(L.SUM + ((parity + levels - 1) % 2) * L.nblk + rs) != 0));
+        } else {
+            nleft() = 0;
+        }
     }
 };
 

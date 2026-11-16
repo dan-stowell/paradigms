@@ -26,6 +26,7 @@ table() {  # table PROBLEM GENERATOR TYPENAME: the C table of variants of one ge
 }
 
 for p in $probs; do
+  if [ -z "${DRIVER_ONLY:-}" ]; then  # DRIVER_ONLY=1: relink the driver against the existing variants
     $CXX -fno-rtti -I$H/include -I"$here" "$here/gen_$p.cpp" $H/lib/libHalide_GenGen.a -L$H/lib -lHalide -lpthread -ldl -Wl,-rpath,$H/lib -o gen_$p
     rm -f ${p}_variants.inc ${p}_*.list
     case $p in
@@ -46,6 +47,11 @@ for p in $probs; do
         done
         for lazy in true false; do for par in false true; do
             gen p2 flood flood_${lazy:0:1}_${par:0:1} lazy=$lazy par=$par; done; done
+        # ATTACKS 3 (results/halide-levelfree.md): k levels per pipeline call. e: end-of-block clear, capped lists
+        # (attempt 2); d: lists to nblk (attempt 1, eager serial only)
+        for k in 1 2 4 8; do for lazy in true false; do for par in false true; do
+            gen p2 flood flood_${lazy:0:1}_${par:0:1}_e$k lazy=$lazy par=$par levels=$k endclear=true; done; done; done
+        for k in 2 4; do gen p2 flood flood_f_f_d$k lazy=false par=false levels=$k; done
         { cat p2_variants.inc; table p2 prep preps; table p2 methods meths; table p2 flood floods; } > p2_variants.h
         ;;
     p3)
@@ -68,6 +74,7 @@ for p in $probs; do
     esac
     # one Halide runtime for all variants of this problem
     ./gen_$p -r runtime_$p -o . target=host$F
+  fi
     $CXX -march=native -I. -I$H/include "$here/$p.cpp" $(sed 's/.*"\(.*\)\.h"/\1.a/' ${p}_variants.inc) runtime_$p.a -lpthread -ldl -o $p
     echo "built $p"
 done

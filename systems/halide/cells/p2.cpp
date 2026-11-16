@@ -82,29 +82,56 @@ int main(int argc, char **argv) {
     auto xkindB = own(xkind);
     printf("non-relocation edges: %u (of %d in p2_edge)\n", xoff[nsl + 1], edst.dim(0).extent());
 
-    int nblk = (nid + 15) / 16, total = 5 * nblk * 16 + nsig + nstr + 1 + 1 + 3 * nmeth + 2 * nblk;  // gen_p2.cpp Layout
+    int nblk = (nid + 15) / 16, total = 5 * nblk * 16 + nsig + nstr + 1 + 1 + 3 * nmeth + 2 * nblk + 4;  // gen_p2.cpp Layout
     Buffer<u8, 1> st(total);
     Buffer<u32, 1> sigrep(nsig);
     Buffer<int32_t, 1> msig(nmeth);
-    Buffer<int32_t, 0> nnext = Buffer<int32_t, 0>::make_scalar();
+    Buffer<int32_t, 0> nnext = Buffer<int32_t, 0>::make_scalar(), nleft = Buffer<int32_t, 0>::make_scalar();
+    int cap = getenv("P2_CAP") ? atoi(getenv("P2_CAP")) : 1024;  // endclear variants: blocks per level after the first
     Buffer<int32_t, 1> actA(nblk), actB(nblk);  // the blocks in the frontier: read one, write the other
     int levels = 0, rounds = 0;
     long blocks = 0;  // blocks expanded, over all levels
-    auto run = [&](int v) {
-        bool lazy = floods[v].name[6] == 't', par = floods[v].name[strlen(floods[v].name) - 1] == 't';
+    std::vector<double> *callT = nullptr;  // count mode: time of every flood call
+    std::vector<int> callN;                // ... and its number of blocks
+    double tPrep = 0, tInit = 0, tMeth = 0;
+    // levels per call of a variant: flood_L_P (1), flood_L_P_eK / _dK (K); P2_HYB=1: an _eK variant hands lists of
+    // >= cap blocks to its _e1 sibling (batch only the narrow levels)
+    auto kOf = [&](int v) { const char *n = floods[v].name; return strlen(n) > 10 ? atoi(n + 11) : 1; };
+    auto sibling1 = [&](int v) {
+        std::string n = floods[v].name;
+        if (n.size() <= 10 || n[10] != 'e') return v;
+        n = n.substr(0, 11) + "1";
+        for (int u = 0; u < nFloods; u++) if (n == floods[u].name) return u;
+        return v;
+    };
+    int hyb = getenv("P2_HYB") ? atoi(getenv("P2_HYB")) : 0;
+    long calls = 0;
+    auto run = [&](int v0) {
+        bool lazy = floods[v0].name[6] == 't', par = floods[v0].name[8] == 't';
+        int v1 = hyb ? sibling1(v0) : v0;
+        double ta = now();
         preps[par].fn(sname, stype, mname, mtyp, sigrep, msig);
+        double tb = now();
         init(nid, nsig, nstr, nmeth, fl, roots, st, actA, nnext);
-        levels = rounds = 0, blocks = 0;
+        double tc0 = now();
+        if (callT) tPrep = tb - ta, tInit = tc0 - tb, tMeth = 0;
+        levels = rounds = 0, blocks = 0, calls = 0;
         for (int parity = 0;;) {
             rounds++;
             do {
                 blocks += nnext();
-                floods[v].fn(nid, nsig, nstr, nmeth, parity, actA, nnext(), fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
-                             lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, actB, nnext);
+                double tc = callT ? now() : 0;
+                if (callT) callN.push_back(nnext());
+                int v = nnext() >= cap ? v1 : v0;
+                floods[v].fn(nid, nsig, nstr, nmeth, parity, actA, nnext(), cap, fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
+                             lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, st, actB, nnext, nleft);
+                if (callT) callT->push_back(now() - tc);
                 std::swap(actA, actB);
-                parity ^= 1, levels++;
-            } while (nnext() != 0);
+                parity = (parity + kOf(v)) % 2, levels += kOf(v), calls++;
+            } while (nnext() != 0 || nleft() != 0);
+            double tm = now();
             meths[par].fn(nid, nsig, nstr, nmeth, parity, mname, mtyp, mifn, mtfn, mexp, msig, st, actA, nnext);
+            if (callT) tMeth += now() - tm;
             if (nnext() == 0) break;
         }
     };
@@ -112,12 +139,52 @@ int main(int argc, char **argv) {
         std::vector<u32> list;
         for (int g = 1; g < nid; g++)
             if (st(g)) list.push_back(g);  // the LIVE region
-        printf("%d levels in %d rounds, %ld blocks of 16 ids; ", levels, rounds, blocks);
+        printf("%ld flood calls, <= %d levels, %d rounds, %ld blocks of 16 ids in the calls' first lists; ", calls, levels, rounds, blocks);
         return check32("live", list.data(), list.size(), "oracle/p2_live.u32") != 0;
     };
     const char *th = getenv("HL_NUM_THREADS");
     long bad = 0;
-    if (mode == "e2e") {
+    if (mode == "count") {  // (a) where the time goes: per-call times, and the cost of a call with an empty frontier
+        int v = argc > 3 ? atoi(argv[3]) : 0;
+        run(v);  // warm
+        std::vector<double> T;
+        double best = 1e9;
+        std::vector<double> bestT;
+        double bp = 0, bi = 0, bm = 0;
+        for (int r = 0; r < 5; r++) {
+            T.clear(), callN.clear(), callT = &T;
+            double t0 = now();
+            run(v);
+            double t1 = now() - t0;
+            if (t1 < best) best = t1, bestT = T, bp = tPrep, bi = tInit, bm = tMeth;
+        }
+        callT = nullptr;
+        double sum = 0, small = 0;
+        int nsmall = 0;
+        for (size_t i = 0; i < bestT.size(); i++) {
+            sum += bestT[i];
+            if (callN[i] < 64) small += bestT[i], nsmall++;
+        }
+        // an empty frontier: the state after a full flood, nact = 0 (the clear, the scan and the list still run)
+        int lazy = floods[v].name[6] == 't';
+        Stat e = timeRuns([&] {
+            floods[v].fn(nid, nsig, nstr, nmeth, 0, actA, 0, cap, fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
+                         lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, st, actB, nnext, nleft);
+        }, 5, 0.3);
+        // the call alone: an empty frontier over a 1-block state (nid = 16: every pass has one element)
+        Stat e0 = timeRuns([&] {
+            floods[v].fn(16, nsig, nstr, nmeth, 0, actA, 0, cap, fl, canon, builtin, srel, sobj, pkgOff, pkg, rpkg, ridx, rtype,
+                         lazy ? xoffB : eoff, lazy ? xdstB : edst, lazy ? xkindB : ekind, moff, mtyp, sigrep, st, st, actB, nnext, nleft);
+        }, 5, 0.3);
+        printf("  call alone (1-block state): " STAT_FMT "\n", STAT_ARGS(e0));
+        printf("count %s threads=%s: best flood %.2f ms, %ld flood calls (%d rounds = method calls), %ld blocks in first lists; calls sum %.2f ms;"
+               " %d calls with < 64 blocks take %.2f ms; empty call " STAT_FMT "\n",
+               floods[v].name, th ? th : "default", best * 1e3, calls, rounds, blocks, sum * 1e3, nsmall, small * 1e3, STAT_ARGS(e));
+        printf("  outside the flood calls: prep %.2f ms, init %.2f ms, methods (%d calls) %.2f ms\n", bp * 1e3, bi * 1e3, rounds, bm * 1e3);
+        if (getenv("P2_PERCALL"))
+            for (size_t i = 0; i < bestT.size(); i++) printf("call %zu blocks %d ms %.3f\n", i, callN[i], bestT[i] * 1e3);
+        bad += check();
+    } else if (mode == "e2e") {
         int v = argc > 3 ? atoi(argv[3]) : 0;
         double t0 = now();
         run(v);
