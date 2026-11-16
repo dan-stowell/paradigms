@@ -1,0 +1,150 @@
+// flat.goose: read the flat files (ref/flat/README.md) into Goose arrays.
+// The one escape from the language is flatio.c: a file's size and a read() straight into a builder's
+// stack top (goose.h's contract). Plain numbers are read that way; arrays of index types go through
+// from_bytes, which checks every index against its array (C cannot write them: the compiler refuses).
+import std;
+import os;
+
+extern fn flat_size(path: const u8[:]) -> i64;
+extern fn flat_read(path: const u8[:], out: u8[>..]&, elem: i64) -> bool;
+extern fn flat_read(path: const u8[:], out: u16[>..]&, elem: i64) -> bool = "flat_read";
+extern fn flat_read(path: const u8[:], out: u32[>..]&, elem: i64) -> bool = "flat_read";
+extern fn flat_read(path: const u8[:], out: i32[>..]&, elem: i64) -> bool = "flat_read";
+extern fn flat_read(path: const u8[:], out: u64[>..]&, elem: i64) -> bool = "flat_read";
+extern fn flat_read(path: const u8[:], out: i64[>..]&, elem: i64) -> bool = "flat_read";
+// a .u64x2 file: 128-bit keys, k1 then k2
+struct Key { k1: u64, k2: u64 }
+extern fn flat_read(path: const u8[:], out: Key[>..]&, elem: i64) -> bool = "flat_read";
+// elements [first, first + count) of a file
+extern fn flat_read_range(path: const u8[:], out: u8[>..]&, elem: i64, first: i64, count: i64) -> bool;
+extern fn flat_read_range(path: const u8[:], out: u32[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: u64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: i64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+extern fn flat_read_range(path: const u8[:], out: Key[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
+
+// the output's pages (flatio.c, ATTACKS.md 2): fresh 4 KB or 2 MB pages for out's next n bytes; minor faults so far
+extern fn fresh_pages(out: u8[>..]&, n: i64, huge: bool) -> i64;
+extern fn minor_faults(thread: bool) -> i64;
+
+// the data directory: the first argument
+fn dir_arg() -> u8[>..] {
+    let a = args();
+    return str(if a.len > 1 { a[1] } else { "/home/exedev/paradigms/data/minio" });
+}
+var flat_dir: u8[>..] = dir_arg();
+
+fn flat_path(name: const u8[:]) -> u8[>..] { str(flat_dir, "/", name) }
+
+// appends the file's elements to out (sizes from the element type)
+fn load(name: const u8[:], out: u8[>..]&) { guard flat_read(flat_path(name), out, 1) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u16[>..]&) { guard flat_read(flat_path(name), out, 2) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u32[>..]&) { guard flat_read(flat_path(name), out, 4) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: i32[>..]&) { guard flat_read(flat_path(name), out, 4) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: i64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: Key[>..]&) { guard flat_read(flat_path(name), out, 16) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u8[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 1, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u32[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 4, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: u64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: i64[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 8, first, count) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: Key[>..]&, first: i64, count: i64) { guard flat_read_range(flat_path(name), out, 16, first, count) else { abort(str("cannot read ", name)); } }
+
+// the file framed as a Goose image (ULEB128 byte count, then the bytes), for from_bytes
+fn load_image(name: const u8[:]) -> u8[>..] {
+    let p = flat_path(name);
+    var img: u8[>..] = [];
+    format_uleb(img, flat_size(p));
+    guard flat_read(p, img, 1) else { abort(str("cannot read ", name)); }
+    return img;
+}
+
+// meta.txt: `key value` lines
+fn meta(key: const u8[:]) -> i64 {
+    var text: u8[>..] = [];
+    guard read_file(flat_path("meta.txt"), text) else { abort("cannot read meta.txt"); }
+    for line in split(text, '\n') {
+        let k, v, ok = split_once(line, ' ');
+        if ok && k == key {
+            let n, nok = parse_int(v);
+            if nok { return n; }
+        }
+    }
+    abort(str("meta: no ", key));
+    return 0;
+}
+
+fn zeros(n: i64) -> u8[>..] {
+    var a: u8[>..] = [];
+    a.resize(n, 0);
+    return a;
+}
+fn load_u8(name: const u8[:]) -> u8[>..] { var a: u8[>..] = []; load(name, a); return a; }
+fn load_u32(name: const u8[:]) -> u32[>..] { var a: u32[>..] = []; load(name, a); return a; }
+fn load_u64(name: const u8[:]) -> u64[>..] { var a: u64[>..] = []; load(name, a); return a; }
+fn load_i64(name: const u8[:]) -> i64[>..] { var a: i64[>..] = []; load(name, a); return a; }
+fn load_u16(name: const u8[:]) -> u16[>..] { var a: u16[>..] = []; load(name, a); return a; }
+fn load_i32(name: const u8[:]) -> i32[>..] { var a: i32[>..] = []; load(name, a); return a; }
+fn load_keys(name: const u8[:]) -> Key[>..] { var a: Key[>..] = []; load(name, a); return a; }
+
+checkfree fn mix64(x: u64) -> u64 {
+    var h = x;
+    h ^= h >> 30;
+    h *= 0xBF58476D1CE4E5B9;
+    h ^= h >> 27;
+    h *= 0x94D049BB133111EB;
+    return h ^ (h >> 31);
+}
+
+// how many of got differ from the oracle file (u32 entries); prints the first few
+fn check32(what: const u8[:], got: u32[:], oracle: const u8[:]) -> i64 {
+    var want: u32[>..] = [];
+    load(oracle, want);
+    if want.len != got.len { print(what, ": ", got.len, " entries, oracle ", want.len); return 1; }
+    var bad = 0;
+    for i in got.len {
+        if got[i] != want[i] {
+            if bad < 5 { print("  ", what, "[", i, "] = ", got[i], ", oracle ", want[i]); }
+            bad++;
+        }
+    }
+    print(what, ": ", got.len, " entries, ", bad, " differ from ", oracle);
+    return bad;
+}
+
+// an array of an index type, verified against its array by from_bytes
+fn load_ids<T>(name: const u8[:]) -> T[>..] {
+    let a, ok = from_bytes<T[>..]>(load_image(name));
+    guard ok else { abort(str(name, ": an index does not fit its array")); }
+    return a;
+}
+
+fn ms(t0: f64, t1: f64) -> f64 { (t1 - t0) * 1000.0 }
+
+fn env_set(name: const u8[:]) -> bool {
+    var v: u8[>..] = [];
+    return env(name, v) && v.len > 0;
+}
+
+fn env_int(name: const u8[:], dflt: i64) -> i64 {
+    var v: u8[>..] = [];
+    if env(name, v) { let n, ok = parse_int(v); if ok && n >= 1 { return n; } }
+    return dflt;
+}
+
+// min / median / max of times (ms), sorted in place
+fn spread(note: u8[>..]&, what: const u8[:], times: f64[>..]&) {
+    sort(times) { x, y => x < y };
+    format(note, what, " ");
+    format_flt(note, times[0], 1);
+    format(note, "/");
+    format_flt(note, times[times.len / 2], 1);
+    format(note, "/");
+    format_flt(note, times[times.len - 1], 1);
+    format(note, " ms  ");
+}
+
+fn report(note: u8[>..]&, what: const u8[:], t0: f64, t1: f64) {
+    format(note, what, " ");
+    format_flt(note, ms(t0, t1), 1);
+    format(note, " ms  ");
+}

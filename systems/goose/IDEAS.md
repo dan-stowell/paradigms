@@ -169,3 +169,14 @@ ranks ML Kit, GNU obstacks, ParaSail, Ada/GNAT, C arenas, Cyclone as nearest).
 - Kill test: emit the 1.4 M shapes into the image directly versus into a scratch buffer and memcpy. Kill if the extra
   copy is under 2% of the codegen phase (109 MB at 92 GB/s is about 1.2 ms of copy; if the measured gap is that
   small, in-place construction is not worth a language feature).
+
+## Measured (cells, 2026-11-16T16:25Z, load ~8-13)
+
+- **Leave a shared-nothing output distributed.** p3par builds the 109 MB image in 17-24 ms on 8 workers (2 MB pages) when
+  each worker keeps its address range; gathering it into main costs 142-171 ms more. For a linker the output is a file:
+  each worker writing its range (pwrite at its offset) is the shape that keeps Goose's isolation and its speed. Kill test:
+  per-worker pwrite of the segments to a hugetlbfs/tmpfs file; kill if it costs more than 2x the distributed 3b.
+- **A data stack's page size as a language knob.** Remapping the pages above a builder's stack top to MAP_HUGETLB halves 3b
+  (86.7-98.5 -> 40.8-42.2 ms, faults 26,731 -> 258-457). Goose assigns stacks statically, so it knows which stack holds
+  the image: a per-stack (or per-`let`) "huge" attribute would make this idiomatic. Kill test: the same 2x on another
+  big write (P1's 200 MB table first touch: 213 ms first rep vs 79-115 later).
