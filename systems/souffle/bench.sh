@@ -22,6 +22,7 @@ cells=(
 	"2 reach $D cmp -s $O/p2_live.u32 $D/oracle/p2_live.u32"
 	"2-lazy reach_lazy $here/build/lazyfacts cmp -s $O/p2_live.u32 $D/oracle/p2_live.u32"
 	"3a layout $D $here/build/check_p3 $D $D/oracle/p3_image.bin $O/p3_addr.u32"
+	"3a-rank layout_rank $D $here/build/check_p3 $D $D/oracle/p3_image.bin $O/p3_addr.u32"
 	"3b relocate $D $here/build/check_p3 $D $O/p3_image.out"
 )
 tmp=$(mktemp -d)
