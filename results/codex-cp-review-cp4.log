@@ -1,0 +1,6 @@
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4cp4 (2 threads): lay out 23.998 ms, emit 159.895 ms (60733909 bytes, 2381252 items), sort relocations 525.307 ms (1780281); 0 errors; reps 1 total 0.184 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+cp4 covered (2 threads, specialized): emit 65.852 ms; 1141371 items; reps 1 total 0.066 s
+P4 OK

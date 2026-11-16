@@ -1,0 +1,5 @@
+p4cp1 (1 core): lay out 93.827 ms, emit 486.468 ms (60733909 bytes, 2381252 items), sort relocations 171.547 ms (1780281); 0 errors; reps 1 total 0.580 s
+function offsets: 0 differ
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
