@@ -51,19 +51,40 @@ static Expr ite(Expr c, Expr a, Expr b) {  // if_then_else: only the taken side 
 }
 static Expr bit(Expr v, int b) { return (v & u8(b)) != 0; }
 
-// the list of blocks whose summary byte (st(base + b)) is set: a serial scan over the blocks, then a scatter
-static void blockList(Func st, Expr base, Expr nblk, Func list, Func count) {
-    Var b("b");
-    RDom r(0, nblk, "rb");
+// the list of blocks whose summary byte (st(base + b)) is set: a scan over the blocks, then a scatter. Parallel:
+// the scan blocked by hand (scan within chunks of 2^12 in parallel, a serial scan of the chunk totals): a scan is
+// a loop-carried update, which Halide runs serially as written.
+static void blockList(Func st, Expr base, Expr nblk, Func list, Func count, bool par) {
+    Var b("b"), j("j"), ch("ch");
     Func pos("pos");
-    pos(b) = 0;
-    pos(r) = select(r > 0, pos(max(r - 1, 0)), 0) + i32(st(base + r) != 0);
-    pos.compute_root();
+    auto flagged = [&](Expr x) { return select(x < nblk, i32(st(base + min(x, nblk - 1)) != 0), 0); };
+    if (!par) {
+        RDom r(0, nblk, "rb");
+        pos(b) = 0;
+        pos(r) = select(r > 0, pos(max(r - 1, 0)), 0) + flagged(r);
+        pos.compute_root();
+    } else {
+        const int C = 1 << 12;
+        Expr nch = (nblk + C - 1) / C;
+        Func inc("inc"), off("off");
+        RDom ri(1, C - 1, "ri");
+        inc(j, ch) = flagged(ch * C + j);
+        inc(ri, ch) = inc(ri - 1, ch) + flagged(ch * C + ri);
+        RDom rc(1, max(nch - 1, 0), "rc");
+        off(ch) = 0;
+        off(rc) = off(rc - 1) + inc(C - 1, rc - 1);
+        pos(b) = off(b / C) + inc(b % C, b / C);
+        inc.compute_root().parallel(ch);
+        inc.update().parallel(ch);
+        off.compute_root();
+    }
     list(b) = 0;
     RDom rl(0, nblk, "rl");
-    rl.where(st(base + rl) != 0);
-    list(clamp(pos(rl) - 1, 0, nblk - 1)) = rl;
+    Expr rlc = min(rl, nblk - 1);  // (the parallel split runs past the end)
+    rl.where(st(base + rlc) != 0);
+    list(clamp(pos(rlc) - 1, 0, nblk - 1)) = rlc;
     count() = pos(nblk - 1);
+    if (par) hj::parChunks(list.update().allow_race_conditions(), rl, 1 << 14);  // distinct positions
 }
 
 // The initial state: IFACE from the flags, the roots LIVE and their blocks in list 0.
@@ -85,7 +106,7 @@ public:
         Expr t = unsafe_promise_clamped(i32(roots(r.x)), 0, nid - 1);
         st(select(r.y == 0, L.LIVE + t, L.SUM + t / BLK)) = u8(1);
         st.parallel(x, 1 << 16, TailStrategy::GuardWithIf);
-        blockList(st, L.SUM, L.nblk, next, nnext);
+        blockList(st, L.SUM, L.nblk, next, nnext, false);
     }
 };
 
@@ -138,7 +159,8 @@ public:
         st(x) = undef<uint8_t>();
         // update 0: clear the next level's block summary
         RDom rz(0, L.nblk, "rz");
-        st(SUMN + rz) = u8(0);
+        st(SUMN + min(rz, L.nblk - 1)) = u8(0);  // (min: the parallel split runs past the end)
+        if (par) hj::parChunks(st.update(0).allow_race_conditions(), rz, 1 << 15);  // (the clamped tail rewrites a 0)
 
         // update 1: the expansion, RDom (phase, op, symbol in block, block in the list)
         RDom rk(0, 3, 0, 1 << 26, 0, BLK, 0, nact, "rk");
@@ -163,19 +185,22 @@ public:
         Expr isDef = c <= nsl && bit(flc, fDef);
         Expr uii = bit(flc, fGoType) && has(L.IFACE, c);
         Expr needs = isDef && has(L.LIVE, c) && (!has(L.EXP, c) || (uii && !has(L.DONE, c)));
-        // The methods count only for a type converted to an interface. If IFACE arrives on c during its own
-        // expansion (another thread, or a self edge), nops grows: the last iteration (the bound was fixed at loop
-        // entry) is then a method op, not the self op, so c is not marked EXP / DONE and is expanded again, in full,
-        // next level. (With the methods always in the layout and DONE set from the uii seen at the last op, a
-        // parallel run lost 2,106 live symbols: DONE without the method ops.)
+        // The methods, and a last op that sets DONE, count only for a type converted to an interface (uii).
+        // IFACE can arrive on c during its own expansion (another thread, or a self edge): the loop bound was
+        // fixed at entry, so the ops actually run are those of the layout without them, and every iteration maps
+        // its op from the uii it reads now. DONE is then never set (its op is past the bound), and if the methods
+        // are cut short, EXP is not set either: c is expanded again next level. Every op is a valid inference
+        // from the current state, so this is sound. (Two earlier layouts, with DONE set at the self op from the
+        // uii read there, lost 6 to 2,106 live symbols in parallel runs: DONE without the method or iface work.)
         nm = select(uii, nm, 0);
-        Expr nops = 2 + nr + nx + 2 * nm;
+        Expr nops = 2 + nr + nx + select(uii, 2 * nm + 1, 0);
         rk.where(op < select(needs, nops, 0));
 
         // the op's target
-        Expr selfOp = op == nops - 1, reflOp = !selfOp && op == 0;
+        Expr selfOp = op == 1 + nr + nx + 2 * nm, doneOp = uii && op == nops - 1 && !selfOp;
+        Expr reflOp = !selfOp && op == 0;
         Expr isRel = !selfOp && op >= 1 && op < 1 + nr, isX = !selfOp && op >= 1 + nr && op < 1 + nr + nx;
-        Expr isM = !selfOp && op >= 1 + nr + nx;
+        Expr isM = op >= 1 + nr + nx && op < 1 + nr + nx + 2 * nm;
         Expr tRel = u32(0);
         if (lazy) {
             Expr r = unsafe_promise_clamped(rel0 + op - 1, 0, R - 1);
@@ -208,15 +233,15 @@ public:
         Expr setLive = plainOp && !liveT;
         Expr push = setLive || (setIface && (plainOp || liveT));  // its block goes to the next list
         Expr scr = L.SCR + c;
-        Expr site0 = select(push, SUMN + ti / BLK, selfOp, L.EXP + c, reflOp && bit(flc, fReflect), L.REFL,
+        Expr site0 = select(push, SUMN + ti / BLK, selfOp, L.EXP + c, doneOp, L.DONE + c, reflOp && bit(flc, fReflect), L.REFL,
                             sigOp, L.SIG + i32(sigrep(clamp(i32(t), 0, nsig - 1))), namedOp, L.NAMED + clamp(i32(t), 0, nstr),
                             candOp, L.CAND + m, scr);
-        Expr site1 = select(setIface, L.IFACE + ti, selfOp && uii, L.DONE + c, scr);
+        Expr site1 = select(setIface, L.IFACE + ti, scr);
         Expr site2 = select(setLive || (plainOp && setIface), L.LIVE + ti, scr);
         Expr site = unsafe_promise_clamped(select(ph == 0, site0, ph == 1, site1, site2), 0, L.total - 1);
         st(site) = u8(1);
 
-        blockList(st, SUMN, L.nblk, next, nnext);
+        blockList(st, SUMN, L.nblk, next, nnext, par);
 
         info.compute_at(st, rk.z);
         if (par) hj::parChunks(st.update(1).allow_race_conditions(), rk.w, chunk);  // only constant stores race
@@ -256,7 +281,7 @@ public:
         Expr setLive = q < 3 && t != 0 && st(L.LIVE + ti) == 0;
         Expr site = select(r.x == 6, L.CALLED + m, setLive, select(ph == 0, SUMP + ti / BLK, L.LIVE + ti), L.SCRM + m);
         st(unsafe_promise_clamped(site, 0, L.total - 1)) = u8(1);
-        blockList(st, SUMP, L.nblk, next, nnext);
+        blockList(st, SUMP, L.nblk, next, nnext, par);
         if (par) hj::parChunks(st.update(0).allow_race_conditions(), r.y, 4096);
     }
 };
