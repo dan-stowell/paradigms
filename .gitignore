@@ -1,0 +1,7 @@
+STOP
+.claude/status-asked
+.claude/fresh
+.claude/settings.local.json
+.claude/worktrees/
+build/
+data/
