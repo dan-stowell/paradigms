@@ -1,4 +1,4 @@
-# Halide cells (for GRID.md), MinIO, 2026-11-16T17:00-17:10Z, load 1.8-7.3. ms: per-iteration min-max of 5 runs >= 1 s.
+# Halide cells (for GRID.md), MinIO. P1-P3: 2026-11-16T17:00-17:10Z, load 1.8-7.3; P4: 18:31Z, load 4.1-4.9. ms: per-iteration min-max of 5 runs >= 1 s.
 # Check: build with systems/halide/cells/build.sh; B=systems/halide/cells/build; D=data/minio (absolute path).
 
 **1. resolve** — correct: P1 OK (`HL_NUM_THREADS=8 $B/p1 $D e2e 1`: canon, builtin, reltarget, p1c canon, all 0 differ).
@@ -25,3 +25,16 @@ pages 113-119 (19,109 faults) / 42.7-45 (19,187); **2 MB pages 84.6-88 (39 fault
 0.21-0.25 / 0.10-0.12 s · 106 lines. Easy: ragged copy, 8-kind select chain. Forced: values stored byte by byte with
 scratch bytes for unwritten ones (a non-innermost where is not a loop bound); chunked parallel. ATTACKS 2: yes, the
 caller maps the output MAP_HUGETLB; faults 19 K -> 39, 1.3-1.6x faster, but 4-5x C on 2 MB pages.
+
+**4. codegen by shape** — correct: P4 OK (`HL_NUM_THREADS=8 $B/p4 $D4 e2e lay_t_lf emit_t_i2_v32_p1`, D4=data/minio-p4:
+code == oracle/p4_code.bin, fn offsets == p4_fn_off.u64, 1,780,281 relocations sorted == p4_rel_*; every variant and
+P4_TOPK=0..all checked). 2026-11-16T18:31Z, load 4.1-4.9, min-max of 5; 1 thread = CPU time. templates (template-only
+index) 9.4-9.6 / **6.8-7.7** · layout 17.9-18.7 / **4.9-5.6** (p4.c 6.5-7.0, p4par 8 thr 1.3-2.0) · emit 157-162 /
+**23.0-25.1** (p4.c 103-112, p4par 97-99 / 16.4-20.1) · gather-form emit 237-251 / 56-72 · e2e process 0.21-0.24 /
+0.07-0.10 s (2 MB pages) · gen_p4 345 + driver 288 lines. Easy: lengths + two-column scan (at, rat), rel32 as a gather
+of at, the relocation list as a scatter to rat[i]+k (no C host needed), chunked parallel, caller-owned 2 MB output.
+Forced: the template index (CSR inverse scatter, binary search as an RDom update); the vector copy only as a 32-byte
+read-modify-write in parity passes (the obvious split+vectorize: 26 s); the patch as an 8-lane read-modify-write;
+entry-0 indices on untaken select sides (Halide evaluates both: 200 -> 160 ms). Impossible: fusing copy and patch
+(two updates of one Func; compute_with refused); exact-width stores in a vector loop. Top K templates (rest as glue):
+emit is per piece (~42 ns) and per hole (~5.8 ns), not per byte (all-glue copy of 60.7 MB: 12.8 / 4.8 ms).

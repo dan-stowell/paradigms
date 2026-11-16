@@ -8,7 +8,7 @@ B=${BUILD:-build}; F=${FEAT:-}  # FEAT=-profile: Halide profiler build (into BUI
 mkdir -p "$here/$B"; cd "$here/$B"
 export LD_LIBRARY_PATH=$H/lib
 CXX="g++ -std=c++17 -O2"
-probs=${*:-p1 p2 p3}
+probs=${*:-p1 p2 p3 p4}
 
 # gen NAME GENERATOR FUNC [params...]: one AOT variant, appended to the variant table of problem NAME
 gen() {
@@ -53,6 +53,17 @@ for p in $probs; do
         for rf in 0; do for par in false true; do for vec in 0 32; do
             gen p3 relocate reloc_f${rf}_p${par:0:1}_v$vec rform=$rf par=$par vec=$vec; done; done; done
         { cat p3_variants.inc; table p3 layout layouts; table p3 relocate relocs; } > p3_variants.h
+        ;;
+    p4)
+        gen p4 templates templates
+        for par in false true; do for lr in false true; do gen p4 layout lay_${par:0:1}_l${lr:0:1} par=$par lenRoot=$lr; done; done
+        for par in false true; do for inf in 0 1 2; do for vec in 0 32; do for pf in 0 1; do
+            gen p4 emit emit_${par:0:1}_i${inf}_v${vec}_p$pf par=$par info=$inf vec=$vec pform=$pf; done; done
+            gen p4 emit emit_${par:0:1}_i${inf}_g_p0 par=$par info=$inf gform=1 pform=0; done; done
+        for par in false true; do for v in 0 32; do gen p4 emit emit_${par:0:1}_i0_v${v}_p0_fuse par=$par vec=$v fuse=1; done; gen p4 emit emit_${par:0:1}_i3_v32_p1 par=$par info=3 vec=32 pform=1; done
+        for c in 1024 16384; do gen p4 emit emit_t_i2_v32_p1_c$c par=true info=2 vec=32 pform=1 chunk=$c; done
+        for o in 1 2; do gen p4 emit diag${o}_f_i2_v32_p1 info=2 vec=32 pform=1 only=$o; gen p4 emit diag${o}_f_i2_v32_p0 info=2 vec=32 pform=0 only=$o; done
+        { cat p4_variants.inc; table p4 layout layouts; table p4 emit emits; } > p4_variants.h
         ;;
     esac
     # one Halide runtime for all variants of this problem

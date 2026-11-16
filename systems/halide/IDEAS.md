@@ -115,3 +115,21 @@ GraphIt's `to(filter)` is a per-vertex predicate that sees state, so it can expr
   atomics; the frontier is implicit ("live and not expanded"). Correct 30/30 parallel runs; Halide's atomic()
   version was a mutex array per call (3.5 s). In Halide it costs 3 iterations per edge (79-90 ms at 8 threads).
 - Kill test: the same layout in C/OpenMP (plain byte stores, no CAS) vs p2par's test-and-set; kill if slower.
+
+### C3. Code emission is per piece, not per byte: emit fewer, larger pieces (P4)
+- Evidence: Halide P4 with only the K commonest templates emitted (the rest glue, merged into runs): emit fits
+  ~42 ns per item + ~5.8 ns per hole on 1 thread; all 60.7 MB as 136 K glue runs copies in 12.8 ms (4.7 GB/s), the
+  full 2.38 M items + 7.68 M holes take 157-162 ms. In C, replacing each item's memcpy by whole 32-byte vectors
+  changes the emit by at most ~5% (cells/p4_copy32.sh; one window 92.7-95.9 vs 98.2-99.6 ms, a second within
+  noise): the walk, not the bytes, is the cost. 24.5% of nodes write
+  no bytes of their own (ref/p4/NOTES.md), yet each is an item (1.06 M of the 2.38 M items are empty).
+- Idea: merge each node's segments with its zero-length siblings and adjacent glue at extraction (a template
+  covering a statement or a whole small subtree, not one node), so a piece averages hundreds of bytes.
+- Kill test: re-key the templates by statement (or by subtree up to N bytes), count pieces and holes, rerun p4par
+  and Halide emit; kill if pieces drop < 2x or emit time drops < 1.5x.
+
+### C4. A data-parallel select evaluates both sides: point the untaken side at a hot entry (P4)
+- Evidence: Halide emit 200-213 -> 157-172 ms and layout 26-32 -> 18-19 ms (1 thread) only from indexing the
+  untaken side of each glue/node select with 0 instead of chasing a garbage id through three tables.
+- Kill test: count the distinct cache lines touched by untaken sides (instrumented C mirror); a system without
+  lazy select (Futhark, ISPC, SIMD C) should see the same; kill if < 10% of emit there.
