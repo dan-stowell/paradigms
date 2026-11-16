@@ -1,14 +1,12 @@
 # PLAN
 
-The user writes the campaign; the agent keeps the Milestones log and the Now (2026-11-16T16:07Z): M1/M2 in flight. **Lesson: a /clear kills the session's subagents** (the first four builders and
-the P4 agent all stopped at 15:53Z when their session was cleared; their uncommitted work was saved as WIP commits at
-16:04Z). So before `touch .claude/fresh`, wait for every builder to finish (LOOP.md step 1), or note exactly where each was.
-Running from this session: Soufflé, Futhark, Halide, Goose builders resumed in their old worktrees
-(.claude/worktrees/agent-{a04daa..,a86aa6..,a45ed3..,a8177a..}, branches worktree-agent-*), and the DuckDB builder (its own
-worktree agent-a66651..). Each replies when done; then rerun its oracle check, merge its branch, paste CELLS.md into GRID.md.
-P4 data merged (ref/p4, data/minio-p4, P4 OK). Codex skeptic on ATTACKS 1 -> reviews/inbox/*-codex-attack1.md: triage it.
-When the machine is quiet (load < 1): rerun `ref/flat/bench.sh`, `P3_THP=1 OMP_NUM_THREADS=8 build/p3par data/minio`
-(ATTACKS 2's 8-thread number) and hlink with `sudo sysctl vm.nr_hugepages=512` vs `=0` interleaved (`COLD=0 ref/hlink/bench.sh
-minio build/hlink 3`); the VM keeps 512 reserved huge pages (not persistent across reboot). Next lead work while builders run: ATTACKS 1 follow-ups (a) decode aux + kinds 1-3 lazily from columns (needs aux columns
-in the extractor) to make the hlink comparison exact, (b) per-source dedup; and a second ATTACKS candidate from the C refs
-(1c: partitioned hash join 7.2 ms vs hlink 8-9: no win; look at P3b relocate 59-67 ms 1 core vs floor 4.92).
+The user writes the campaign; the agent keeps the Milestones log and the Now (2026-11-16T16:20Z, lead session paradigms-46): M1/M2 in flight. **A /clear or session end kills the session's
+subagents**: the builders below run inside paradigms-46; if it is gone, relaunch them with ideas/RESUME.md (one Opus agent
+per worktree, prompt = "You are the <sys> cell builder ... worktree <path> ... follow ideas/RESUME.md").
+Builders (worktrees .claude/worktrees/): souffle agent-a04daa.., futhark agent-a86aa6.., halide agent-a45ed3.., goose
+agent-a8177a.., duckdb agent-a66651... Each replies when done; then rerun its oracle check, merge its branch, paste CELLS.md
+into GRID.md. Codex: codex-e (paradigms-e) = lazy funcdata aux in p2lazy (ATTACKS 1 follow-up a); codex-f (paradigms-c) =
+p1compact, testing "p1par's join is bound by 4 passes over the dense 83 MB key array; only 15% of slots are keyed"
+(results/codex-f.md). When codex-e lands: add the timed-decoder hash check and relaxed atomics (REVIEWS.md, attack1).
+Done this session: ATTACKS 2 numbers (huge pages 24 vs 49 ms 1 thread, 5.4-6.8 vs 14 on 8, floor 4.92); hlink huge vs
+none within noise; ATTACKS 1 narrowed to lazy vs eager. Measured bandwidth here: 25 GB/s read 1 thread, 36 on 8.
