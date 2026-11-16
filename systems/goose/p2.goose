@@ -52,15 +52,6 @@ checkfree inline fn set_iface(c: Sym, work: Sym[>..<]&) {
     }
 }
 
-checkfree fn mix64(x: u64) -> u64 {
-    var h = x;
-    h ^= h >> 30;
-    h *= 0xBF58476D1CE4E5B9;
-    h ^= h >> 27;
-    h *= 0x94D049BB133111EB;
-    return h ^ (h >> 31);
-}
-
 checkfree fn sig_add(k: u64) {
     var h = (mix64(k) >> 1) as! i64;
     loop {

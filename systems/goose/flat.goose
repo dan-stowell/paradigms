@@ -12,6 +12,9 @@ extern fn flat_read(path: const u8[:], out: u32[>..]&, elem: i64) -> bool = "fla
 extern fn flat_read(path: const u8[:], out: i32[>..]&, elem: i64) -> bool = "flat_read";
 extern fn flat_read(path: const u8[:], out: u64[>..]&, elem: i64) -> bool = "flat_read";
 extern fn flat_read(path: const u8[:], out: i64[>..]&, elem: i64) -> bool = "flat_read";
+// a .u64x2 file: 128-bit keys, k1 then k2
+struct Key { k1: u64, k2: u64 }
+extern fn flat_read(path: const u8[:], out: Key[>..]&, elem: i64) -> bool = "flat_read";
 
 // the data directory: the first argument
 fn dir_arg() -> u8[>..] {
@@ -29,6 +32,7 @@ fn load(name: const u8[:], out: u32[>..]&) { guard flat_read(flat_path(name), ou
 fn load(name: const u8[:], out: i32[>..]&) { guard flat_read(flat_path(name), out, 4) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: u64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
 fn load(name: const u8[:], out: i64[>..]&) { guard flat_read(flat_path(name), out, 8) else { abort(str("cannot read ", name)); } }
+fn load(name: const u8[:], out: Key[>..]&) { guard flat_read(flat_path(name), out, 16) else { abort(str("cannot read ", name)); } }
 
 // the file framed as a Goose image (ULEB128 byte count, then the bytes), for from_bytes
 fn load_image(name: const u8[:]) -> u8[>..] {
@@ -62,6 +66,35 @@ fn zeros(n: i64) -> u8[>..] {
 fn load_u8(name: const u8[:]) -> u8[>..] { var a: u8[>..] = []; load(name, a); return a; }
 fn load_u32(name: const u8[:]) -> u32[>..] { var a: u32[>..] = []; load(name, a); return a; }
 fn load_u64(name: const u8[:]) -> u64[>..] { var a: u64[>..] = []; load(name, a); return a; }
+fn load_i64(name: const u8[:]) -> i64[>..] { var a: i64[>..] = []; load(name, a); return a; }
+fn load_u16(name: const u8[:]) -> u16[>..] { var a: u16[>..] = []; load(name, a); return a; }
+fn load_i32(name: const u8[:]) -> i32[>..] { var a: i32[>..] = []; load(name, a); return a; }
+fn load_keys(name: const u8[:]) -> Key[>..] { var a: Key[>..] = []; load(name, a); return a; }
+
+checkfree fn mix64(x: u64) -> u64 {
+    var h = x;
+    h ^= h >> 30;
+    h *= 0xBF58476D1CE4E5B9;
+    h ^= h >> 27;
+    h *= 0x94D049BB133111EB;
+    return h ^ (h >> 31);
+}
+
+// how many of got differ from the oracle file (u32 entries); prints the first few
+fn check32(what: const u8[:], got: u32[:], oracle: const u8[:]) -> i64 {
+    var want: u32[>..] = [];
+    load(oracle, want);
+    if want.len != got.len { print(what, ": ", got.len, " entries, oracle ", want.len); return 1; }
+    var bad = 0;
+    for i in got.len {
+        if got[i] != want[i] {
+            if bad < 5 { print("  ", what, "[", i, "] = ", got[i], ", oracle ", want[i]); }
+            bad++;
+        }
+    }
+    print(what, ": ", got.len, " entries, ", bad, " differ from ", oracle);
+    return bad;
+}
 
 // an array of an index type, verified against its array by from_bytes
 fn load_ids<T>(name: const u8[:]) -> T[>..] {
