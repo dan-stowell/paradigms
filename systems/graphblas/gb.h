@@ -9,6 +9,7 @@
 
 typedef GrB_Index ix;
 static GrB_Scalar TRUE_;
+static double cpuNow(void) { struct timespec t; clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t); return t.tv_sec + t.tv_nsec * 1e-9; }
 static int nthreads(void) { return getenv("GB_THREADS") ? atoi(getenv("GB_THREADS")) : 1; }
 static void gbInit(void) {
 	OK(GrB_init(GrB_NONBLOCKING));

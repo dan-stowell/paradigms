@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 	GrB_Semiring sr = GxB_ANY_PAIR_BOOL;
 	GrB_Vector live, iface, fr, delta, src, t1, t2, cand, call, cm, sig, named, csig, cnam, rv, start = NULL;
 	GrB_Matrix S, S1;
-	double best = 1e9, bestRules = 1e9, sum = 0;
+	double bestCpu = 1e9, best = 1e9, bestRules = 1e9, sum = 0;
 	long levels = 0, ilevels = 0, rounds = 0, nvxm = 0;
 	for (int rep = 0; rep < reps; rep++) {
 		// the state (outside the timing, like the C references' clearing): live and iface as bitmaps
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
 		OK(GrB_Vector_dup(&iface, iface0));
 		OK(GrB_Vector_set_INT32(iface, GxB_BITMAP, GxB_SPARSITY_CONTROL));
 		OK(GrB_Vector_dup(&fr, rootv));
-		OK(GrB_Vector_new(&delta, GrB_BOOL, N)); OK(GrB_Vector_new(&src, GrB_BOOL, N));
+		OK(GrB_Vector_new(&delta, GrB_BOOL, N)); OK(GrB_Vector_set_INT32(delta, GxB_BITMAP, GxB_SPARSITY_CONTROL)); OK(GrB_Vector_new(&src, GrB_BOOL, N));
 		OK(GrB_Vector_new(&t1, GrB_BOOL, N)); OK(GrB_Vector_new(&t2, GrB_BOOL, N));
 		OK(GrB_Vector_new(&cand, GrB_BOOL, nmeth)); OK(GrB_Vector_new(&cm, GrB_BOOL, nmeth));
 		OK(GrB_Vector_new(&call, GrB_BOOL, nmeth)); OK(GrB_Vector_new(&csig, GrB_BOOL, nmeth));
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 		OK(GrB_mxm(S1, NULL, NULL, sr, SN, MN, GrB_DESC_T1));
 		OK(GrB_mxm(S, S1, NULL, sr, ST, MT0, GrB_DESC_ST1));
 		OK(GrB_Matrix_wait(S, GrB_MATERIALIZE));
-		double t0b = now();
+		double t0b = now(), c0 = cpuNow();
 		int reflect = 0;
 		levels = ilevels = rounds = nvxm = 0;
 		for (;;) {
@@ -171,7 +171,8 @@ int main(int argc, char **argv) {
 			if (nv(fr) == 0) break;
 		}
 		OK(GrB_Vector_wait(live, GrB_MATERIALIZE));
-		double t1t = now();
+		double t1t = now(), c1 = cpuNow() - c0;
+		if (c1 < bestCpu) bestCpu = c1;
 		if (t1t - t0b < best) best = t1t - t0b;
 		if (t1t - t0 < bestRules) bestRules = t1t - t0;
 		sum += t1t - t0b;
@@ -189,6 +190,7 @@ int main(int argc, char **argv) {
 	printf("p2gb (%d threads, %s): flood best %.1f ms (mean %.1f), with rule join (S) best %.1f ms; %lu live, "
 	       "%ld BFS levels + %ld iface levels in %ld rounds, %ld vxm/mxv calls\n",
 	       nthreads(), dir, best * 1e3, sum / reps * 1e3, bestRules * 1e3, (unsigned long)nlive, levels, ilevels, rounds, nvxm);
+	printf("flood process CPU time best %.1f ms (all threads)\n", bestCpu * 1e3);
 	printf("setup: load+tuples %.1f ms, builds %.1f ms; process to here %.1f ms\n", (tLoad - tStart) * 1e3,
 	       (tBuilt - tLoad) * 1e3, (tEnd - tStart) * 1e3);
 	long bad = check32("live", list, nlive, "oracle/p2_live.u32");
