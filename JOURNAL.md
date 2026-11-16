@@ -71,3 +71,4 @@ reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a se
 - 2026-11-16T17:15:35Z triaged M2 skeptic: corrected GRID (DuckDB P2 not yet falls-down; Futhark lazy ties eager-with-decode; Soufflé lazy 2x its eager), ATTACKS 3 scope; the M2 paragraph's 'in Futhark and Halide lazy is slower than eager' holds for Halide only.
 - 2026-11-16T17:18:19Z M3/M4 launched: 5 Opus builders (Halide P4, Futhark P4, DuckDB P2 + Soufflé 3a second attempts, GraphBLAS, level-free floods) + Codex kube-apiserver runs.
 - 2026-11-16T17:19:05Z frontier histogram (ref/flat/p2levels.c, results/levels.md): 81 of 111 levels < 4K frontier, 6% of work; hybrid wide-parallel / sequential-tail flood suggested.
+- 2026-11-16T17:19:34Z relocation histogram (results/relkinds.*): 8 (kind,width) pairs, rel32 56%, top 100 targets = 30% of 2.05 M.
