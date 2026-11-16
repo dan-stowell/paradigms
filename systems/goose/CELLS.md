@@ -42,7 +42,16 @@ bases back · impossible: -. `bin/p3 D --pipeline`: 3b from its own 3a addresses
 **2 MB pages (P3_THP=1): 41-42 / 17-24**; minor faults/rep 26,731 -> 258-457 (1 thread) · 8 = image left distributed
 by address range; gathered into one array in main +142-171 · easy: `move_from` + match on kind · forced: byte-wise
 stores; huge pages only via C remapping the pages under the builder's stack top (runtime maps 4 KB, MADV_NOHUGEPAGE) ·
-impossible: one image written in place by 8 workers (falls down as one array; distributed is the cell).
+impossible: one Goose image array written in place by 8 workers (falls down as one array).
+**Review 5: one output file works.** `P3_FILE=/absolute/path bin/p3par D 8`: workers pwrite disjoint ranges via
+C; main times create/truncate + relocate + write-out to the last completion. 2026-11-16T19:45–19:51Z,
+load 2.65–5.13, five rotating rounds ×64 reps, min/median/max of process minima: 2 MiB **72.3 / 77.3 / 78.8 ms**,
+vs Goose1 **99.1 / 101.2 / 103.3** and C1 **105.3 / 107.8 / 108.2**, each including file write-out.
+4 KiB **77.0 / 79.5 / 86.1** vs **148.4 / 151.5 / 155.9** and **138.5 / 141.9 / 145.2**.
+Buffered writes, no fsync. All 50 processes P3 OK, all 30 final files pass an independent full comparison:
+76,359,886 placed bytes from the oracle plus zero gaps (the oracle's other ELF bytes are outside P3).
+The former distributed timing omitted file assembly; “falls down” is specific to one shared Goose array.
+Reproduce and full scope: `results/codex-review5.md`, B; `results/review5-b-bench.py`.
 
 **4 code generation by shape** — correct: P4 OK (`bin/p4 /home/exedev/paradigms/data/minio-p4 [1|8]`: the code byte for
 byte vs oracle/p4_code.bin, all `nfn+1` function offsets vs oracle/p4_fn_off.u64, 1,780,281 relocations sorted

@@ -1,0 +1,48 @@
+huge=0 warm=0
+first join: 78.980992 ms, 28407 minor faults
+join minor faults: 28407 total, 28407.000 per rep
+pages: AnonHugePages=0 Private_Hugetlb=0 Shared_Hugetlb=0 kB
+p1compact (1 threads): best 126.4 ms = join by name 79.0 + relocation targets 47.5
+p1compact mean: join 78.980992 ms total 126.441426 ms (1 reps, 0.126441 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 63.6 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+huge=0 warm=1
+first join: 27.429828 ms, 0 minor faults
+join minor faults: 0 total, 0.000 per rep
+pages: AnonHugePages=0 Private_Hugetlb=0 Shared_Hugetlb=0 kB
+p1compact (1 threads): best 59.7 ms = join by name 27.4 + relocation targets 32.2
+p1compact mean: join 27.429828 ms total 59.675456 ms (1 reps, 0.059675 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 64.1 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+huge=1 warm=0
+first join: 64.751732 ms, 72 minor faults
+join minor faults: 72 total, 72.000 per rep
+pages: AnonHugePages=0 Private_Hugetlb=192512 Shared_Hugetlb=0 kB
+p1compact (1 threads): best 123.0 ms = join by name 64.8 + relocation targets 58.3
+p1compact mean: join 64.751732 ms total 123.007574 ms (1 reps, 0.123008 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 58.7 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+huge=1 warm=1
+first join: 24.069006 ms, 0 minor faults
+join minor faults: 0 total, 0.000 per rep
+pages: AnonHugePages=0 Private_Hugetlb=192512 Shared_Hugetlb=0 kB
+p1compact (1 threads): best 54.7 ms = join by name 24.1 + relocation targets 30.7
+p1compact mean: join 24.069006 ms total 54.721246 ms (1 reps, 0.054721 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 41.6 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK

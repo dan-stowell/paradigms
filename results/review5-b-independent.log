@@ -1,0 +1,5 @@
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 134.1 ms  3a 15.9 ms  3b relocate+file (2 MB pages, x1) 69.8 / 69.8 / 69.8 ms min/median/max (slowest worker 63.6 ms, 1336 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 88.8 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 85.7 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+Independent range/gap check OK: 109486380 bytes, 354967 placed spans, 33126494 gap bytes all zero

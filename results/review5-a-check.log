@@ -1,0 +1,61 @@
+Mon Nov 16 19:39:55 UTC 2026
+ 19:39:55 up  4:24,  0 user,  load average: 4.11, 4.61, 5.49
+Running as unit: run-rbdd2892f3c904e2ca57ffb33080b2971.scope; invocation ID: 033f1fe074714cdcb261f2b02e2a4485
+threads=1
+3a layout_c0_w0     min    58.66  med    60.86  max    68.82 ms (x12)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c0_w1     min    56.32  med    58.13  max    62.14 ms (x18)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c1_w0     min    62.70  med    63.90  max    65.46 ms (x17)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c1_w1     min    67.90  med    77.05  max   109.15 ms (x17)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c2_w0     min    79.50  med   118.14  max   121.16 ms (x11)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c2_w1     min    71.42  med    79.01  max   103.68 ms (x12)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c3_w0     min    56.67  med    63.57  max    94.18 ms (x14)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c3_w1     min    57.13  med    61.88  max    64.19 ms (x18)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+Mon Nov 16 19:40:39 UTC 2026
+ 19:40:39 up  4:25,  0 user,  load average: 5.40, 4.88, 5.54
+Running as unit: run-r4a0996b399884304bbca2607c9e4de86.scope; invocation ID: 576edd21ddd7466f94d1082f62dd84ad
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+e2e threads=1 layout=layout_c3_w1 reloc=reloc_f0_pt_v32: load 11.1 ms, 3a 59.9 ms, 3b 137.8 ms, write 0.0 ms, total 209.2 ms
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+Running as unit: run-r52aba32dc0ac4aa0bed7fd1daa6d2a50.scope; invocation ID: 50cea8db848042f096c21170fbd496b1
+  addr[0] = 4294967295, oracle 4198400
+  addr[1] = 4294967295, oracle 96599872
+addr: 360315 entries, 2 differ from oracle/p3_addr.u32
+P3 FAIL
+omitted unit exit=1 (expected 1)
+Mon Nov 16 19:40:39 UTC 2026
+ 19:40:39 up  4:25,  0 user,  load average: 5.40, 4.88, 5.54
+Running as unit: run-r37c23624b1bb4f72b19fdb23f2253488.scope; invocation ID: 46d5b353aa5744219240f3753ae7034b
+threads=8
+3a layout_c0_w0     min    20.91  med    22.81  max    24.77 ms (x35)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c0_w1     min    20.21  med    20.67  max    23.43 ms (x47)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c1_w0     min    30.28  med    44.77  max    47.68 ms (x35)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c1_w1     min    27.61  med    39.49  max    55.80 ms (x31)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c2_w0     min    20.09  med    23.04  max    23.75 ms (x39)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c2_w1     min    22.44  med    34.03  max    52.73 ms (x53)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c3_w0     min    19.64  med    32.54  max    38.57 ms (x30)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+3a layout_c3_w1     min    21.54  med    40.35  max    44.13 ms (x24)   addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+Mon Nov 16 19:41:24 UTC 2026
+ 19:41:24 up  4:25,  0 user,  load average: 9.66, 6.03, 5.90
+Running as unit: run-rb3e788c3cae4423db97350a47f8695ec.scope; invocation ID: f3f1771a785c48b588e59182e6b5507d
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+e2e threads=8 layout=layout_c3_w1 reloc=reloc_f0_pt_v32: load 13.7 ms, 3a 49.3 ms, 3b 60.8 ms, write 0.0 ms, total 124.4 ms
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+Running as unit: run-r54bcfe677d304e229c7aa452001412cc.scope; invocation ID: efc3792fcc9d4c6e8aeac148b99d4d91
+  addr[0] = 4294967295, oracle 4198400
+  addr[1] = 4294967295, oracle 96599872
+addr: 360315 entries, 2 differ from oracle/p3_addr.u32
+P3 FAIL
+omitted unit exit=1 (expected 1)
+Mon Nov 16 19:41:24 UTC 2026
+ 19:41:24 up  4:25,  0 user,  load average: 9.66, 6.03, 5.90
+Running as unit: run-r297d416c943c4053990e70e243d336e5.scope; invocation ID: 019c42aa81874a6a832d2d8780b80e24
+threads=8
+3a layout_c3_w1     min    19.44  med    28.32  max    36.80 ms (x23)     addr[0] = 4294967295, oracle 4198400
+  addr[1] = 4294967295, oracle 96599872
+addr: 360315 entries, 2 differ from oracle/p3_addr.u32
+P3 FAIL
+omitted unit warm exit=1 (expected 1)

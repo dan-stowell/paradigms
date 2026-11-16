@@ -20,9 +20,10 @@
 6. None found.
 
 ## Full-grid skeptic (reviews/done/20261116T1930-codex-skeptic-full.md, on 5e179fe), triaged 2026-11-16T19:40Z
-1. Halide P3a output initialised from the oracle (an omitted write passes) -> **accept**: Codex codex-review5 A (poisoned output + planted omission). Cell stays counted pending it.
-2. Goose P3b "falls down" broader than measured (distributed output 17-24 ms works; only the gathered array fails) -> **accept**: codex-review5 B measures disjoint file ranges incl. assembly; GRID wording after.
+1. Halide P3a output initialised from the oracle (an omitted write passes) -> **accept**: Codex codex-review5 A (poisoned output + planted omission) -> **fixed** (poisoned before every invocation; P3_SKIP_UNIT omission fails; lead reran).
+2. Goose P3b "falls down" broader than measured (distributed output 17-24 ms works; only the gathered array fails) -> **accept**: codex-review5 B measures disjoint file ranges incl. assembly; -> **measured**: one file from 8 workers 72.3/77.3/78.8 ms (2 MB) incl. write-out vs Goose 1 worker 101.2, C p3 1 thread 107.8; GRID: falls down only for a gathered array.
 3. STATUS called Goose P4 a tie -> already fixed in the STATUS written after 5e179fe (join cost stated); warm-page caveats already in GRID.
 4. GRID Futhark P2 still said 111 levels, omitted the faster sequential worklist -> **accept, fixed** (45 levels; 67/102/130 vs 156/201/258).
-5. ATTACKS 2's "TLB reach, not faults" for the join is asserted, not counted -> **accept**: codex-review5 C (perf dTLB + faults, page size verified).
+5. ATTACKS 2's "TLB reach, not faults" for the join is asserted, not counted -> **accept**: codex-review5 C -> **measured**: both: first run faults and TLB; warm 2.81x fewer L1 dTLB misses, 2.46x fewer walks, timing within noise; 'not faults' withdrawn in ATTACKS 2.
 6. None found.
+2026-11-16 codex-review5 follow-up to 20261116T1930-codex-skeptic-full.md: accept Halide oracle-prefill weakness (poison + skipped-unit rejection), accept Goose one-array verdict scope (measured checked file assembly), accept unproven TLB-only attribution (join-gated perf shows faults on first execution and TLB reduction after warmup). Evidence and qualifications: results/codex-review5.md. Source review remains read-only in sibling clone.

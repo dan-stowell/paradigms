@@ -1,0 +1,352 @@
+[
+  {
+    "round": 1,
+    "name": "goose8-4k-file",
+    "min": 86.1,
+    "median": 118.5,
+    "max": 156.7
+  },
+  {
+    "round": 1,
+    "name": "goose8-2m-file",
+    "min": 78.8,
+    "median": 98.6,
+    "max": 254.6
+  },
+  {
+    "round": 1,
+    "name": "goose1-4k-file",
+    "min": 149.8,
+    "median": 154.1,
+    "max": 170.7
+  },
+  {
+    "round": 1,
+    "name": "goose1-4k-kernel",
+    "min": 88.5,
+    "median": 92.4,
+    "max": 117.5
+  },
+  {
+    "round": 1,
+    "name": "goose1-2m-file",
+    "min": 101.2,
+    "median": 104.5,
+    "max": 132.1
+  },
+  {
+    "round": 1,
+    "name": "goose1-2m-kernel",
+    "min": 38.5,
+    "median": 40.3,
+    "max": 53.9
+  },
+  {
+    "round": 1,
+    "name": "c1-4k-file",
+    "min": 145.2,
+    "median": 167.3,
+    "max": 315.4
+  },
+  {
+    "round": 1,
+    "name": "c1-4k-kernel",
+    "min": 59.1,
+    "median": 60.7,
+    "max": 78.1
+  },
+  {
+    "round": 1,
+    "name": "c1-2m-file",
+    "min": 107.8,
+    "median": 120.8,
+    "max": 179.6
+  },
+  {
+    "round": 1,
+    "name": "c1-2m-kernel",
+    "min": 28.5,
+    "median": 28.9,
+    "max": 39.4
+  },
+  {
+    "round": 2,
+    "name": "goose8-2m-file",
+    "min": 77.1,
+    "median": 106.1,
+    "max": 154.6
+  },
+  {
+    "round": 2,
+    "name": "goose1-4k-file",
+    "min": 148.4,
+    "median": 153.4,
+    "max": 192.9
+  },
+  {
+    "round": 2,
+    "name": "goose1-4k-kernel",
+    "min": 83.2,
+    "median": 87.6,
+    "max": 98.4
+  },
+  {
+    "round": 2,
+    "name": "goose1-2m-file",
+    "min": 99.8,
+    "median": 103.4,
+    "max": 121.0
+  },
+  {
+    "round": 2,
+    "name": "goose1-2m-kernel",
+    "min": 38.3,
+    "median": 40.2,
+    "max": 46.6
+  },
+  {
+    "round": 2,
+    "name": "c1-4k-file",
+    "min": 138.5,
+    "median": 160.8,
+    "max": 298.8
+  },
+  {
+    "round": 2,
+    "name": "c1-4k-kernel",
+    "min": 58.6,
+    "median": 60.9,
+    "max": 75.5
+  },
+  {
+    "round": 2,
+    "name": "c1-2m-file",
+    "min": 105.8,
+    "median": 128.4,
+    "max": 381.5
+  },
+  {
+    "round": 2,
+    "name": "c1-2m-kernel",
+    "min": 28.8,
+    "median": 29.8,
+    "max": 39.8
+  },
+  {
+    "round": 2,
+    "name": "goose8-4k-file",
+    "min": 83.0,
+    "median": 102.8,
+    "max": 155.6
+  },
+  {
+    "round": 3,
+    "name": "goose1-4k-file",
+    "min": 155.9,
+    "median": 158.4,
+    "max": 201.0
+  },
+  {
+    "round": 3,
+    "name": "goose1-4k-kernel",
+    "min": 87.1,
+    "median": 91.7,
+    "max": 141.7
+  },
+  {
+    "round": 3,
+    "name": "goose1-2m-file",
+    "min": 101.5,
+    "median": 104.9,
+    "max": 134.1
+  },
+  {
+    "round": 3,
+    "name": "goose1-2m-kernel",
+    "min": 38.1,
+    "median": 39.7,
+    "max": 46.8
+  },
+  {
+    "round": 3,
+    "name": "c1-4k-file",
+    "min": 141.9,
+    "median": 153.7,
+    "max": 308.5
+  },
+  {
+    "round": 3,
+    "name": "c1-4k-kernel",
+    "min": 59.3,
+    "median": 62.0,
+    "max": 69.4
+  },
+  {
+    "round": 3,
+    "name": "c1-2m-file",
+    "min": 108.1,
+    "median": 134.9,
+    "max": 191.3
+  },
+  {
+    "round": 3,
+    "name": "c1-2m-kernel",
+    "min": 28.6,
+    "median": 29.0,
+    "max": 45.4
+  },
+  {
+    "round": 3,
+    "name": "goose8-4k-file",
+    "min": 79.5,
+    "median": 92.6,
+    "max": 117.5
+  },
+  {
+    "round": 3,
+    "name": "goose8-2m-file",
+    "min": 77.3,
+    "median": 96.2,
+    "max": 122.5
+  },
+  {
+    "round": 4,
+    "name": "goose1-4k-kernel",
+    "min": 83.4,
+    "median": 88.1,
+    "max": 94.5
+  },
+  {
+    "round": 4,
+    "name": "goose1-2m-file",
+    "min": 99.1,
+    "median": 104.4,
+    "max": 146.9
+  },
+  {
+    "round": 4,
+    "name": "goose1-2m-kernel",
+    "min": 38.1,
+    "median": 39.2,
+    "max": 53.3
+  },
+  {
+    "round": 4,
+    "name": "c1-4k-file",
+    "min": 139.3,
+    "median": 160.8,
+    "max": 325.4
+  },
+  {
+    "round": 4,
+    "name": "c1-4k-kernel",
+    "min": 59.6,
+    "median": 60.3,
+    "max": 67.2
+  },
+  {
+    "round": 4,
+    "name": "c1-2m-file",
+    "min": 105.3,
+    "median": 116.4,
+    "max": 191.6
+  },
+  {
+    "round": 4,
+    "name": "c1-2m-kernel",
+    "min": 28.8,
+    "median": 29.5,
+    "max": 59.1
+  },
+  {
+    "round": 4,
+    "name": "goose8-4k-file",
+    "min": 79.2,
+    "median": 96.8,
+    "max": 121.3
+  },
+  {
+    "round": 4,
+    "name": "goose8-2m-file",
+    "min": 77.4,
+    "median": 106.6,
+    "max": 145.1
+  },
+  {
+    "round": 4,
+    "name": "goose1-4k-file",
+    "min": 151.6,
+    "median": 157.0,
+    "max": 181.4
+  },
+  {
+    "round": 5,
+    "name": "goose1-2m-file",
+    "min": 103.3,
+    "median": 105.1,
+    "max": 120.8
+  },
+  {
+    "round": 5,
+    "name": "goose1-2m-kernel",
+    "min": 39.5,
+    "median": 41.0,
+    "max": 51.4
+  },
+  {
+    "round": 5,
+    "name": "c1-4k-file",
+    "min": 145.1,
+    "median": 155.1,
+    "max": 213.9
+  },
+  {
+    "round": 5,
+    "name": "c1-4k-kernel",
+    "min": 59.3,
+    "median": 62.2,
+    "max": 67.9
+  },
+  {
+    "round": 5,
+    "name": "c1-2m-file",
+    "min": 108.2,
+    "median": 121.9,
+    "max": 219.9
+  },
+  {
+    "round": 5,
+    "name": "c1-2m-kernel",
+    "min": 28.4,
+    "median": 29.0,
+    "max": 31.2
+  },
+  {
+    "round": 5,
+    "name": "goose8-4k-file",
+    "min": 77.0,
+    "median": 96.4,
+    "max": 112.5
+  },
+  {
+    "round": 5,
+    "name": "goose8-2m-file",
+    "min": 72.3,
+    "median": 104.7,
+    "max": 129.5
+  },
+  {
+    "round": 5,
+    "name": "goose1-4k-file",
+    "min": 151.5,
+    "median": 156.5,
+    "max": 176.8
+  },
+  {
+    "round": 5,
+    "name": "goose1-4k-kernel",
+    "min": 86.8,
+    "median": 94.7,
+    "max": 115.0
+  }
+]

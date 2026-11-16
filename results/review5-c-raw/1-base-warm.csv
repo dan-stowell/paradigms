@@ -1,0 +1,6 @@
+# started on Mon Nov 16 19:41:57 2026
+
+7261905,,dTLB-load-misses,2046497611,100.00,,
+70102734,,ls_l1_d_tlb_miss.all:u,2046497611,100.00,,
+7261905,,ls_l1_d_tlb_miss.all_l2_miss:u,2046497611,100.00,,
+0,,page-faults:u,2046497611,100.00,,

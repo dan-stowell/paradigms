@@ -1,0 +1,35 @@
+Events disabled
+Events enabled
+Events disabled
+first join: 32.102039 ms, 0 minor faults
+join minor faults: 0 total, 0.000 per rep
+pages: AnonHugePages=0 Private_Hugetlb=0 Shared_Hugetlb=0 kB
+p1compact (1 threads): best 65.1 ms = join by name 32.1 + relocation targets 33.0
+p1compact mean: join 32.102039 ms total 65.146439 ms (1 reps, 0.065146 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 67.4 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+
+ Performance counter stats for 'taskset -c 6 build/review5-p1compact /home/exedev/paradigms/data/minio 1':
+
+            161331      dTLB-load-misses
+            161331      ls_l1_d_tlb_miss.all_l2_miss:u
+                 0      page-faults:u
+
+       0.405157471 seconds time elapsed
+
+       0.000000000 seconds user
+       0.000000000 seconds sys
+
+
+p1compact (1 threads): best 125.7 ms = join by name 73.8 + relocation targets 51.8
+p1compact mean: join 73.837840 ms total 125.684689 ms (1 reps, 0.125685 s kernel)
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 63.2 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK

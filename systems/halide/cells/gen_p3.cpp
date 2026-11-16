@@ -38,6 +38,7 @@ public:
     Input<int> nunits{"nunits"};
     Input<int> ntl{"ntl"};
     Input<uint32_t> minFunc{"minFunc"};
+    Input<int> skip_unit{"skip_unit"};  // P3_SKIP_UNIT fault injection; -1 writes every unit
     Output<Buffer<uint32_t, 1>> addr{"addr"};
 
     Var i{"i"}, b{"b"}, c{"c"}, u{"u"}, x{"x"}, k{"k"};
@@ -166,11 +167,14 @@ public:
         tva(rs) = rnd(prevEnd, u32(1) << u32(C(ts)));
 
         // 5. the address of every symbol: from its unit's W, then the typelinks over it
-        addr(i) = u32(0);
+        addr(i) = undef<uint32_t>();  // every address must be supplied by the updates
         RDom ra(0, unitMax, 0, nunits, "ra");
         ra.where(ra.x < ulen(ra.y));
+        ra.where(ra.y != skip_unit);
         addr(clamp(ustart(ra.y) + ra.x, 0, L - 1)) = W(nK + ra.x, ra.y);
-        addr(clamp(tl(rs), 0, L - 1)) = tva(rs);
+        RDom rtaddr(0, ntl, "rtaddr");
+        rtaddr.where(i32(unit(clamp(tl(rtaddr), 0, L - 1))) != skip_unit);
+        addr(clamp(tl(rtaddr), 0, L - 1)) = tva(rtaddr);
 
         // ---- schedule
         ulen.compute_root();

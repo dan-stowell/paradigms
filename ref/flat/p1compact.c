@@ -4,6 +4,7 @@
 // Relocation targets, content join and oracle checks are identical to p1par.
 #include "flat.h"
 #include <omp.h>
+#include <sys/resource.h>
 #include "p1c.h"
 
 #define NP 256
@@ -13,6 +14,37 @@ typedef struct { u64 k1, k2, val; } rec; // val = rank << 32 | ~id; id 0: a want
 
 typedef struct { u64 k1, k2, val; u32 slot; } compact; // 32 bytes including padding
 
+// Optional diagnostics keep perf counters confined to the name join. Run perf
+// stat -D -1 --control=fifo:CTL,ACK with P1_PERF_CTL/ACK naming those
+// FIFOs, P1_PROFILE=1 and OMP_NUM_THREADS=1. P1_WARMUP=1 runs
+// one complete excluded iteration, touching precisely the pages the kernel uses.
+static void perf_gate(int enable) {
+	static FILE *ctl, *ack;
+	if (!getenv("P1_PERF_CTL")) return;
+	if (!ctl) {
+		if (!getenv("P1_PERF_ACK")) { fprintf(stderr, "P1_PERF_ACK is required\n"); exit(2); }
+		ctl = fopen(getenv("P1_PERF_CTL"), "w");
+		ack = fopen(getenv("P1_PERF_ACK"), "r");
+		if (!ctl || !ack) { perror("perf control"); exit(2); }
+	}
+	fprintf(ctl, "%s\n", enable ? "enable" : "disable"); fflush(ctl);
+	char reply[32];
+	if (read(fileno(ack), reply, sizeof reply) < 3 || strncmp(reply, "ack", 3)) {
+		fprintf(stderr, "perf acknowledgement failed\n"); exit(2);
+	}
+}
+static void page_report(void) {
+	FILE *f = fopen("/proc/self/smaps", "r");
+	char line[512]; unsigned long anon = 0, priv = 0, shared = 0, kb;
+	if (!f) { perror("smaps"); exit(2); }
+	while (fgets(line, sizeof line, f)) {
+		if (sscanf(line, "AnonHugePages: %lu kB", &kb) == 1) anon += kb;
+		if (sscanf(line, "Private_Hugetlb: %lu kB", &kb) == 1) priv += kb;
+		if (sscanf(line, "Shared_Hugetlb: %lu kB", &kb) == 1) shared += kb;
+	}
+	fclose(f);
+	printf("pages: AnonHugePages=%lu Private_Hugetlb=%lu Shared_Hugetlb=%lu kB\n", anon, priv, shared);
+}
 int main(int argc, char **argv) {
 	flatDir = argc > 1 ? argv[1] : "data/minio";
 	u32 N = (u32)metaGet("nslots"), nb = (u32)metaGet("nbuiltin");
@@ -39,7 +71,17 @@ int main(int argc, char **argv) {
 	double best = 1e9, bj = 0, bt = 0, sumj = 0, sumt = 0;
 	int reps = argc > 2 ? atoi(argv[2]) : 7;
 	if (reps < 1) { fprintf(stderr, "rep count must be positive\n"); return 2; }
-	for (int rep = 0; rep < (argc > 2 ? atoi(argv[2]) : 7); rep++) {
+	int profile = getenv("P1_PROFILE") && atoi(getenv("P1_PROFILE"));
+	int warmup = getenv("P1_WARMUP") && atoi(getenv("P1_WARMUP"));
+	if (profile && T != 1) { fprintf(stderr, "P1_PROFILE requires one thread\n"); return 2; }
+	long join_faults = 0, first_faults = 0;
+	double first_join = 0;
+	for (int rep = -warmup; rep < reps; rep++) {
+		struct rusage before, after;
+		if (profile && rep >= 0) {
+			perf_gate(1);
+			getrusage(RUSAGE_SELF, &before);
+		}
 		double t0 = now();
 		memset(cnt, 0, sizeof(size_t) * C * NP * 2);
 		#pragma omp parallel for schedule(static, 1)
@@ -131,6 +173,13 @@ int main(int argc, char **argv) {
 			builtin[i] = (e && e->val && ((e->val >> 32) & rankDef)) ? ~(u32)e->val : 0;
 		}
 		double t1 = now();
+		if (profile && rep >= 0) {
+			perf_gate(0);
+			getrusage(RUSAGE_SELF, &after);
+			join_faults += after.ru_minflt - before.ru_minflt;
+			if (!rep) first_faults = after.ru_minflt - before.ru_minflt;
+		}
+		if (!rep) first_join = t1 - t0;
 		// 4. relocation targets: a gather through the object's package table, then canon
 		#pragma omp parallel for schedule(static, 65536)
 		for (u32 g = 1; g <= N; g++) {
@@ -144,8 +193,14 @@ int main(int argc, char **argv) {
 			}
 		}
 		double t2 = now();
+		if (rep < 0) continue;
 		sumj += t1 - t0; sumt += t2 - t0;
 		if (t2 - t0 < best) best = t2 - t0, bj = t1 - t0, bt = t2 - t1;
+	}
+	if (profile) {
+		printf("first join: %.6f ms, %ld minor faults\n", first_join*1e3, first_faults);
+		printf("join minor faults: %ld total, %.3f per rep\n", join_faults, (double)join_faults/reps);
+		page_report();
 	}
 	printf("p1compact (%d threads): best %.1f ms = join by name %.1f + relocation targets %.1f\n", T, best * 1e3, bj * 1e3, bt * 1e3);
 	printf("p1compact mean: join %.6f ms total %.6f ms (%d reps, %.6f s kernel)\n", sumj/reps*1e3, sumt/reps*1e3, reps, sumt);
