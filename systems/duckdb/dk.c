@@ -245,7 +245,7 @@ static void makeView(char **w, int nw) {
 // ---- running statements
 static double cellMs[64];
 static char cellName[64][64];
-static int ncell = -1;
+static int ncell = -1, cellCount; // ncell: the current cell (-1: none)
 static double loadMs;
 static int quiet;
 static duckdb_result run(const char *sql, int keep) {
@@ -427,7 +427,7 @@ static void exec(int from, int to) {
 			}
 			loadMs += (now() - t0) * 1e3;
 		} else if (!strcmp(d, "cell")) {
-			ncell++;
+			ncell = cellCount++;
 			snprintf(cellName[ncell], 64, "%s", a);
 			if (!quiet) printf("-- %s\n", a);
 		} else if (!strcmp(d, "nocell")) {
@@ -514,7 +514,7 @@ int main(int argc, char **argv) {
 		exec(from, nprog);
 	}
 	printf("load (arrow views + CREATE TABLE): %.1f ms\n", loadMs);
-	for (int c = 0; c <= ncell; c++) printf("cell %s: %.1f ms\n", cellName[c], cellMs[c]);
+	for (int c = 0; c < cellCount; c++) printf("cell %s: %.1f ms\n", cellName[c], cellMs[c]);
 	printf("total process: %.1f ms\n", (now() - t0) * 1e3);
 	return 0;
 }
