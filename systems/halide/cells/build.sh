@@ -8,7 +8,7 @@ B=${BUILD:-build}; F=${FEAT:-}  # FEAT=-profile: Halide profiler build (into BUI
 mkdir -p "$here/$B"; cd "$here/$B"
 export LD_LIBRARY_PATH=$H/lib
 CXX="g++ -std=c++17 -O2"
-probs=${*:-p1 p2 p3}
+probs=${*:-p1 p2 p3 p4}
 
 # gen NAME GENERATOR FUNC [params...]: one AOT variant, appended to the variant table of problem NAME
 gen() {
@@ -53,6 +53,13 @@ for p in $probs; do
         for rf in 0; do for par in false true; do for vec in 0 32; do
             gen p3 relocate reloc_f${rf}_p${par:0:1}_v$vec rform=$rf par=$par vec=$vec; done; done; done
         { cat p3_variants.inc; table p3 layout layouts; table p3 relocate relocs; } > p3_variants.h
+        ;;
+    p4)
+        gen p4 segholes segholes
+        for par in false true; do gen p4 layout lay_${par:0:1} par=$par; done
+        for par in false true; do for vec in 0 32; do for pf in 0 1; do
+            gen p4 emit emit_${par:0:1}_v${vec}_p$pf par=$par vec=$vec pform=$pf; done; done; done
+        { cat p4_variants.inc; table p4 layout layouts; table p4 emit emits; } > p4_variants.h
         ;;
     esac
     # one Halide runtime for all variants of this problem
