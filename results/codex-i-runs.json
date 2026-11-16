@@ -1,0 +1,502 @@
+[
+  {
+    "round": 0,
+    "dataset": "minio",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:05 up  1:45,  0 user,  load average: 4.14, 3.42, 4.07",
+    "after": "17:01:06 up  1:45,  0 user,  load average: 4.14, 3.42, 4.07",
+    "output": "p3a (1 core): layout 7.372977 ms (360315 symbols, 33261 sorted by type string), reps 136 total 1.002725 s\nphase allocate ms 0.039861 read 0 write 2908076\nphase classify ms 1.523354 read 4778322 write 2749476\nphase bucket_prefix ms 0.349832 read 2464632 write 1283464\nphase scatter ms 0.703603 read 4612017 write 2749476\nphase sort ms 4.663195 read 33039706 write 3713576\nphase typelink_walk ms 0.092851 read 299349 write 133044\nsort comparisons 441528 string_prefix_bytes 8120114 merge_read_and_write_each 3713576\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 0,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:06 up  1:45,  0 user,  load average: 4.14, 3.42, 4.07",
+    "after": "17:01:07 up  1:45,  0 user,  load average: 4.14, 3.42, 4.07",
+    "output": "p3a_par threads=1 reps=201 total=1.004666 ms=4.998336 classify=1.554262 prefix_scatter=0.484847 sort=2.866048 walk=0.093179 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:07 up  1:45,  0 user,  load average: 4.14, 3.42, 4.07",
+    "after": "17:01:08 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "output": "p3a_par threads=8 reps=274 total=1.002087 ms=3.657252 classify=0.606943 prefix_scatter=0.291364 sort=2.679535 walk=0.079410 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:08 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "after": "17:01:09 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "output": "p3a_par threads=1 reps=209 total=1.004729 ms=4.807315 classify=1.493990 prefix_scatter=0.451493 sort=2.782829 walk=0.079003 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:09 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "after": "17:01:10 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "output": "p3a_par threads=8 reps=231 total=1.001408 ms=4.335100 classify=0.745086 prefix_scatter=0.329389 sort=3.188442 walk=0.072183 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "kube-apiserver",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:10 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "after": "17:01:11 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "output": "p3a (1 core): layout 11.346587 ms (430349 symbols, 45475 sorted by type string), reps 89 total 1.009846 s\nphase allocate ms 0.054637 read 0 write 4298100\nphase classify ms 2.153568 read 5661086 write 3260892\nphase bucket_prefix ms 0.818338 read 4351320 write 2254616\nphase scatter ms 0.895664 read 5433711 write 3260892\nphase sort ms 7.233786 read 50286632 write 5272824\nphase typelink_walk ms 0.190128 read 409275 write 181900\nsort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 0,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:11 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "after": "17:01:12 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "output": "p3a_par threads=1 reps=124 total=1.002624 ms=8.085679 classify=2.080790 prefix_scatter=0.822299 sort=4.960868 walk=0.221722 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:12 up  1:45,  0 user,  load average: 4.29, 3.46, 4.08",
+    "after": "17:01:13 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "output": "p3a_par threads=8 reps=151 total=1.001998 ms=6.635746 classify=1.078223 prefix_scatter=0.412067 sort=4.936099 walk=0.209357 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:13 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "after": "17:01:14 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "output": "p3a_par threads=1 reps=135 total=1.006981 ms=7.459115 classify=1.962809 prefix_scatter=0.703121 sort=4.570639 walk=0.222546 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 0,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:14 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "after": "17:01:15 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "output": "p3a_par threads=8 reps=147 total=1.001565 ms=6.813367 classify=1.007818 prefix_scatter=0.709151 sort=4.820560 walk=0.275838 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "minio",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:15 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "after": "17:01:17 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "output": "p3a (1 core): layout 7.588342 ms (360315 symbols, 33261 sorted by type string), reps 132 total 1.001661 s\nphase allocate ms 0.050298 read 0 write 2908076\nphase classify ms 1.615399 read 4778322 write 2749476\nphase bucket_prefix ms 0.399682 read 2464632 write 1283464\nphase scatter ms 0.709899 read 4612017 write 2749476\nphase sort ms 4.699777 read 33039706 write 3713576\nphase typelink_walk ms 0.112803 read 299349 write 133044\nsort comparisons 441528 string_prefix_bytes 8120114 merge_read_and_write_each 3713576\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 1,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:17 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "after": "17:01:18 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "output": "p3a_par threads=1 reps=185 total=1.000965 ms=5.410620 classify=1.639998 prefix_scatter=0.548425 sort=3.086501 walk=0.135696 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:18 up  1:45,  0 user,  load average: 4.27, 3.47, 4.08",
+    "after": "17:01:19 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "output": "p3a_par threads=8 reps=133 total=1.005707 ms=7.561708 classify=1.161881 prefix_scatter=0.617717 sort=5.641728 walk=0.140382 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:19 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "after": "17:01:20 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "output": "p3a_par threads=1 reps=198 total=1.001833 ms=5.059762 classify=1.494989 prefix_scatter=0.463550 sort=3.027810 walk=0.073413 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:20 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "after": "17:01:21 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "output": "p3a_par threads=8 reps=169 total=1.007785 ms=5.963226 classify=0.981145 prefix_scatter=0.478379 sort=4.386742 walk=0.116959 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "kube-apiserver",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:21 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "after": "17:01:22 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "output": "p3a (1 core): layout 11.811825 ms (430349 symbols, 45475 sorted by type string), reps 85 total 1.004005 s\nphase allocate ms 0.060236 read 0 write 4298100\nphase classify ms 2.209784 read 5661086 write 3260892\nphase bucket_prefix ms 1.003302 read 4351320 write 2254616\nphase scatter ms 0.935949 read 5433711 write 3260892\nphase sort ms 7.386874 read 50286632 write 5272824\nphase typelink_walk ms 0.215287 read 409275 write 181900\nsort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 1,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:22 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "after": "17:01:23 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "output": "p3a_par threads=1 reps=129 total=1.001019 ms=7.759834 classify=2.091335 prefix_scatter=0.677588 sort=4.822662 walk=0.168249 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:23 up  1:45,  0 user,  load average: 4.73, 3.58, 4.11",
+    "after": "17:01:24 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "output": "p3a_par threads=8 reps=165 total=1.002811 ms=6.077642 classify=0.813246 prefix_scatter=0.422219 sort=4.658102 walk=0.184076 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:24 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "after": "17:01:25 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "output": "p3a_par threads=1 reps=124 total=1.005163 ms=8.106149 classify=2.055028 prefix_scatter=0.676428 sort=5.182530 walk=0.192163 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 1,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:25 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "after": "17:01:26 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "output": "p3a_par threads=8 reps=185 total=1.000227 ms=5.406632 classify=0.735919 prefix_scatter=0.379227 sort=4.110731 walk=0.180754 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "minio",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:26 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "after": "17:01:27 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "output": "p3a (1 core): layout 7.247591 ms (360315 symbols, 33261 sorted by type string), reps 138 total 1.000168 s\nphase allocate ms 0.039810 read 0 write 2908076\nphase classify ms 1.510520 read 4778322 write 2749476\nphase bucket_prefix ms 0.338626 read 2464632 write 1283464\nphase scatter ms 0.690318 read 4612017 write 2749476\nphase sort ms 4.587419 read 33039706 write 3713576\nphase typelink_walk ms 0.080574 read 299349 write 133044\nsort comparisons 441528 string_prefix_bytes 8120114 merge_read_and_write_each 3713576\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 2,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:27 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "after": "17:01:28 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "output": "p3a_par threads=1 reps=205 total=1.003905 ms=4.897098 classify=1.526439 prefix_scatter=0.454003 sort=2.839141 walk=0.077514 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:28 up  1:45,  0 user,  load average: 4.51, 3.56, 4.10",
+    "after": "17:01:29 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "output": "p3a_par threads=8 reps=258 total=1.002994 ms=3.887574 classify=0.633582 prefix_scatter=0.289615 sort=2.878665 walk=0.085712 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:29 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "after": "17:01:30 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "output": "p3a_par threads=1 reps=209 total=1.001106 ms=4.789982 classify=1.495753 prefix_scatter=0.448620 sort=2.770833 walk=0.074777 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:30 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "after": "17:01:31 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "output": "p3a_par threads=8 reps=238 total=1.000280 ms=4.202857 classify=0.713812 prefix_scatter=0.379458 sort=3.029141 walk=0.080446 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "kube-apiserver",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:31 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "after": "17:01:32 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "output": "p3a (1 core): layout 11.880895 ms (430349 symbols, 45475 sorted by type string), reps 85 total 1.009876 s\nphase allocate ms 0.072061 read 0 write 4298100\nphase classify ms 2.292995 read 5661086 write 3260892\nphase bucket_prefix ms 0.947249 read 4351320 write 2254616\nphase scatter ms 0.909221 read 5433711 write 3260892\nphase sort ms 7.433631 read 50286632 write 5272824\nphase typelink_walk ms 0.225231 read 409275 write 181900\nsort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 2,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:32 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "after": "17:01:33 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "output": "p3a_par threads=1 reps=128 total=1.007001 ms=7.867198 classify=2.022047 prefix_scatter=0.804479 sort=4.841456 walk=0.199218 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:33 up  1:45,  0 user,  load average: 4.63, 3.60, 4.11",
+    "after": "17:01:34 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "output": "p3a_par threads=8 reps=183 total=1.000483 ms=5.467119 classify=0.706433 prefix_scatter=0.401350 sort=4.172896 walk=0.186440 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:34 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "after": "17:01:35 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "output": "p3a_par threads=1 reps=133 total=1.004801 ms=7.554892 classify=1.972865 prefix_scatter=0.740808 sort=4.637878 walk=0.203340 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 2,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:35 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "after": "17:01:36 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "output": "p3a_par threads=8 reps=183 total=1.000539 ms=5.467427 classify=0.826299 prefix_scatter=0.446844 sort=4.020311 walk=0.173973 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "minio",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:36 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "after": "17:01:37 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "output": "p3a (1 core): layout 7.550605 ms (360315 symbols, 33261 sorted by type string), reps 133 total 1.004230 s\nphase allocate ms 0.050199 read 0 write 2908076\nphase classify ms 1.602222 read 4778322 write 2749476\nphase bucket_prefix ms 0.376831 read 2464632 write 1283464\nphase scatter ms 0.713373 read 4612017 write 2749476\nphase sort ms 4.705919 read 33039706 write 3713576\nphase typelink_walk ms 0.101715 read 299349 write 133044\nsort comparisons 441528 string_prefix_bytes 8120114 merge_read_and_write_each 3713576\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 3,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:37 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "after": "17:01:38 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "output": "p3a_par threads=1 reps=201 total=1.002360 ms=4.986864 classify=1.565025 prefix_scatter=0.465816 sort=2.875694 walk=0.080329 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:38 up  1:46,  0 user,  load average: 4.66, 3.62, 4.12",
+    "after": "17:01:39 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "output": "p3a_par threads=8 reps=236 total=1.002711 ms=4.248776 classify=0.688278 prefix_scatter=0.322810 sort=3.140323 walk=0.097366 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:39 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "after": "17:01:40 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "output": "p3a_par threads=1 reps=199 total=1.000103 ms=5.025641 classify=1.491637 prefix_scatter=0.449796 sort=3.013682 walk=0.070526 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:40 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "after": "17:01:41 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "output": "p3a_par threads=8 reps=250 total=1.000938 ms=4.003750 classify=0.630917 prefix_scatter=0.271757 sort=3.024996 walk=0.076080 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "kube-apiserver",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:41 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "after": "17:01:42 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "output": "p3a (1 core): layout 11.766745 ms (430349 symbols, 45475 sorted by type string), reps 86 total 1.011940 s\nphase allocate ms 0.066164 read 0 write 4298100\nphase classify ms 2.282509 read 5661086 write 3260892\nphase bucket_prefix ms 0.877058 read 4351320 write 2254616\nphase scatter ms 0.932575 read 5433711 write 3260892\nphase sort ms 7.407672 read 50286632 write 5272824\nphase typelink_walk ms 0.200377 read 409275 write 181900\nsort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 3,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:42 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "after": "17:01:43 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "output": "p3a_par threads=1 reps=130 total=1.000708 ms=7.697752 classify=2.010962 prefix_scatter=0.691001 sort=4.800736 walk=0.195053 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:43 up  1:46,  0 user,  load average: 4.77, 3.66, 4.13",
+    "after": "17:01:44 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "output": "p3a_par threads=8 reps=185 total=1.000934 ms=5.410452 classify=0.727584 prefix_scatter=0.358144 sort=4.142077 walk=0.182647 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:44 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "after": "17:01:45 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "output": "p3a_par threads=1 reps=132 total=1.004947 ms=7.613238 classify=1.941363 prefix_scatter=0.633954 sort=4.872196 walk=0.165725 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 3,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:45 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "after": "17:01:46 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "output": "p3a_par threads=8 reps=156 total=1.003813 ms=6.434701 classify=0.854269 prefix_scatter=0.490980 sort=4.888499 walk=0.200953 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "minio",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:46 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "after": "17:01:47 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "output": "p3a (1 core): layout 7.371483 ms (360315 symbols, 33261 sorted by type string), reps 136 total 1.002522 s\nphase allocate ms 0.046914 read 0 write 2908076\nphase classify ms 1.564697 read 4778322 write 2749476\nphase bucket_prefix ms 0.353568 read 2464632 write 1283464\nphase scatter ms 0.695125 read 4612017 write 2749476\nphase sort ms 4.618841 read 33039706 write 3713576\nphase typelink_walk ms 0.091984 read 299349 write 133044\nsort comparisons 441528 string_prefix_bytes 8120114 merge_read_and_write_each 3713576\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 4,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:47 up  1:46,  0 user,  load average: 4.62, 3.65, 4.12",
+    "after": "17:01:48 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "output": "p3a_par threads=1 reps=199 total=1.003412 ms=5.042271 classify=1.591108 prefix_scatter=0.469502 sort=2.893926 walk=0.087735 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:48 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "after": "17:01:49 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "output": "p3a_par threads=8 reps=273 total=1.003312 ms=3.675137 classify=0.592331 prefix_scatter=0.302371 sort=2.710616 walk=0.069819 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:49 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "after": "17:01:50 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "output": "p3a_par threads=1 reps=210 total=1.004216 ms=4.781981 classify=1.496155 prefix_scatter=0.446149 sort=2.764113 walk=0.075564 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "minio",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:50 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "after": "17:01:51 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "output": "p3a_par threads=8 reps=227 total=1.000010 ms=4.405330 classify=0.792551 prefix_scatter=0.338583 sort=3.182637 walk=0.091559 symbols=360315 tl=33261\naddr: 360315 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "kube-apiserver",
+    "kind": "p3",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:51 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "after": "17:01:52 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "output": "p3a (1 core): layout 12.781294 ms (430349 symbols, 45475 sorted by type string), reps 79 total 1.009722 s\nphase allocate ms 0.063864 read 0 write 4298100\nphase classify ms 2.230989 read 5661086 write 3260892\nphase bucket_prefix ms 1.539858 read 4351320 write 2254616\nphase scatter ms 1.048722 read 5433711 write 3260892\nphase sort ms 7.651135 read 50286632 write 5272824\nphase typelink_walk ms 0.246277 read 409275 write 181900\nsort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\nP3a OK\n"
+  },
+  {
+    "round": 4,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": false,
+    "before": "17:01:52 up  1:46,  0 user,  load average: 4.49, 3.64, 4.12",
+    "after": "17:01:53 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "output": "p3a_par threads=1 reps=132 total=1.006049 ms=7.621585 classify=2.032972 prefix_scatter=0.684762 sort=4.717675 walk=0.186176 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": false,
+    "before": "17:01:53 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "after": "17:01:54 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "output": "p3a_par threads=8 reps=132 total=1.005340 ms=7.616211 classify=1.107144 prefix_scatter=0.482398 sort=5.758086 walk=0.268583 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 1,
+    "huge": true,
+    "before": "17:01:54 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "after": "17:01:55 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "output": "p3a_par threads=1 reps=132 total=1.003779 ms=7.604388 classify=2.048993 prefix_scatter=0.719568 sort=4.681843 walk=0.153984 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  },
+  {
+    "round": 4,
+    "dataset": "kube-apiserver",
+    "kind": "p3a_par",
+    "threads": 8,
+    "huge": true,
+    "before": "17:01:55 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "after": "17:01:56 up  1:46,  0 user,  load average: 4.37, 3.63, 4.11",
+    "output": "p3a_par threads=8 reps=185 total=1.001889 ms=5.415616 classify=0.780998 prefix_scatter=0.378363 sort=4.090195 walk=0.166060 symbols=430349 tl=45475\naddr: 430349 entries, 0 differ from oracle/p3_addr.u32\n"
+  }
+]

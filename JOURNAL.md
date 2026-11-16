@@ -44,3 +44,5 @@
 
 - 2026-11-16T16:56:23.217995+00:00: codex-h completed 80 interleaved comparison and 20 phase processes, all P1 OK. One-thread medians baseline/A/B/compact: MinIO 46.085/36.849/29.528/28.917 ms; kube 101.934/84.405/73.838/63.428 ms. Partition ownership carries most of the gain; candidate/member readback dominates the phase savings. Full ranges and commands in results/codex-h.md; check.sh unchanged.
 - 2026-11-16T16:57:49Z merged codex-h: p1compact's 1.5x is mostly partition-local candidates (random probes into 256 tables), not fewer dense passes; bandwidth hypothesis killed (IDEAS).
+
+2026-11-16T17:03Z codex-i: profile 3a and add tuned unit-parallel/MSD radix C layout; both datasets match every address at 1/8 threads. Five interleaved >=1 s runs: MinIO medians 7.37 ms plain, 5.00 / 3.89 ms tuned; hugepage request within noise, floor not reached. Details/results: results/codex-i.md.
