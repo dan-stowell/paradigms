@@ -9,21 +9,43 @@ static Expr u32(Expr e) { return cast<uint32_t>(e); }
 static Expr i32(Expr e) { return cast<int32_t>(e); }
 static const uint32_t rankDef = 1u << 29;
 
-// The ids of the slots with keep(g), g in [1, N], in id order: an inclusive scan (serial: a Halide update with a
-// loop-carried dependence cannot be parallel), then a scatter to position scan(g) - 1.
+// The ids of the slots with keep(g), g in [1, N], in id order: a scan, then a scatter to position scan(g) - 1.
+// A scan is an update with a loop-carried dependence, which Halide runs serially; the parallel schedule is a
+// different algorithm (Halide cannot derive it): blocks of 2^14 slots, each block's scan (parallel over blocks),
+// a serial scan of the block totals, then the scatter.
 static Func compact(const std::string &name, Func keep, Expr N, Expr M, bool par) {
-    Var g("g"), j("j");
-    Func inc(name + "_inc"), ids(name + "_ids");
-    RDom rs(1, N, name + "_rs");
-    inc(g) = 0;
-    inc(rs) = inc(rs - 1) + i32(keep(rs));
+    Var g("g"), j("j"), b("b");
+    Func ids(name + "_ids"), pos(name + "_pos");
+    if (!par) {
+        Func inc(name + "_inc");
+        RDom rs(1, N, name + "_rs");
+        inc(g) = 0;
+        inc(rs) = inc(rs - 1) + i32(keep(rs));
+        inc.compute_root();
+        pos(g) = inc(g) - 1;
+    } else {
+        const int B = 1 << 14;
+        Expr nB = (N + B) / B;  // blocks over [0, N]
+        Func inb(name + "_inb"), tot(name + "_tot"), off(name + "_off");
+        RDom ri(1, B - 1, name + "_ri");
+        auto kp = [&](Expr x) { return select(x >= 1 && x <= N, i32(keep(min(x, N))), 0); };
+        inb(j, b) = kp(b * B + j);  // j: position in block b
+        inb(ri, b) = inb(ri - 1, b) + kp(b * B + ri);
+        tot(b) = inb(B - 1, b);
+        RDom rb(1, nB - 1, name + "_rb");
+        off(b) = 0;
+        off(rb) = off(rb - 1) + tot(rb - 1);
+        pos(g) = off(g / B) + inb(g % B, g / B) - 1;
+        inb.compute_root().parallel(b);
+        inb.update().parallel(b);
+        off.compute_root();
+    }
     RDom rk(1, N, name + "_rk");
-    rk.where(keep(rk) != 0);
+    rk.where(keep(min(rk, N)) != 0);  // (min: the parallel split runs past the end by a tail)
     ids(j) = 0;
-    ids(clamp(inc(rk) - 1, 0, M - 1)) = rk;
-    inc.compute_root();
+    ids(clamp(pos(rk), 0, M - 1)) = rk;
     ids.compute_root();
-    if (par) ids.update().allow_race_conditions().parallel(rk);  // distinct positions
+    if (par) hj::parChunks(ids.update().allow_race_conditions(), rk);  // distinct positions
     Func idc(name + "_idc");  // (inlined) the ids are slot ids: tells bounds inference so
     idc(j) = unsafe_promise_clamped(ids(j), 1, N);
     return idc;
@@ -44,7 +66,7 @@ public:
     Input<int> nkeyed{"nkeyed"};              // slots in the join (kinds 4, 5 with a key, and the kind 1 candidates)
     Output<Buffer<uint32_t, 1>> canon{"canon"};
     Output<Buffer<uint32_t, 1>> builtin{"builtin"};
-    Output<Buffer<int32_t, 0>> check{"check"};  // keyed slots counted minus nkeyed, plus unsettled entries: 0
+    Output<Buffer<int32_t, 0>> check{"check"};  // entries that found no group: 0
 
     Var g{"g"}, j{"j"}, i{"i"};
 
@@ -85,8 +107,7 @@ public:
         Expr jb = M1 + nw + i, rb = J.rep(jb);
         Expr v = win(clamp(rb, 0, M - 1));
         builtin(i) = select(rb >= 0 && v != 0 && ((v >> 32) & rankDef) != 0, ~u32(v), u32(0));
-        RDom rk(1, N, "rk");
-        check() = sum(i32(keyed(rk))) - M1 + J.left();
+        check() = J.left();
 
         // schedule
         win.compute_root();
@@ -95,9 +116,9 @@ public:
             k2.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
             creates.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
             win.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
-            win.update().atomic().parallel(rw);
+            hj::parChunks(win.update().atomic(), rw);
             canon.parallel(g, 1 << 16, TailStrategy::GuardWithIf);
-            canon.update().allow_race_conditions().parallel(rc);  // ids are distinct
+            hj::parChunks(canon.update().allow_race_conditions(), rc);  // ids are distinct
         }
     }
 };
@@ -155,7 +176,7 @@ public:
     Input<Buffer<uint32_t, 1>> canon{"canon"};
     Input<int> ncopies{"ncopies"};
     Output<Buffer<uint32_t, 1>> out{"out"};
-    Output<Buffer<int32_t, 0>> check{"check"};  // copies counted minus ncopies, unsettled, sizes >= 2^31: 0
+    Output<Buffer<int32_t, 0>> check{"check"};  // entries that found no group, sizes >= 2^31: 0
 
     Var g{"g"}, j{"j"};
 
@@ -191,18 +212,18 @@ public:
         Expr keepSelf = kind(s) == 2 && mark(s) == 2 && hkey(1, s) > hkey(1, unsafe_promise_clamped(i32(wid), 0, N));
         ro.where(wmark1 && !keepSelf);
         out(unsafe_promise_clamped(s, 0, N)) = wid;
-        RDom rk(1, N, "rk"), rs(0, M, "rs");
+        RDom rs(0, M, "rs");
         Expr big = kind(ids(rs)) == 2 && hkey(1, ids(rs)) >= (u64e(1) << 31);
-        check() = sum(i32(copy(rk))) - M + J.left() + sum(select(big, 1, 0));
+        check() = J.left() + sum(select(big, 1, 0));
 
         win.compute_root();
         if (par) {
             k1.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
             k2.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
             win.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
-            win.update().atomic().parallel(rw);
+            hj::parChunks(win.update().atomic(), rw);
             out.parallel(g, 1 << 16, TailStrategy::GuardWithIf);
-            out.update().allow_race_conditions().parallel(ro);  // ids are distinct
+            hj::parChunks(out.update().allow_race_conditions(), ro);  // ids are distinct
         }
     }
 };

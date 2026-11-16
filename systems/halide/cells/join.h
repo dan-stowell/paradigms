@@ -23,6 +23,12 @@ inline Expr mix64(Expr h) {  // flat.h's mix64
     return h ^ (h >> 31);
 }
 
+// parallel over chunks of an RVar (parallel(r) alone makes one task per iteration)
+inline void parChunks(Stage s, RVar r, int n = 1 << 14) {
+    RVar o(r.name() + "o"), i(r.name() + "i");
+    s.split(r, o, i, n, TailStrategy::GuardWithIf).parallel(o);
+}
+
 struct Join {
     Func rep;    // rep(j): the representative entry of j's group, or -1 (a looking entry whose key no creator has)
     Func left;   // left(): creating entries with no group after the last round (must be 0)
@@ -59,7 +65,7 @@ inline Join hashJoin(const std::string &name, Func k1, Func k2, Func creates, Ex
         rep.compute_root();
         if (par) {
             claim.parallel(h, 1 << 14, TailStrategy::GuardWithIf);
-            claim.update().atomic().parallel(rj);
+            parChunks(claim.update().atomic(), rj);
             rep.parallel(j, 1 << 14, TailStrategy::GuardWithIf);
         }
         out.claims.push_back(claim);
