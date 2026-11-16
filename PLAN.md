@@ -52,8 +52,15 @@ Milestones log:
   in C, GraphBLAS column (P1, P2), kube-apiserver for every paradigm's P1-P3 cells (all correct). M4: Futhark P4 correct
   (3.2x / ~5x C), tuned C P4 (p4par). Oracle number: **17/20** (+ DuckDB 3, GraphBLAS 2); **4 ATTACKS backed**.
 
-Now (2026-11-16T18:50Z): M3 done and reviewed (REVIEWS.md). Running: Halide P4 builder (worktree; its reply or
-systems/halide/P4-REPORT.md), Goose P4 builder (worktree), Futhark P4 builder resumed on a variant reading the flattened
-emit stream (ATTACKS 4's next; ref/p4/p4runs.c control D). Next: merge each after rerunning its check (Halide P4 makes M4
-with Futhark), then M4 milestone steps; then a Halide batched-level flood (M3 review 5), quiet-machine reruns of the
-8-thread numbers (the machine is quiet when no helpers run: p4par fell from 51-68 to 16-23 ms), and Soufflé P4.
+- 2026-11-16T18:55Z M4: problem 4 correct in Futhark (4bf, flat 4D), Halide and Goose, plus tuned C (p4par) and C
+  kill tests (CP1 split, CP4 killed, CP7: indirection not pieces). Oracle number: **19/20** (+ DuckDB 3, GraphBLAS 2);
+  **4 ATTACKS backed**.
+
+Now (2026-11-16T18:55Z): M4 done; M4 skeptic fired (reviews/inbox/*-M4.md: triage into REVIEWS.md). No builders
+running. Next, in order: (1) Soufflé P4 (an Opus builder in a worktree; brief = ideas/BUILDER.md + ref/p4/README.md +
+ATTACKS 4; Datalog has no bytes, so the rules compute positions and patch values and a C writer stores bytes, as its
+3b did: that is a finding either way) -> 20/20. (2) A Halide batched-level or async flood vs its 100 pipeline calls
+(M3 review 5). (3) The hole cost (ATTACKS 4): after flattening, 8 M holes ~46 ms: test fewer holes per byte (merge
+adjacent holes of one operand, or holes whose value repeats within a function) as a Codex C job. (4) Quiet reruns of
+the 8-thread grid numbers while nothing else runs (M3 numbers were at load 7-26): systems/*/bench.sh one at a time.
+(5) A Halide cell on the flattened stream (Futhark gained 4.5x).

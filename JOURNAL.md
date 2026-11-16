@@ -107,3 +107,11 @@ The 8-thread numbers are weak evidence because the machine was oversubscribed by
 2026-11-16T18:31:29Z CP7 measurement: 55/55 oracle passes, five interleaved P4_REPS=128 runs, 1/8 threads, 12 GiB, load 2.53–4.85. Prepared unmerged D/1 48.474 ms vs p4par/1 94.695; A/1 43.981, B/1 44.689, C/1 46.589 ms. B has 17.43× fewer copies than D but only 1.08× lower time; fusion benefits at eight threads overlap noise. C stores 55,389 distinct runs / 48,985,021 bytes. Report, raw logs, reproducible summary and independent UBSan/negative-offset review committed; no new grid cell or ATTACKS entry, entry 4 refined.
 - 2026-11-16T18:36:46Z merged codex-cp7 (lead rerun all P4 OK): flattened per-item stream 2x p4; merging pieces 17x adds only 1.08x -> ATTACKS 4 corrected: indirection per piece is the cost.
 - 2026-11-16T18:47:54Z merged Halide P4 (1.5x/1.3x C), Goose P4 (ties p4par on 8), Futhark 4D (flat stream 4.5x its own emit); lead rebuilt + reran each. GRID P4 row, ATTACKS 4 cost split (pieces ~40 ns, holes ~5.8 ns, bytes ~13 ms).
+
+**M4 (2026-11-16T18:55Z).** Problem 4 went from a C reference to three correct paradigm cells and a tuned C in about
+1.5 hours. The attack moved twice: "patching is cheap, so the copy is the cost" (p4par) -> "pieces, not bytes" (ATTACKS 4
+first draft) -> "lookups per piece; flatten the stream" (codex-cp7's control D, then confirmed in Futhark at 4.5x and
+in the paradigms' top-K curves). Writing the draft before the control was run cost one correction; the control was
+cheap and should have come first. **What did the oracle number do since the last milestone? If it stalled, what is
+the blocker, and what am I doing about it?** 17/20 -> 19/20, ATTACKS 4 backed. The last cell is Soufflé P4, next in
+the Now line; after it the grid is full, and the work turns to the open attacks (holes, level sync in Halide).
