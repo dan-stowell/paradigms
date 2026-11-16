@@ -21,3 +21,9 @@ with `git status`/`git diff`, keep what is good, and commit it).
    (ref/p4/README.md, data/minio-p4) is optional after 1-3.
 5. Commit often on your branch; never push to main. Cap memory at 6G per process (`prlimit --as=6G`).
    When done, reply in five lines or fewer: cells correct, best 8-core warm times, falls-downs, branch name.
+
+**Load warning (16:20Z).** With all builders running, OpenMP-style spinning barriers lose ~100x: p2par's 8-thread flood
+(111 levels) went 14 ms -> 900-1300 ms with the default wait policy, 14-55 ms with `OMP_WAIT_POLICY=passive`. Any runtime
+with spin-wait barriers or a thread pool (OpenMP, Futhark's multicore backend, Halide's thread pool, DuckDB's scheduler) can
+show this. Report multi-thread numbers with the passive / non-spinning setting where one exists, say which, and treat an
+8-thread time far above the 1-thread time as this effect, not as the paradigm's cost.

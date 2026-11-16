@@ -6,6 +6,9 @@
 enum { fDef = 1, fText = 2, fReflect = 4, fGoType = 8, fIface = 16 };
 static u8 *live, *iface, *ifaceDone;
 static inline int tas(u8 *p) { return __atomic_exchange_n(p, 1, __ATOMIC_RELAXED) == 0; }
+// shared flags inside the parallel flood: relaxed atomic loads and stores (plain ones are data races, even same-value)
+#define LD(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
+#define ST1(x) __atomic_store_n(&(x), 1, __ATOMIC_RELAXED)
 
 typedef struct { u32 *a; size_t n, cap; } vec;
 static inline void push(vec *v, u32 x) {
@@ -171,22 +174,22 @@ int main(int argc, char **argv) {
 							u32 t = ed[e];
 							switch (ek[e]) {
 							case 0:
-								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !iface[t] && tas(&iface[t])) {
+								if (uii && (fl[t] & fGoType) && (fl[t] & fDef) && !LD(iface[t]) && tas(&iface[t])) {
 									tas(&live[t]);
 									push(nx, t); // (re)flood it as a type converted to an interface
-								} else if (!live[t] && tas(&live[t])) push(nx, t);
+								} else if (!LD(live[t]) && tas(&live[t])) push(nx, t);
 								break;
 							case 1:
-								if (!iface[t] && tas(&iface[t]) && live[t]) push(nx, t);
+								if (!LD(iface[t]) && tas(&iface[t]) && LD(live[t])) push(nx, t);
 								break;
-							case 2: if (!sigSeen[t]) sigSeen[t] = 1; break;
-							case 3: if (!named[t]) named[t] = 1; break;
+							case 2: if (!LD(sigSeen[t])) ST1(sigSeen[t]); break;
+							case 3: if (!LD(named[t])) ST1(named[t]); break;
 							}
 						}
 						if (uii)
 							for (u32 m = moff[c]; m < moff[c + 1]; m++) {
 								u32 t = mTyp[m];
-								if (t && !iface[t] && tas(&iface[t]) && live[t]) push(nx, t);
+								if (t && !LD(iface[t]) && tas(&iface[t]) && LD(live[t])) push(nx, t);
 								push(&meth[w], m);
 							}
 					}
