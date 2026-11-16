@@ -72,9 +72,11 @@ interleaved runs each, 2026-11-16T16:13Z, load 2.4-3.0, P3 OK:
 On 8 threads the huge-page relocate is **1.1-1.4x the FLOOR.md floor of 4.92 ms**; on 4 KB pages it is 3x. The ranges
 don't overlap at either thread count. The attack is not a new loop: it is the output's page size.
 
-**Note for the grid.** This VM had `vm.nr_hugepages=0`, and hlink was built to write its output on hugetlbfs: GRID's hlink
-times so far were taken without huge pages. hlink rerun with 512 reserved pages vs 0 (16:06Z, load 2.4-4.3, noisy):
-whole process 215-229 vs 250-287 ms on 8 cores. Redo quietly before using.
+**Note for the grid.** hlink with `vm.nr_hugepages=512` vs `0`, 6 interleaved rounds on 8 cores (16:15Z, load 1.9-2.5):
+total 193-267 ms (median ~226) vs 205-249 (~225): **within noise**; write phase 17-56 vs 17-23. The earlier noisy
+215-229 vs 250-287 did not reproduce, so GRID's hlink numbers (taken with 0 reserved pages) stand. hlink reuses its
+previous output file in place ("overwrote the old output in place, zeroed": create 11 ms), so its output faults are
+already mostly paid outside write.
 
 **What it would take.** Quiet 8-thread numbers; then the paradigms' 3b cells should report whether their runtime lets
 the output live on huge pages (Futhark's and Halide's buffers, Goose's arenas, DuckDB's blobs), because on this
