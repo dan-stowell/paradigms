@@ -62,11 +62,10 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T20:45Z): grid full (20/20), 5 ATTACKS backed. Merged: unify.c (identity 35-51 ms), p2inc chain fuzz
-(fresh edit-2 B->A loses: 105 ms vs 45.7 recompute). Running: (a) Codex `codex-relayout` in /home/exedev/paradigms-c
-(layout + relocate after edits; results/c-relayout.md; wait on its PID, not on EXIT lines: Codex output echoes them);
-(b) Codex `codex-p2inc-witness` in /home/exedev/paradigms-w (fresh-state retraction cost: witness / support counts);
-(c) Opus builder: GraphIt column P2 (systems/graphit); (d) Opus builder: maintained resolve in C (ref/flat/p1inc.c,
-results/c-p1inc.md). When each lands: rerun its check, merge, update ATTACKS 5 / GRID. Then an end-to-end relink
-sequence (identity -> maintained resolve -> reach -> relayout, one number per edit), quiet reruns of the 8-thread
-grid numbers, skeptic.
+Now (2026-11-16T20:55Z): grid full (20/20), 5 ATTACKS backed (5 now has Obs 1-4). Merged today: unify.c, p2inc
+chain fuzz, p3inc relayout (Obs 4: addition 0.44 us, deletion ~ recompute). Running: (a) Codex `codex-relayout2` in
+/home/exedev/paradigms-c (holes/no compaction, typelink diagnosis, small slack + spare extent; wait on its PID: Codex
+output echoes EXIT lines); (b) Codex `codex-p2inc-witness` in /home/exedev/paradigms-w (fresh-state retraction cost);
+(c) Opus builder: GraphIt column P2 (systems/graphit); (d) Opus builder: maintained resolve in C (ref/flat/p1inc.c).
+When each lands: rerun its check, merge, update ATTACKS 5 / GRID. Then an end-to-end relink sequence (identity ->
+maintained resolve -> reach -> relayout, one number per edit), quiet reruns of the 8-thread grid numbers, skeptic.
