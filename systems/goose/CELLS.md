@@ -26,6 +26,14 @@ scales only ~1.7x on 8.
 in p2rules · easy: decode inside the drain, ten lines · forced: cutting relocation edges out of the p2 rows at load;
 a canon copy per worker · impossible: -. Beats the eager C pipeline on 1 thread, not on 8.
 
+**2 reach, no supersteps (async, ATTACKS 3)** — correct: P2 OK (`bin/p2async D 8`, `bin/p2async D 8 lazy`) · 8 workers
+best flood 33.4 / 38.9 / 44.2 vs BSP p2par 48.1 / 52.9 / 62.5 (min/med/max, interleaved, 17:45Z, load 21-23; second
+window 28.2 / 37.4 / 46.6 vs 33.8 / 48.0 / 80.0); flush every 4 K ids 30.1 / 33.8 / 35.7; lazy 60.4 / 64.6 / 76.6 vs
+66.7 / 95.4 / 103.0; 1 worker = BSP within noise · 233 lines + p2rules · easy: `qpoll` between local fixpoints,
+termination by per-pair batch counts reported when idle · forced: facts broadcast to every worker in the data
+batches · impossible: a shared visited set. 10 supersteps -> 0; scaling still ~1.3-1.9x (the partition, not the
+barriers; results/levelfree.md).
+
 **3a layout** — correct: P3 OK (`bin/p3`, `bin/p3par D 8`; addr vs oracle/p3_addr) · 15-26 / 17-31 · e2e 3a+3b 338-392 /
 595-730 · 251 / 386 lines · easy: count, scan, assign; block-comparator sort for typelinks · forced: counts to main and
 bases back · impossible: -. `bin/p3 D --pipeline`: 3b from its own 3a addresses -> P3 pipeline OK.
