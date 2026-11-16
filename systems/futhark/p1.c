@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 		futhark_values_u32_1d(ctx, fb, builtin);
 		SYNC();
 		if (check) bad += check32("canon", canon, N, "oracle/p1_canon.u32") + check32("builtin", builtin, nb, "oracle/p1_builtin.u32");
-	} else if (strcmp(cell, "1b") == 0) {
+	} else if (strncmp(cell, "1b", 2) == 0) {
 		struct futhark_u32_1d *canon = LOAD(u32, "oracle/p1_canon.u32"), *builtin = LOAD(u32, "oracle/p1_builtin.u32");
 		struct futhark_u32_1d *srel = LOAD(u32, "slot_rel.u32"), *sobj = LOAD(u32, "slot_obj.u32");
 		struct futhark_u32_1d *poff = LOAD(u32, "obj_pkg_off.u32"), *pkg = LOAD(u32, "obj_pkg.u32");
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 		struct futhark_u32_1d *out = NULL;
 		TIMEIT(cell, {
 			if (out) futhark_free_u32_1d(ctx, out);
-			fut_check(futhark_entry_reltargets(ctx, &out, canon, builtin, srel, sobj, poff, pkg, rpkg, ridx), cell);
+			fut_check((strcmp(cell, "1b_scan") == 0 ? futhark_entry_reltargets_scan : futhark_entry_reltargets)(ctx, &out, canon, builtin, srel, sobj, poff, pkg, rpkg, ridx), cell);
 		});
 		u32 *tgt = malloc(4 * nrel);
 		futhark_values_u32_1d(ctx, out, tgt);

@@ -94,6 +94,27 @@ entry reltargets [N] [S] [B] [R] (canon: [N]u32) (builtin: [B]u32) (slot_rel: [S
     in if s != 0 then canon[i64.u32 s] else 0
   in map target (iota R)
 
+-- 1b, second shape: each relocation's slot by segment expansion instead of a binary search: scatter every
+-- slot with a non-empty row to its row's first relocation, then a max-scan carries it over the row.
+entry reltargets_scan [N] [S] [B] [R] (canon: [N]u32) (builtin: [B]u32) (slot_rel: [S]u32) (slot_obj: [N]u32)
+                                      (pkg_off: []u32) (pkg: []u32) (rel_pkg: [R]u32) (rel_idx: [R]u32) : [R]u32 =
+  let starts = map (\g -> if g + 1 < S && slot_rel[g] < slot_rel[g + 1] then i64.u32 slot_rel[g] else -1) (iota S)
+  let owner = scatter (replicate R 0i64) starts (iota S) |> scan i64.max 0
+  let target r g =
+    let o = i64.u32 slot_obj[g]
+    let base0 = i64.u32 pkg_off[o]
+    let npk = pkg_off[o + 1] - pkg_off[o] - 5
+    let p = rel_pkg[r]
+    let idx = rel_idx[r]
+    let sp = p - pkg_self
+    let t = if sp < 5 then npk + sp else p
+    let s = if t < npk + 5 && pkg[base0 + i64.u32 t] != 0xFFFFFFFF
+            then (if sp == 1 then (if i64.u32 idx < B then builtin[i64.u32 idx] else 0)
+                  else pkg[base0 + i64.u32 t] + idx)
+            else 0
+    in if s != 0 then canon[i64.u32 s] else 0
+  in map2 target (iota R) owner
+
 -- ---- 1c. The content-hash join over the copies the flood reached (mark 1) or names (mark 2).
 -- Groups: kind 2 by k1, kind 3 by (k1, k2). Winner: the maximum of
 --   reached << 63 | (kind 2: size) << 32 | ~id      (sizes of kind 2 are tiny: at most 8 here)
