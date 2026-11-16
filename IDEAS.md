@@ -8,7 +8,7 @@ abstracts or memory and say so: check before citing):
 
 - `ideas/resolve-reach.md` (19), `ideas/layout-codegen.md` (17), `ideas/wildcard.md` (16 systems, top 3)
 - `ideas/copy-and-patch.md` (8, problem 4; Sonnet reader 17:30Z, C&P and Deegen papers read in full): top CP1 width-relaxed
-  templates (claims disp8/disp32 is a pure function of the operand, 0 exceptions in 4.86 M holes: unverified), CP4 a
+  templates (claims disp8/disp32 is a pure function of the operand, 0 exceptions in 4.86 M holes: **lead-verified 17:33Z**, `python3 -I results/cp1check.py data/minio-p4`; the 66,592-template bound is not yet), CP4 a
   generated straight-line emitter per hot template (Deegen 1.62 GiB/s vs our 0.42 GB/s), CP2 always-disp32 (new oracle)
 - `systems/futhark/IDEAS.md` (13), `systems/halide/IDEAS.md` (13), `systems/souffle/IDEAS.md` (15),
   `systems/goose/IDEAS.md` (13)
