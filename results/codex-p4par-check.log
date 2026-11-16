@@ -1,0 +1,14 @@
+p4 (1 core): lay out 33.707 ms, emit 408.970 ms (60733909 bytes, 2381252 items), sort relocations 380.384 ms (1780281); 0 errors; reps 1 total 0.443 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+output: MAP_HUGETLB 2 MB
+p4par (1 threads): lay out 63.717 ms, emit 632.085 ms (60733909 bytes, 2381252 items), sort relocations 612.131 ms (1780281); 0 errors; reps 1 total 0.696 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+output: MAP_HUGETLB 2 MB
+p4par (8 threads): lay out 13.395 ms, emit 158.639 ms (60733909 bytes, 2381252 items), sort relocations 620.561 ms (1780281); 0 errors; reps 1 total 0.172 s
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
