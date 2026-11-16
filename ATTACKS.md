@@ -128,6 +128,19 @@ apart; ambient, within noise. P2 OK on 120/120 separate runs (both datasets, 1/2
 builders' notes point there (passes, pipeline calls, supersteps, statements per level), but the test is a batched-level or
 level-free version of each, counted (passes, barriers, queue operations) and timed against its original. Owed in M3.
 
+**Measured in the paradigms (M3, 17:20-17:55Z, load 17-26: times provisional; [results/levelfree.md](results/levelfree.md)).**
+The premise was half wrong. Futhark's flood has 45 levels, not 111 (it checks methods every level), at ~26 parallel
+operations each; Goose's p2par already floods each partition to a local fixpoint, so it has 10 supersteps. In
+**Futhark the level count is not the cost**: a hybrid (parallel while the frontier is wide, sequential drain when
+narrow) cuts 45 levels / 1,211 parallel ops to 15 / 437 and is within noise of the original at 8 threads; a plain
+sequential worklist written in Futhark beats both (8 threads 67/102/130 vs 156/201/258 ms). The cost is the passes
+inside each level. In **Goose** an async flood (no supersteps, termination by message counts) is 1.3-1.5x the
+bulk-synchronous one at 8 workers (33/39/44 vs 48/53/63 ms, ranges apart in one window; lead one-round rerun 32 vs
+61); the limit after that is the busiest partition and ~1.04 M ids through the queues. In tuned C the same hybrid
+(ref/flat/p2hyb.c) drops 111 barriers to 12 but moves ~44% of pops to one thread (results/levels.md). So:
+dropping level sync pays where waiting on a descheduled worker is the cost (C under load, Goose), not where each
+level is many whole-array passes (Futhark); there the fix is fewer passes per level, which no variant here achieved.
+
 **What it says about the paradigms.** None of the grid's data-parallel systems can say "a fixpoint without levels":
 Futhark and Halide have no worklist; Soufflé's semi-naive evaluation is level-synchronous by construction; DuckDB's
 recursive CTE iterates rounds; Goose has the queues but no shared visited set. The C worklist is ~200 lines of
