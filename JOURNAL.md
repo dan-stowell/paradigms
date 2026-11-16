@@ -115,3 +115,5 @@ in the paradigms' top-K curves). Writing the draft before the control was run co
 cheap and should have come first. **What did the oracle number do since the last milestone? If it stalled, what is
 the blocker, and what am I doing about it?** 17/20 -> 19/20, ATTACKS 4 backed. The last cell is Soufflé P4, next in
 the Now line; after it the grid is full, and the work turns to the open attacks (holes, level sync in Halide).
+
+- 2026-11-16: Goose P4 now checks all computed function offsets, including the sentinel, in file and queue joins outside timed reps; MinIO 1/8 workers pass both modes, and a temporary +1 offset fault fails both. Commands/output: results/codex-goose-fnoff.md.

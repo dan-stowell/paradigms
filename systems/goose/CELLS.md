@@ -45,7 +45,10 @@ stores; huge pages only via C remapping the pages under the builder's stack top 
 impossible: one image written in place by 8 workers (falls down as one array; distributed is the cell).
 
 **4 code generation by shape** — correct: P4 OK (`bin/p4 /home/exedev/paradigms/data/minio-p4 [1|8]`: the code byte for
-byte vs oracle/p4_code.bin, 1,780,281 relocations sorted vs oracle/p4_rel_*; also every `P4_K`) · warm (layout + emit,
+byte vs oracle/p4_code.bin, all `nfn+1` function offsets vs oracle/p4_fn_off.u64, 1,780,281 relocations sorted
+vs oracle/p4_rel_*; also every `P4_K`). Both default file and `P4_JOIN=queue` joins report computed local function
+starts after the timed reps; main adds worker bases and checks every offset, including the final sentinel. The check
+prints the number of differing offsets; any difference gives `P4 FAIL` (validation: `results/codex-goose-fnoff.md`) · warm (layout + emit,
 min/median/max of 5 interleaved rounds, 18:37Z, load 1.7-2.6) 1 worker 97.1 / 98.3 / 100.6 (C p4 105.6 / 106.1 / 107.0)
 / 8 workers 17.6 / 21.3 / 22.9 (C p4par 17.1 / 18.0 / 21.2) · e2e with self-check 1255-1305 / 883-911 (C 593-605 /
 390-446), without the check 656-686 / 267-375 · K=4096 commonest templates, rest glue: 63.7-66.3 / 10.6-15.5; K=0:

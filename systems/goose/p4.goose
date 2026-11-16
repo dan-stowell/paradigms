@@ -6,7 +6,7 @@
 // enough), copies each item's bytes into its own buffer and patches the holes. Main only says go and, at the end,
 // tells each worker its base: the worker writes its bytes and its relocations (shifted by the base) at their
 // offsets of two output files ($P4_OUT or /tmp: goose_p4_code.bin, goose_p4_rel.bin). Main reads them back and
-// checks them against the oracle (code byte for byte, relocations as a sorted list).
+// checks them against the oracle (code byte for byte, function offsets, relocations as a sorted list).
 //   p4 /home/exedev/paradigms/data/minio-p4 [workers 1..8]
 // P4_REPS=n: n timed reps after one warm-up rep (buffers reused, as ref/p4/p4.c). P4_HUGE=1: each worker's
 // output on 2 MB pages (flatio.c fresh_pages). P4_K=k: only the commonest k templates' nodes are emitted, the
@@ -279,7 +279,7 @@ struct Ready { k: i64 }
 struct Go { go: bool }
 struct Done { k: i64, layout: f64, emit: f64, bytes: i64, nrel: i64, pieces: i64, nerr: i64 }
 struct Place { file: bool, base: i64, rbase: i64 }      // where this worker's bytes and relocations go
-struct Out { k: i64, ms: f64, code: u8[], rels: Rel[] }
+struct Out { k: i64, ms: f64, code: u8[], rels: Rel[], foff: i64[] }
 
 // the output files (flatio.c): created by main, written by each worker at its own offset
 extern fn flat_create(path: const u8[:], size: i64) -> bool;
@@ -321,13 +321,17 @@ fn run<T>(k: i64, W: i64, f0: i64, f1: i64, tag: T) {
     // ---- join: write this worker's bytes and relocations (shifted to its base) into the output files, or send them
     let pl = qget<Mail<T, Place>>();
     let t3 = clock();
+    // Gather from the final layout only after all timed reps and main's Place message.
+    var foff: i64[>..] = [];
+    for f in fitem.len - 1 { foff.push(at[fitem[f]]); }
+    if k == W - 1 { foff.push(at[fitem[fitem.len - 1]]); } // final sentinel
     if pl.m.file {
         for r in rels.len { rels[r].off += pl.m.base; }
         guard flat_write_at(out_path("code"), code[..], 1, pl.m.base) && flat_write_at(out_path("rel"), rels[..], relBytes, pl.m.rbase * relBytes)
         else { abort("cannot write the output"); }
-        qput(Out { k: k, ms: ms(t3, clock()), code: [], rels: [] });
+        qput(Out { k: k, ms: ms(t3, clock()), code: [], rels: [], foff: foff[..] });
     } else {
-        qput(Out { k: k, ms: 0.0, code: code[..], rels: rels[..] });
+        qput(Out { k: k, ms: 0.0, code: code[..], rels: rels[..], foff: foff[..] });
     }
 }
 
@@ -353,12 +357,18 @@ fn rel_less(x: Rel, y: Rel) -> bool {
     return x.siz < y.siz;
 }
 
-// the code byte for byte against oracle/p4_code.bin, the relocations as a sorted list against oracle/p4_rel_*
-fn check(img: u8[:], rel: Rel[>..]&) -> i64 {
+// Code bytes, all function offsets (including the sentinel), and sorted relocations against the oracle.
+fn check(img: u8[:], rel: Rel[>..]&, foff: i64[:]) -> i64 {
     var bad = 0;
     var want: u8[>..] = [];
     load("oracle/p4_code.bin", want);
     let wfn = load_u64("oracle/p4_fn_off.u64");
+    var fbad = max(foff.len, wfn.len) - min(foff.len, wfn.len);
+    for f in min(foff.len, wfn.len) {
+        if foff[f] as u64 != wfn[f] { fbad++; }
+    }
+    print("function offsets: ", foff.len, ", oracle ", wfn.len, ", ", fbad, " differ");
+    bad += fbad;
     if img.len != want.len { print("code: ", img.len, " bytes, oracle ", want.len); bad++; }
     else if img != want[..] {
         var nf = 0;
@@ -445,6 +455,8 @@ fn main() {
     for j in W { base.push(total); total += size[j]; rbase.push(rtotal); rtotal += nrel[j]; }
     var img: u8[>..] = [];
     var rel: Rel[>..] = [];
+    var foff: i64[>..] = [];
+    foff.resize(nfn + 1, 0);
     var wmax = 0.0;
     if file {
         guard flat_create(out_path("code"), total) && flat_create(out_path("rel"), rtotal * relBytes) else { abort("cannot create the output"); }
@@ -456,6 +468,7 @@ fn main() {
     for j in W {
         let o = qget<Out>();
         wmax = max(wmax, o.ms);
+        for f in o.foff.len { foff[cut[o.k] + f] = base[o.k] + o.foff[f]; }
         if file { continue; }
         img[base[o.k]..base[o.k] + o.code.len].move_from(o.code[..]);
         let b = base[o.k];
@@ -478,7 +491,7 @@ fn main() {
     if file {
         guard flat_read(out_path("code"), img, 1) && flat_read(out_path("rel"), rel, relBytes) else { abort("cannot read the output back"); }
     }
-    let bad = nerr + check(img, rel);
+    let bad = nerr + check(img, rel, foff);
     print(if bad == 0 { "P4 OK" } else { "P4 FAIL" });
     if bad != 0 { exit(1); }
 }
