@@ -7,8 +7,8 @@
 | 1a join by name | p1compact 28 / 7-10 | 79-115 / 37-57 | 79 / 24 (2 MB) | 81-93 / 20-27 | 1928-2034 / 636 | - / 103-113 |
 | 1b targets | 43 / 5-6 | 39-57 / 42-67 | 47 / 18 | 43-46 / 10-11 | 5220-5426 / 1080 | - / 272-375 |
 | 1c content join | 37 / 7-9 | 97-118 / 39-47 | 111 / 38 | 122-133 / 33-37 | 1625-1865 / 394-587 | - / 128-190 |
-| 2 reach (edges given) | 27-30 / 13-17 | 41-49 / 22-32 | 97 / 58 | 312-332 / 70-127 | 1227-1467 / 431 | 103 + ~2000 (falls down) |
-| 2' reach, own decode | lazy 53 / 14-15 (eager 109 / 30) | 74-79 / 37-49 | 165 / 90 (falls down) | 417-465 / 79-90 | - / 960 | ~3500 (lazy ties eager) |
+| 2 reach (edges given) | 27-30 / 13-17 | 41-49 / 22-32 | 97 / 58 | 312-332 / 70-127 | 1227-1467 / 431 | 103 + ~2000 (third attempt owed) |
+| 2' reach, own decode | lazy 53 / 14-15 (eager 109 / 30) | 74-79 / 37-49 | 165 / 90 (ties eager+decode) | 417-465 / 79-90 | 2.9-3.2 s / 960 (2x its eager) | ~3500 (lazy ties eager) |
 | 3a lay out | p3a_par 5.0 / 3.9 | 15-26 / 17-31 | 14 / 7.3 | - / 20-23 | 7222-7589 / 1339 (falls down) | - / 217-263 |
 | 3b relocate (2 MB pages) | 24 / 5.4-6.8 | 41-42 / 17-24 | 107 / 41 | - / 27-31 | - / 320 | - / 309-332 |
 
@@ -20,8 +20,9 @@ GRID.md and systems/*/CELLS.md, NOTES.md (with code excerpts).
   partitioning the probe side, made the C reference 1.5x faster (p1compact; codex-h showed the probe side was the cost).
 - **Up:** one environment variable (`GLIBC_TUNABLES=glibc.malloc.hugetlb=2`, found by the Futhark builder) gives 2x on
   relocate and 1.5x on the hash join, in C and in Futhark, with no code change.
-- **Down:** the decode-in-the-flood win (ATTACKS 1) does not carry over to the data-parallel paradigms: in Futhark and
-  Halide the lazy flood is slower than their eager one, because each of the 111 levels costs whole-array passes.
+- **Mixed:** the decode-in-the-flood win (ATTACKS 1) carries over to Soufflé (lazy 2x its own eager decode + flood) and
+  Goose, but not clearly to Futhark (a tie at best, counting eager's own decode) or Halide (lazy 1.3-1.5x slower);
+  each of the 111 levels costs them whole-array passes. (Corrected after the M2 review.)
 - **Down:** on this shared VM, OpenMP's default spinning barrier makes an 8-thread flood 60x slower (900-1300 ms vs 14).
 - **Down:** this VM streams 25 / 36 GB/s (1 / 8 threads); FLOOR.md's floors assume ~87 GB/s, so they are ~2.4x low here.
 
@@ -40,7 +41,8 @@ hlink gaining from huge pages (noise).
 
 ## Review disagreements worth your attention
 - Codex on ATTACKS 1: the hlink comparison does different work in both directions -> accepted; claim narrowed.
-- M2 skeptic review is running (reviews/inbox); triage in REVIEWS.md.
+- M2 skeptic (17:15Z): DuckDB P2 falls-down premature, Futhark lazy-vs-eager unlike, Soufflé lazy win understated,
+  ATTACKS 3 beyond C unmeasured -> all accepted and corrected (REVIEWS.md).
 
 ## Decisions for you
 None. vm.nr_hugepages was raised to 1536 (3 GB) for the builders and the tunable; it resets on reboot.

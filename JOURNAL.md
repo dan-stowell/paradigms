@@ -68,3 +68,4 @@ and what am I doing about it?** From 0/20 + 0 ATTACKS at M0 (15:40Z) to 16/20 + 
 stalled. What remains for M3/M4: problem 4 in two paradigms (0 so far; the C reference and oracle exist), kube-apiserver
 for the paradigm cells, second attempts on the falls-downs (DuckDB's single recursive query, Soufflé 3a), quiet-machine
 reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a semiring BFS).
+- 2026-11-16T17:15:35Z triaged M2 skeptic: corrected GRID (DuckDB P2 not yet falls-down; Futhark lazy ties eager-with-decode; Soufflé lazy 2x its eager), ATTACKS 3 scope; the M2 paragraph's 'in Futhark and Halide lazy is slower than eager' holds for Halide only.

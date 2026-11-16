@@ -123,6 +123,11 @@ needed for the live set. One join per round: **7 phases instead of 111 barriers.
 1 thread: within noise of p2par (34-38 vs 37-44 ms). Under deliberate overload async beats passive by 1.7x with ranges
 apart; ambient, within noise. P2 OK on 120/120 separate runs (both datasets, 1/2/8 threads) and in check.sh.
 
+**Scope (after the M2 review).** Measured: in C, overload robustness (async vs passive within noise when lightly loaded,
+1.7x under overload). Not measured: that the level count is *the* bottleneck in Futhark, Halide, Goose and DuckDB; the
+builders' notes point there (passes, pipeline calls, supersteps, statements per level), but the test is a batched-level or
+level-free version of each, counted (passes, barriers, queue operations) and timed against its original. Owed in M3.
+
 **What it says about the paradigms.** None of the grid's data-parallel systems can say "a fixpoint without levels":
 Futhark and Halide have no worklist; Soufflé's semi-naive evaluation is level-synchronous by construction; DuckDB's
 recursive CTE iterates rounds; Goose has the queues but no shared visited set. The C worklist is ~200 lines of
