@@ -187,3 +187,18 @@ copy itself (a map cannot memcpy into a slice; a sequential slice-update loop in
 cheaper than scattering bytes, and the same trick made its 3b relocate 2.7-3.6x faster). The flattened stream (1) is
 exactly the shape a data-parallel language wants (no nested lookups), so it should help Futhark and Halide more than C:
 **next**, a Futhark or Halide cell reading D's representation.
+
+
+**Hole follow-up (codex-holes).** Before: B's 8.02 M records emit in 44.495 ms at one core.
+Observation: 5.63 M are integers, 0.70 M rel32, and 1.69 M relocations that write no code.
+Skipping integer stores while retaining their records takes 41.559 ms. Fix: pre-bake integers
+into each function blob and drop their records (H1): **28.757 ms, 1.55x**, nonoverlapping
+one-core ranges, but preparation rises from 343.769 to 401.802 ms median. This moves work into
+preparation; it is not an end-to-end compiler speedup. H2 merges 3.53 M integer holes into
+1.76 M masked stores: 28% fewer patch stores, **41.275 ms**, overlapping B's range (within
+noise). H1 removes 89% of patch stores but only 35% of emit time: no proportional scaling.
+Eight-core H1/B ranges overlap under load 3.43–13.35. Full bytes/offsets/relocations pass,
+three planted faults fail, independent recount/UBSan pass. User-mode perf and the checked
+no-store control point to metadata traversal/dispatch and memory traffic, not a 5.8 ns
+scalar-store cost. Counts, five interleaved rounds, preparation and counter scope:
+[results/codex-holes.md](results/codex-holes.md).

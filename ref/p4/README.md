@@ -93,6 +93,15 @@ control. These trade additional prepared input for less runtime lookup work.
 `bench-runs.sh DATA` compares them with p4/p4par in five interleaved rounds at 1/8
 threads. Counts, input sizes, timing scope and conclusions: `results/codex-cp7.md`.
 
+`p4holes.c DATA H1|H2` starts from B. H1 moves integer writes into preparation;
+H2 keeps them in emission and combines consecutive integer holes whose full span
+fits in eight bytes into a masked store. `H0` is a checked diagnostic: pre-bake
+integers but retain their records and traversal. `P4_COUNTS=1` prints reuse, width,
+and adjacency counts (disable it for timing). `check-runs.sh` also invokes
+`check-holes.sh`, including deliberately planted byte/offset/relocation faults.
+`bench-holes.sh` compares B, p4par, H1/H2/H0 in five rotated rounds at 1/8 threads.
+Scope, measured tradeoffs and reproduction: `results/codex-holes.md`.
+
 ## Second dataset: kube-apiserver (2026-11-16T18:53Z)
 
 `TARGET=/home/exedev/targets/kubernetes PKG=./cmd/kube-apiserver GOCACHE=data/kube-p4/gocache ref/p4/extract.sh

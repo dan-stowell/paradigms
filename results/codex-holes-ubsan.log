@@ -1,0 +1,42 @@
+prep H0: construct 394.569 ms transform 53.501 ms total 448.071 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H0 (1 threads): emit 45.648 ms; GB/s 1.330489; reps 1 total 0.046 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H1: construct 363.998 ms transform 50.981 ms total 414.979 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H1 (1 threads): emit 32.200 ms; GB/s 1.886163; reps 1 total 0.032 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H2: construct 377.183 ms transform 66.555 ms total 443.737 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H2 (1 threads): emit 46.615 ms; GB/s 1.302871; reps 1 total 0.047 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H0: construct 382.122 ms transform 52.769 ms total 434.891 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H0 (8 threads): emit 24.014 ms; GB/s 2.529086; reps 1 total 0.024 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H1: construct 387.679 ms transform 56.381 ms total 444.061 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H1 (8 threads): emit 19.966 ms; GB/s 3.041934; reps 1 total 0.020 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+prep H2: construct 375.236 ms transform 73.770 ms total 449.006 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: anonymous fallback, MADV_HUGEPAGE failed (THP not guaranteed)
+p4holes H2 (8 threads): emit 18.236 ms; GB/s 3.330449; reps 1 total 0.018 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK

@@ -1,0 +1,5 @@
+records 8018921 encodings {1: 5633606, 2: 700229, 3: 1685086}
+widths {1: 3792009, 2: 373, 4: 4223772, 8: 2767}
+previous_same_value 1135878 template_bytes_equal 456215 union 1452746
+pairs 6245406 touching 177552 gap_le_8 5328335 span_le_8_in_function 3454252 integer_pairs_fit 3044116
+H2 groups 1756297 merged_holes 3527790 remaining_records 6247428

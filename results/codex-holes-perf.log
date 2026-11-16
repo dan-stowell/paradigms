@@ -1,0 +1,100 @@
+PERF B
+2026-11-16T19:05:32Z
+ 19:05:32 up  3:49,  0 user,  load average: 5.89, 7.22, 6.00
+prep B: construct 679.064 ms, dedupe 0.000 ms, total 679.065 ms; runs 136634 distinct 136634 blob_bytes 60733909 holes 8018921 bytes_per_run 444.501 pieces_per_MB 2249.715 input_bytes 344114823
+output: MAP_HUGETLB 2 MB
+p4runs B (1 threads): emit 45.345 ms; GB/s 1.339365; reps 256 total 24.223 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4runs /home/exedev/paradigms/data/minio-p4 B':
+
+       51766039700      cycles:u                                                              
+       62667398705      instructions:u                   #    1.21  insn per cycle            
+       15077677589      branches:u                                                            
+         438188779      branch-misses:u                  #    2.91% of all branches           
+         210525128      cache-misses:u                                                        
+
+      25.704243242 seconds time elapsed
+
+      22.114742000 seconds user
+       0.689263000 seconds sys
+
+
+PERF H0
+2026-11-16T19:05:58Z
+ 19:05:58 up  3:50,  0 user,  load average: 8.61, 7.74, 6.20
+prep H0: construct 850.550 ms transform 49.235 ms total 899.785 ms; blob_bytes 60733909 records 8018921 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 256605472
+output: MAP_HUGETLB 2 MB
+p4holes H0 (1 threads): emit 40.182 ms; GB/s 1.511467; reps 256 total 17.706 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4holes /home/exedev/paradigms/data/minio-p4 H0':
+
+       51316927773      cycles:u                                                              
+       55205102035      instructions:u                   #    1.08  insn per cycle            
+       12147514401      branches:u                                                            
+         299785568      branch-misses:u                  #    2.47% of all branches           
+         249550909      cache-misses:u                                                        
+
+      19.601953355 seconds time elapsed
+
+      17.183809000 seconds user
+       0.522504000 seconds sys
+
+
+PERF H1
+2026-11-16T19:06:18Z
+ 19:06:18 up  3:50,  0 user,  load average: 8.78, 7.82, 6.26
+prep H1: construct 449.235 ms transform 62.618 ms total 511.853 ms; blob_bytes 60733909 records 2385315 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 0 groups 0 record_bytes 76330080
+output: MAP_HUGETLB 2 MB
+p4holes H1 (1 threads): emit 28.893 ms; GB/s 2.102042; reps 256 total 10.316 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4holes /home/exedev/paradigms/data/minio-p4 H1':
+
+       33216325990      cycles:u                                                              
+       33466653227      instructions:u                   #    1.01  insn per cycle            
+        4915605624      branches:u                                                            
+         153863606      branch-misses:u                  #    3.13% of all branches           
+         177387325      cache-misses:u                                                        
+
+      11.291786819 seconds time elapsed
+
+       9.264692000 seconds user
+       0.356543000 seconds sys
+
+
+PERF H2
+2026-11-16T19:06:29Z
+ 19:06:29 up  3:50,  0 user,  load average: 9.64, 8.04, 6.35
+prep H2: construct 440.661 ms transform 63.105 ms total 503.767 ms; blob_bytes 60733909 records 6247428 integer_holes 5633606 rel32 700229 relocations 1685086 merged_holes 3527790 groups 1756297 record_bytes 199917696
+output: MAP_HUGETLB 2 MB
+p4holes H2 (1 threads): emit 41.839 ms; GB/s 1.451605; reps 256 total 13.771 s
+function offsets: 136635 checked, 0 errors
+code: 60733909 bytes in 136634 functions, equal to oracle/p4_code.bin
+relocations: 1780281, oracle 1780281, 0 differ
+P4 OK
+
+ Performance counter stats for 'prlimit --as=12884901888 build/p4holes /home/exedev/paradigms/data/minio-p4 H2':
+
+       50799601837      cycles:u                                                              
+       53601574401      instructions:u                   #    1.06  insn per cycle            
+       10908163185      branches:u                                                            
+         470834951      branch-misses:u                  #    4.32% of all branches           
+         224911810      cache-misses:u                                                        
+
+      14.791640456 seconds time elapsed
+
+      14.111900000 seconds user
+       0.350039000 seconds sys
+
+
