@@ -39,4 +39,7 @@ M4. Problem 4 (code generation by shape) in at least two paradigms.
 
 Milestones log:
 
-Now: Start M0. Clone the reference repos into /home/exedev/targets, build MinIO with the stock toolchain and freeze its objects (bottom-up's scripts), design and write the flat-file extractor and the oracles. In parallel: builders in worktrees install Goose, Futhark, Halide and Soufflé and run each one's hello-world on this VM; Sonnet prior-art readers (one per paradigm, one per problem, one wildcard) write to IDEAS.md.
+- 2026-11-16T15:40Z M0: MinIO frozen; flat files + oracles for problems 1-3 (ref/flat/README.md) extracted by hlink -dumpflat; plain 1-core C references reproduce every oracle exactly (ref/flat/check.sh); hlink's phase times on this VM in GRID.md (149 ms whole link, 8 cores); floors from bottom-up FLOOR.md. Oracle number: 0/20 paradigm cells (C column filled), 0 ATTACKS backed.
+
+Now: M1/M2 in flight. Four Opus builders (worktrees, branches worktree-agent-*) are building Soufflé, Futhark, Halide, Goose cells for problems 1-3 per ideas/BUILDER.md; merge each branch when it reports (check its CELLS.md, rerun its oracle check and bench.sh on a quiet machine), paste cells into GRID.md. Codex is writing ref/flat/stats.c (BFS levels, degree and reloc-kind histograms -> results/minio.stats.txt). Next for the lead: problem 4 data (fc's shapes from simd-lang: find the tool behind SHAPES.md's 4,096 shapes / 96.7%), kube-apiserver freeze + extraction (`link/freeze.sh` from bottom-up with kubernetes source), first ATTACKS.md entries from the cells.
+

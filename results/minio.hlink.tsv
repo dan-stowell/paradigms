@@ -1,0 +1,62 @@
+1	load	22.8
+1	resolve	121.6
+1	inittasks	4.4
+1	deadcode	158.8
+1	layout	84.8
+1	create	27.7
+1	write	99.8
+1	finish	3.5
+1	teardown	5.3
+1	total	528.7
+1	complete	532.6
+1	process	536.6
+2	load	11.0
+2	resolve	63.6
+2	inittasks	4.3
+2	deadcode	88.9
+2	layout	47.5
+2	create	15.4
+2	write	50.6
+2	finish	3.5
+2	teardown	4.4
+2	total	289.4
+2	complete	289.4
+2	process	294.7
+4	load	20.0
+4	resolve	37.6
+4	inittasks	4.4
+4	deadcode	52.3
+4	layout	30.2
+4	create	9.2
+4	write	26.5
+4	finish	3.2
+4	teardown	3.9
+4	total	187.5
+4	complete	187.5
+4	process	192.6
+8	load	16.7
+8	resolve	26.7
+8	inittasks	4.5
+8	deadcode	44.6
+8	layout	21.1
+8	create	7.5
+8	write	15.4
+8	finish	3.1
+8	teardown	4.5
+8	total	144.1
+8	complete	144.2
+8	process	148.7
+# phase       wall ms   cpu ms
+# load           16.7     70.1  [kernel  57.2] 1312 files, 1421 objects, 1763 units; slots: 1124269 by index, 47874+2632620 by content hash, 547814 defined by name, 852850 references by name; 0 of the slots in bare .o files
+# resolve        26.7    177.6  [kernel  62.5] 5205427 slots; joined: 627344 by name (and 3652 definitions by package index); ms: records 16.0, joins 4.2, pkgdefs 3.1, names 2.8
+# inittasks       4.5     29.5  [kernel   5.6] 622 + 3 packages with initialization to run
+# deadcode       44.6    282.1  [kernel  50.9] 360376 symbols live, 110 levels in 7 rounds, 11450 methods pruned, reflection true; 255900 symbols flooded, 2552911 relocations and 2133149 aux records read; content-addressed: 1290076 reached, 456940 kept
+# layout         21.1     97.6  [kernel   0.0] 110680 functions, text 40.0 MB, rodata 21.3, pclntab 31.4, types 9.7 (33261 sorted), data 2.0, bss 32.6
+# create          7.5     64.0  [kernel  62.4] overwrote the old output in place (it was 109.5 MB), zeroed
+# write          15.4    126.3  [kernel   1.4] 2227123 relocations applied
+# finish          3.1     12.5  [kernel   3.5] 
+# teardown        4.5     21.3  [kernel  21.3] output unmapped
+# total         144.1    880.9  8 threads, output 109.5 MB
+# complete      144.2           from the start to the output complete, as the parent sees it (a child tears the link's address space down)
+# output_bytes 109486380
+# measured 2026-11-16T15:32:58Z, 5 rounds, hlink
