@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <omp.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -78,6 +79,23 @@ inline const uint8_t* mapFile(const std::string& path, size_t& bytes) {
 	close(fd);
 	if (m == MAP_FAILED) throw std::runtime_error("flatio: cannot map " + path);
 	return (const uint8_t*)m;
+}
+
+inline std::string factDir = "."; // the last input's fact dir (writers see only the output dir)
+
+// a string table P.off.u64 + P.bin, named "P.str": per string id, its Soufflé symbol (encoded serially)
+inline Col openStrings(const std::string& dir, const std::string& name, SymbolTable& st) {
+	std::string base = name.substr(0, name.size() - 4);
+	size_t ob, bb;
+	const uint64_t* off = (const uint64_t*)mapFile(dir + "/" + base + ".off.u64", ob);
+	const char* bin = (const char*)mapFile(dir + "/" + base + ".bin", bb);
+	static std::vector<std::vector<int64_t>> keep;
+	keep.emplace_back(ob / 8 - 1);
+	auto& ids = keep.back();
+	for (size_t i = 0; i < ids.size(); i++) ids[i] = st.encode(std::string(bin + off[i], off[i + 1] - off[i]));
+	Col c;
+	c.p = (const uint8_t*)ids.data(), c.n = ids.size(), c.size = 8;
+	return c;
 }
 
 inline Col openCol(const std::string& dir, const std::string& name) {
@@ -182,9 +200,23 @@ void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable&
 	using T = typename R::t_tuple;
 	constexpr size_t arity = std::tuple_size<T>::value;
 	std::string dir = opt(d, "fact-dir");
+	factDir = dir;
+	if (opt(d, "meta") == "true") { // meta.txt: (key, value) lines
+		if constexpr (arity == 2) {
+			FILE* f = fopen((dir + "/meta.txt").c_str(), "r");
+			if (!f) throw std::runtime_error("flatio: no meta.txt in " + dir);
+			char k[256];
+			unsigned long long x;
+			while (fscanf(f, "%255s %llu", k, &x) == 2) rel.insert(T{st.encode(k), (RamDomain)x});
+			fclose(f);
+		}
+		stats.load += msSince(t0);
+		return;
+	}
 	std::vector<Col> cols;
 	size_t nv = 0;
-	for (auto& f : split(opt(d, "cols"))) cols.push_back(openCol(dir, f)), nv += cols.back().width;
+	for (auto& f : split(opt(d, "cols")))
+		cols.push_back(f.size() > 4 && f.substr(f.size() - 4) == ".str" ? openStrings(dir, f, st) : openCol(dir, f)), nv += cols.back().width;
 	// leading columns: the CSR row; then the element's position (index=true) or its position in its row (pos=true)
 	std::string csr = opt(d, "csr");
 	bool byRow = !csr.empty(), byIndex = opt(d, "index") == "true", byPos = opt(d, "pos") == "true";
@@ -219,6 +251,73 @@ void readAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable&
 	if (getenv("FLATIO_VERBOSE")) fprintf(stderr, "flatio: %s %zu tuples %.1f ms\n", opt(d, "name").c_str(), v.size(), msSince(t0));
 }
 
+inline uint64_t metaGet(const std::string& dir, const char* key) {
+	FILE* f = fopen((dir + "/meta.txt").c_str(), "r");
+	if (!f) throw std::runtime_error("flatio: no meta.txt in " + dir);
+	char k[256];
+	unsigned long long x;
+	while (fscanf(f, "%255s %llu", k, &x) == 2)
+		if (!strcmp(k, key)) { fclose(f); return x; }
+	fclose(f);
+	throw std::runtime_error(std::string("flatio: meta has no ") + key);
+}
+
+// image="NAME": the relation is (position, width, value), the patches of problem 3b. Assemble the output image
+// (C, not Datalog: Soufflé has no bytes): copy every placed symbol's bytes to its address (addr=, default
+// oracle/p3_addr.u32; not buckets 13-15), write each patch's low `width` bytes little-endian, write NAME.
+// FLATIO_HUGE=1: the image on 2 MB pages (MAP_HUGETLB). FLATIO_IMG_REPS=n: assemble n times into a fresh mapping
+// and report min/median/max ms and minor faults per assembly (ATTACKS 2).
+template <class R>
+void writeImage(std::map<std::string, std::string> d, const R& rel) {
+	auto t0 = Clock::now();
+	const std::string& fd = factDir;
+	size_t L = metaGet(fd, "p3_placed"), nimg = metaGet(fd, "image_bytes"), base = metaGet(fd, "imageBase"), b;
+	std::string an = opt(d, "addr").empty() ? "oracle/p3_addr.u32" : opt(d, "addr");
+	const uint32_t* addr = (const uint32_t*)mapFile(fd + "/" + an, b);
+	const uint8_t* bucket = mapFile(fd + "/p3_bucket.u8", b);
+	const uint64_t* doff = (const uint64_t*)mapFile(fd + "/p3_data.off.u64", b);
+	const uint8_t* dbin = mapFile(fd + "/p3_data.bin", b);
+	std::vector<typename R::t_tuple> all(rel.begin(), rel.end());
+	double toVec = msSince(t0);
+	int reps = getenv("FLATIO_IMG_REPS") ? atoi(getenv("FLATIO_IMG_REPS")) : 1;
+	std::vector<double> ms;
+	std::vector<long> flt;
+	uint8_t* img = nullptr;
+	size_t mapped = 0;
+	for (int rep = 0; rep < reps; rep++) {
+		if (img) munmap(img, mapped);
+		struct rusage r0, r1;
+		getrusage(RUSAGE_SELF, &r0);
+		auto t1 = Clock::now();
+		size_t hp = 2u << 20;
+		mapped = (nimg + hp - 1) / hp * hp;
+		img = (uint8_t*)MAP_FAILED;
+		if (getenv("FLATIO_HUGE")) img = (uint8_t*)mmap(nullptr, mapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+		if (img == MAP_FAILED) img = (uint8_t*)mmap(nullptr, mapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#pragma omp parallel for schedule(dynamic, 1024)
+		for (size_t i = 0; i < L; i++)
+			if (bucket[i] < 13 && doff[i + 1] > doff[i]) memcpy(img + addr[i] - base, dbin + doff[i], doff[i + 1] - doff[i]);
+#pragma omp parallel for schedule(static)
+		for (size_t i = 0; i < all.size(); i++) {
+			uint64_t v = (uint64_t)all[i][2];
+			memcpy(img + (uint64_t)all[i][0] - base, &v, (size_t)all[i][1]); // little-endian: the low bytes
+		}
+		ms.push_back(msSince(t1));
+		getrusage(RUSAGE_SELF, &r1);
+		flt.push_back(r1.ru_minflt - r0.ru_minflt);
+	}
+	auto t2 = Clock::now();
+	std::string path = (opt(d, "output-dir").empty() ? std::string(".") : opt(d, "output-dir")) + "/" + opt(d, "image");
+	FILE* f = fopen(path.c_str(), "wb");
+	if (!f || fwrite(img, 1, nimg, f) != nimg) throw std::runtime_error("flatio: cannot write " + path);
+	fclose(f);
+	double fileMs = msSince(t2);
+	std::vector<double> sorted = ms;
+	std::sort(sorted.begin(), sorted.end());
+	fprintf(stderr, "flatio: image %zu patches, assemble min %.1f median %.1f max %.1f ms over %d (%s pages, %ld minor faults), tuples->vector %.1f ms, file %.1f ms\n",
+	        all.size(), sorted[0], sorted[sorted.size() / 2], sorted.back(), reps, getenv("FLATIO_HUGE") ? "2 MB" : "4 KB", flt.back(), toVec, fileMs);
+}
+
 template <class R>
 void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable& rt, const R& rel) {
 	if (opt(d, "IO") != "flat") {
@@ -231,9 +330,13 @@ void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable
 	std::string dir = opt(d, "output-dir");
 	if (dir.empty()) dir = ".";
 	auto names = split(opt(d, "cols"));
-	if (names.size() != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": output columns do not match arity");
-	std::vector<T> all(rel.begin(), rel.end());
-	for (size_t j = 0; j < arity; j++) {
+	if (!opt(d, "image").empty()) {
+		if constexpr (arity == 3) writeImage(d, rel);
+		names.clear();
+	} else if (names.size() != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": output columns do not match arity");
+	std::vector<T> all;
+	if (!names.empty()) all.assign(rel.begin(), rel.end());
+	for (size_t j = 0; j < names.size(); j++) {
 		if (names[j] == "-") continue;
 		Col c = {};
 		std::string sfx = names[j].substr(names[j].rfind('.') + 1);

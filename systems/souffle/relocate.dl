@@ -1,0 +1,40 @@
+// Problem 3b, relocate (ref/flat/README.md): the value every relocation writes, by its kind. The rules compute the
+// patches (position, width, value); flatio's image writer copies the symbols' bytes to their addresses and writes
+// the patches (C: Soufflé has no bytes). 3b alone: the addresses are 3a's oracle and p3_addr_all.
+
+.decl meta(k: symbol, v: unsigned)
+.input meta(IO=flat, meta="true")
+.decl addr(i: unsigned, a: unsigned)                     // placed symbol i's address
+.input addr(IO=flat, index="true", cols="oracle/p3_addr.u32")
+.decl at(g: unsigned, t: unsigned)                       // every id's address (T)
+.input at(IO=flat, index="true", cols="p3_addr_all.u32")
+.decl rel(i: unsigned, off: unsigned, siz: unsigned, kind: unsigned, add: number, tgt: unsigned)
+.input rel(IO=flat, csr="p3_rel_start.u32", cols="p3_rel_off.u32,p3_rel_siz.u8,p3_rel_kind.u8,p3_rel_add.i64,p3_rel_tgt.u32")
+
+.decl sect(s: unsigned)                                  // section bases, for the offset kinds
+sect(s) :- meta(k, s), (k = "lay_text" ; k = "lay_rodata" ; k = "lay_pclntab" ; k = "lay_types" ;
+                        k = "lay_noptrdata" ; k = "lay_data" ; k = "lay_bss" ; k = "lay_noptrbss").
+
+// a relocation at P = addr + off with its target's address T (as signed numbers)
+.decl site(p: number, siz: unsigned, kind: unsigned, add: number, tgt: unsigned, t: number) inline
+site(to_number(a + off), siz, kind, add, tgt, to_number(t)) :- rel(i, off, siz, kind, add, tgt), addr(i, a), at(tgt, t).
+
+.decl patch(p: number, siz: unsigned, v: number)
+.decl error(p: number, kind: unsigned)
+patch(p, z, t + add) :- site(p, z, 1, add, _, t), t != 0.
+patch(p, z, add)     :- site(p, z, 1, add, 0, 0).
+error(p, 1)          :- site(p, _, 1, _, g, 0), g != 0.
+patch(p, z, t + add) :- site(p, z, 2, add, _, t), t != 0.
+patch(p, z, add)     :- site(p, z, 2, add, 0, 0).
+patch(p, z, to_number(u) + add) :- site(p, z, 2, add, g, 0), g != 0, meta("addr_unreachableMethod", u).
+patch(p, z, t - to_number(b) + add) :- site(p, z, k, add, _, t), (k = 3 ; k = 4), t != 0,
+                                       b = max s : { sect(s), to_number(s) <= t }.
+patch(p, z, 0xFFFFFFFF) :- site(p, z, 4, _, _, 0).
+patch(p, z, t + add - (p + to_number(z))) :- site(p, z, k, add, _, t), (k = 5 ; k = 6 ; k = 7), t != 0.
+patch(p, z, add - (p + to_number(z)))     :- site(p, z, k, add, 0, 0), (k = 5 ; k = 6 ; k = 7).
+error(p, k)          :- site(p, _, k, _, g, 0), g != 0, (k = 5 ; k = 7).
+patch(p, z, to_number(u) + add - (p + to_number(z))) :- site(p, z, 6, add, g, 0), g != 0, meta("addr_mapinitnoop", u).
+patch(p, z, add)     :- site(p, z, 8, add, _, _).
+
+.output error(IO=flat, cols="relocate_error_pos.i64,relocate_error_kind.u8", exitafter="2")
+.output patch(IO=flat, image="p3_image.out", exitafter="2")
