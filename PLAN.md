@@ -67,5 +67,5 @@ incremental relink after a real MinIO edit (branch worktree-agent-aa18026fc1e40e
 and Halide P4 on the flattened stream (branch worktree-agent-ac1d106352ebc93ed, results/halide-p4flat.md); skeptic on
 5e179fe (reviews/inbox/*-codex-skeptic-full.md: triage into REVIEWS.md). On each finish: rebuild + rerun its check in
 main, merge, GRID/ATTACKS (DD: a new ATTACKS entry if the update beats recompute by orders of magnitude on a real
-edit). Then: quiet reruns of the 8-thread numbers once no builder runs (systems/*/bench.sh one at a time); Futhark 3b
-with the blocked copy (MORNING surprise, not yet applied); then a fresh context.
+edit). Then: quiet reruns of the 8-thread numbers once no builder runs (systems/*/bench.sh one at a time); then
+a fresh context.

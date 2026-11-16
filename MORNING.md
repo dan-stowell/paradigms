@@ -36,7 +36,7 @@ P4 cell correct unchanged; emit grows 1.0-1.2x for 1.23x the bytes (kube has 0.8
   functions), but joining the parts costs it another 37-260 ms (no shared memory); Halide is 1.3x C.
 - **Up:** disp8 vs disp32 is a pure function of the operand (0 exceptions in 4.86 M holes): templates merge 108,833 -> 66,046.
 - **Up:** Futhark *can* bulk-copy: a sequential slice-update loop inside a map over 64 blocks compiles to memcpy
-  (3-5x the byte scatter its 3b used; not yet applied to 3b).
+  (3-5x the byte scatter; applied to 3b as 3b_blk: 2.7x / 3.6x).
 - **Mixed:** reach's frontier: 81 of 111 levels are under 4,096 symbols and hold 6% of the work, but a hybrid flood in
   C that drains them sequentially moves ~44% of the work to one thread (the small levels lead into wide ones).
 
