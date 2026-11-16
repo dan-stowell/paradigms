@@ -1,0 +1,104 @@
+# 2026-11-16T19:36:54Z  19:36:54 up  4:21,  0 user,  load average: 3.79, 4.57, 5.66 data /home/exedev/paradigms/data/minio-p4
+# round 1 2026-11-16T19:36:54Z load 3.79 4.57 5.66
+halide-D 1 41.14
+halide-H1 1 13.42
+halide-H1-r32 1 12.79
+p4par(lay+emit) 1 102.735
+p4runs-D 1 46.295
+p4runs-B 1 39.764
+p4holes-H1 1 26.869
+futhark-4D 1 67.44
+halide-D 8 13.19
+halide-H1 8 5.77
+halide-H1-r32 8 8.35
+p4par(lay+emit) 8 22.353
+p4runs-D 8 13.963
+p4runs-B 8 12.648
+p4holes-H1 8 7.700
+futhark-4D 8 22.06
+# round 2 2026-11-16T19:37:36Z load 4.19 4.53 5.59
+halide-D 1 43.14
+halide-H1 1 15.02
+halide-H1-r32 1 13.72
+p4par(lay+emit) 1 112.517
+p4runs-D 1 47.487
+p4runs-B 1 43.840
+p4holes-H1 1 28.531
+futhark-4D 1 90.33
+halide-D 8 24.39
+halide-H1 8 6.92
+halide-H1-r32 8 5.32
+p4par(lay+emit) 8 33.142
+p4runs-D 8 14.253
+p4runs-B 8 9.351
+p4holes-H1 8 6.128
+futhark-4D 8 18.78
+# round 3 2026-11-16T19:38:24Z load 6.28 4.99 5.69
+halide-D 1 41.83
+halide-H1 1 12.81
+halide-H1-r32 1 12.21
+p4par(lay+emit) 1 105.049
+p4runs-D 1 46.132
+p4runs-B 1 40.216
+p4holes-H1 1 27.577
+futhark-4D 1 65.04
+halide-D 8 15.79
+halide-H1 8 6.43
+halide-H1-r32 8 5.64
+p4par(lay+emit) 8 20.267
+p4runs-D 8 13.254
+p4runs-B 8 10.471
+p4holes-H1 8 7.163
+futhark-4D 8 22.74
+# round 4 2026-11-16T19:39:07Z load 5.40 4.89 5.62
+halide-D 1 42.78
+halide-H1 1 14.99
+halide-H1-r32 1 14.11
+p4par(lay+emit) 1 103.82
+p4runs-D 1 47.738
+p4runs-B 1 43.883
+p4holes-H1 1 29.248
+futhark-4D 1 66.54
+halide-D 8 13.48
+halide-H1 8 6.77
+halide-H1-r32 8 5.97
+p4par(lay+emit) 8 24.67
+p4runs-D 8 13.833
+p4runs-B 8 11.802
+p4holes-H1 8 8.442
+futhark-4D 8 25.90
+# round 5 2026-11-16T19:39:48Z load 4.29 4.66 5.51
+halide-D 1 41.89
+halide-H1 1 13.87
+halide-H1-r32 1 12.57
+p4par(lay+emit) 1 103.715
+p4runs-D 1 46.127
+p4runs-B 1 41.077
+p4holes-H1 1 27.479
+futhark-4D 1 68.71
+halide-D 8 25.49
+halide-H1 8 7.08
+halide-H1-r32 8 6.94
+p4par(lay+emit) 8 31.606
+p4runs-D 8 13.693
+p4runs-B 8 14.772
+p4holes-H1 8 10.392
+futhark-4D 8 28.81
+# end 2026-11-16T19:40:32Z load 5.61 4.92 5.56
+# program threads: min / median / max over rounds (ms)
+futhark-4D 1           65.04 / 67.44 / 90.33
+futhark-4D 8           18.78 / 22.74 / 28.81
+halide-D 1             41.14 / 41.89 / 43.14
+halide-D 8             13.19 / 15.79 / 25.49
+halide-H1 1            12.81 / 13.87 / 15.02
+halide-H1 8            5.77 / 6.77 / 7.08
+halide-H1-r32 1        12.21 / 12.79 / 14.11
+halide-H1-r32 8        5.32 / 5.97 / 8.35
+p4holes-H1 1           26.869 / 27.577 / 29.248
+p4holes-H1 8           6.128 / 7.700 / 10.392
+p4par(lay+emit) 1      102.735 / 103.82 / 112.517
+p4par(lay+emit) 8      20.267 / 24.67 / 33.142
+p4runs-B 1             39.764 / 41.077 / 43.883
+p4runs-B 8             9.351 / 11.802 / 14.772
+p4runs-D 1             46.127 / 46.295 / 47.738
+p4runs-D 8             13.254 / 13.833 / 14.253
