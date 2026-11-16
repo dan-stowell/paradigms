@@ -99,3 +99,5 @@ attack (ATTACKS 4). **What did the oracle number do since the last milestone? If
 am I doing about it?** 16/20 + DuckDB 3 with 3 ATTACKS -> 17/20 + DuckDB 3 + GraphBLAS 2 with 4 ATTACKS. Not stalled,
 but slower: the three remaining cells are all problem 4 (Goose, Halide, Soufflé); Halide is building, Goose goes next.
 The 8-thread numbers are weak evidence because the machine was oversubscribed by my own helpers; reruns go in the Now line.
+
+2026-11-16 CP7: prepared contiguous runs in C (hole-free-neighbour fusion, whole-function blobs, sequence deduplication), plus an unmerged prepared control to distinguish fewer copies from hoisted metadata lookup. All variants pass bytes, unconditional function offsets and sorted relocations at 1/8 threads and constrained-team/fallback checks. Five interleaved 128-repetition measurements underway; preprocessing separately timed, logical prepared-input footprint counted.
