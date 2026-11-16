@@ -1,6 +1,9 @@
 -- Problem 2, reach, as an iterated frontier (semi-naive evaluation driven from outside: dk's .repeat).
 -- Each round joins only what is new: dl, the symbols that became live last round, and du, the live types that
 -- became "used in interface" (iface + gotype + def) last round. The rules are ref/flat/README.md's.
+-- The edges come from two views over dl and du, out_dl and out_du (kind, dst): p2prep.sql reads them from the
+-- p2_edge CSR, p2eager.sql from relocations decoded up front, p2lazy.sql decodes a symbol's relocations when it
+-- becomes live (ATTACKS 1).
 .cell 2loop
 CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
 CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
@@ -19,7 +22,7 @@ SELECT id FROM dl SEMI JOIN gt USING (id) SEMI JOIN iface USING (id);
 INSERT INTO uii FROM du;
 .repeat
 -- what the new live symbols name
-CREATE OR REPLACE TEMP TABLE out_l AS SELECT unnest(out, recursive := true) FROM adj JOIN dl ON adj.src = dl.id;
+CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
 INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE kind = 2;
 INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WHERE kind = 3;
 INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf USING (id));
@@ -30,8 +33,7 @@ CREATE OR REPLACE TEMP TABLE ni AS
 SELECT DISTINCT id FROM (
   SELECT dst AS id FROM out_l WHERE kind = 1
   UNION ALL
-  SELECT e.dst FROM (SELECT unnest(out, recursive := true) FROM adj JOIN du ON adj.src = du.id) e
-    SEMI JOIN gt ON gt.id = e.dst WHERE e.kind = 0
+  SELECT e.dst FROM out_du e SEMI JOIN gt ON gt.id = e.dst WHERE e.kind = 0
   UNION ALL
   SELECT mtyp FROM meth JOIN du ON meth.typ = du.id)
 ANTI JOIN iface USING (id) WHERE id <> 0;
