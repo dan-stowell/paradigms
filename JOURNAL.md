@@ -126,3 +126,17 @@ the Now line; after it the grid is full, and the work turns to the open attacks 
 - (Codex, codex-kube-p4) 2026-11-16T19:15Z codex-kube-p4: rebuilt unchanged Futhark 4bf/4D, Halide and C P4 cells; both datasets pass their existing checks, five interleaved 1/8-thread rounds archived in results/codex-kube-p4-raw.json and analyzed in results/codex-kube-p4.md. Goose builds but fails before loading under the requested 8 GiB address-space cap (stack reservations); no code/constants changed. C offset-check limitation documented; independent review verified all table cells and ratios.
 - 2026-11-16T19:17Z codex-kube-p4 merged: every P4 cell (C, Futhark 4bf/4D, Halide, Goose) P4 OK on kube-apiserver unchanged; emit scales ~1.0-1.2x for 1.23x the bytes (Halide 1-thread 1.44x, overlapping ranges). Goose rerun by lead under its cgroup cap. p4.c offsets checked unconditionally.
 - 2026-11-16T19:31Z Halide batched-level flood merged (results/halide-levelfree.md): k=2/4/8 levels per call 1.0-1.2x slower than one call per level; calls cost ~2 ms of 300; per-level passes (0.63 / 0.23 ms even when empty) are the cost. Lead rebuilt + reran: f_f 294, f_f_e4 348 (1 thr), f_t 64, f_t_e8 84 ms (8), all P2 OK. ATTACKS 3 updated; M4 review item 5 closed.
+
+**2026-11-16T19:33Z, grid full.** Soufflé P4 closed the last cell: correct (bytes, every function offset, sorted
+relocations; MinIO and kube), 70x C on 1 core and 130x on 8, which is Soufflé's usual factor on this workload: 8.65 M
+output tuples, each a B-tree insert. Its finding is a trap, not a speed: set semantics silently merged 37,703
+relocations that were exact duplicates, and only the count check caught it. Datalog's relation is a set; a linker's
+relocation list is a multiset. Halide's batched flood answered the M3/M4 reviewers: the calls are free (~0.02 ms), the
+per-level passes cost 0.2-0.6 ms even with an empty frontier, so ATTACKS 3's verdict for data-parallel systems
+(fewer passes per level, not fewer levels) now holds in Futhark and Halide. The hole cost split: what looked like
+5.8 ns per store is record traversal; baking layout-independent integers into prepared blobs is 1.5x (reproduced by
+the lead), merging stores is noise. Every P4 cell is correct on kube-apiserver unchanged. **What did the oracle number
+do since the last milestone? If it stalled, what is the blocker, and what am I doing about it?** 19/20 -> 20/20; ATTACKS
+stayed at 4 backed entries but 3 and 4 gained measured extensions. Not stalled. The grid's frame is filled, so the
+next gains are outside it: Differential Dataflow asks whether a relink after a small edit needs most of this work at
+all (builder running), and a Halide cell on the flattened P4 stream tests whether ATTACKS 4 transfers (builder running).

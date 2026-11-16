@@ -56,6 +56,12 @@ Milestones log:
   kill tests (CP1 split, CP4 killed, CP7: indirection not pieces). Oracle number: **19/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed**.
 
+- 2026-11-16T19:33Z Grid full: Soufflé P4 correct (emit2.dl, ~70x / ~130x C; lead rebuilt, P4 OK on MinIO and kube).
+  Every P4 cell correct on kube-apiserver too. Halide batched-level flood measured (1.0-1.2x slower: ATTACKS 3 holds
+  in Halide as in Futhark); hole cost split (baking integer holes 1.5x; store merging within noise). New column:
+  Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
+  **4 ATTACKS backed** (3 and 4 extended).
+
 Now (2026-11-16T19:00Z): Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md) and Halide
 batched-level flood (results/halide-levelfree.md); Sonnet installer for a new column, Differential Dataflow
 (systems/ddflow, incremental relink); Codex in /home/exedev/paradigms-c (branch codex-holes, results/codex-holes.md, log
