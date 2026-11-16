@@ -112,7 +112,8 @@ memory, arrangements built inside the timing).
 - Edit 2 (12 K ids die): the update is ~40x DD's full but **slower than recomputing in C** (65 vs 49 single
   core, 19 on 8 threads). Retracting reachability is DD's expensive case: every dead id's derivation is withdrawn
   round by round through the loop (45 rounds), with the arrangements' history of every round.
-- 8 workers make updates *slower* (edit 2: 526-555 median vs 65 on 1 worker): per-round coordination of a
+- **Corrected 20:12Z (results/c-incremental.md): on a quiet machine (load 0.7-1.7) edit 2 updates in 29 ms on 8
+  workers vs 59 on 1, edit 1 in 2.1 vs 1.4; the slowdown below is load.** At load 4.4-5.6, 8 workers made updates *slower* (edit 2: 526-555 median vs 65 on 1 worker): per-round coordination of a
   small, many-round update. The 28 ms minimum shows what it costs when the machine is quiet for a moment.
 
 ### Problem 1a+1b

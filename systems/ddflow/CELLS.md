@@ -24,7 +24,7 @@ forced: static joins hoisted out of the loop, sig ids decoded at load. **60x / 1
 (`ddflow inc $D/minio $D/minio-edit 5 -w 1`) · diff edit 1: 27 edges + 30 flags, 31 symbols with changed facts of
 9.7 M facts, live -1 +2 · **update 1.3 / 1.4 / 3.4 (1 wkr) vs C recompute 52 / p2par 31 (1 thr)**; 8 wkr
 1.8 / 9.0 / 82 vs p2par 20.5 · diff edit 2: 234 edges, 141 symbols, **live -12,320 +10** · update 55 / 65 / 113
-(1), 28 / 555 / 688 (8): **slower than recomputing in C** (retraction through 45 rounds; 8 workers 8x worse) ·
+(1), 28 / 555 / 688 (8): **slower than recomputing in C** (retraction through 45 rounds; 8 workers 8x worse at load 4-6; quiet 20:12Z: 29 on 8 vs 59 on 1) ·
 code: the full run plus `feed(minus, -1); feed(plus, +1)` · forced: a stable id space (positional ids shift on
 any edit): name/hash keys + Myers alignment, `facts.rs`, outside DD.
 

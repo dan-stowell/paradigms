@@ -2,25 +2,34 @@
 // link's state, kept in memory as a resident linker would), then applies a stored diff (DATA_B/diff/, written by
 // `ddflow writediff`, see its README.md) as an update, and back, REPS times; every result is checked against B's
 // oracle in A's id space (diff/live_b.u32) or A's oracle.
-//   gcc -O2 -march=native -o build/p2inc ref/flat/p2inc.c && build/p2inc data/minio data/minio-edit [REPS]
+//   gcc -O2 -march=native -o build/p2inc ref/flat/p2inc.c && build/p2inc data/minio data/minio-edit [REPS] [plain]
+//   FUZZ=K build/p2inc ...: then K random diffs (up to 200 edges removed from live sources, 200 added, all kinds)
+//   on top of B, each checked against a from-scratch flood of the same graph, and reverted to B's oracle.
 //
 // The rules are p2.c's (data/README.md). The state kept between links, all derived by the same rules: live, iface,
 // typeDone (live, iface, type descriptor: its type edges and methods have been applied), called (per method),
-// support counts of the aggregate facts: sig(name, type), named(name), reflect = how many live sources assert them.
+// counts of the aggregate facts sig(name, type), named(name), reflect (how many live sources assert them), and a
+// stamp per fact: the clock when it was set, so every fact was derived from facts with smaller stamps.
 //
 // An update is DRed (delete and rederive, Gupta-Mumick-Subrahmanian 1993), in three steps:
-//  1. over-delete: with the old flags, every fact derived through a removed edge, root or changed flag, and
-//     everything derived from those, transitively, is retracted (live, iface, typeDone, called), and the counts of
-//     sig/named/reflect are decremented for every source that stops being live; a method whose condition loses
-//     its last support is retracted;
-//  2. rederive: with the new flags and edges, each retracted fact that still has a derivation from facts that
-//     are true is set again (one reverse lookup: plain/useiface predecessors, calling methods, roots);
-//  3. insert: added edges from live sources, added roots, and everything that follows, by the same worklist as
-//     the initial flood (only new targets are pushed).
-// Why DRed and not counts: liveness is cyclic (a function and its closure keep each other alive), so a count of
-// live predecessors never reaches zero for a dead cycle; DRed is exact with cycles. Why not "recompute when a live
-// edge is removed": every real edit removes live edges (the edited function's GC-locals symbols are renamed), so
-// that policy would recompute every time. The cost of DRed is the over-deleted cone: printed below.
+//  1. over-delete, with the old flags: all removed edges leave the graph, then the facts they derived are
+//     retracted, transitively -- except that a fact is kept if it still has a derivation from a true fact with a
+//     smaller stamp (a predecessor, a root, a flag, a called method; a method keeps its call if a live source of
+//     its condition has a smaller stamp than the call). Every retraction re-checks what it supported, so what is
+//     kept has a chain of decreasing stamps down to roots and flags: it is derivable. ("plain": textbook DRed,
+//     nothing is kept, every fact downstream of a removal is retracted.)
+//  2. rederive, with the new flags and edges: each retracted fact with any derivation from true facts is set again
+//     (one reverse lookup: predecessors, calling methods, roots); the worklist restores what follows from it;
+//  3. insert: added edges of live sources, added roots, and what follows, by the same worklist as the initial
+//     flood (only new targets are pushed).
+// Why not support counts: liveness is cyclic (a function and its closure keep each other alive), so a count of
+// live predecessors never reaches zero for a dead cycle. The same holds for the method rule: a sig's remaining
+// sources can be the method's own targets, which is why a method's condition is checked by stamps, not counts
+// (found by the fuzzer). Why not "recompute when a live edge is removed": every real edit removes live edges (the
+// edited function's GC-locals symbols are renamed), so that policy would always recompute. Why stamps: textbook
+// DRed over-deletes 594 K of 663 K live ids for edit 2 (a retracted source of reflect/sig/named retracts every
+// method call it may justify, and everything downstream of those); with stamps the cone is 26 K.
+// Method-table diffs are not supported (exit 3; neither edit has one).
 #include "flat.h"
 
 enum { fDef = 1, fReflect = 4, fGoType = 8, fIface = 16 };
