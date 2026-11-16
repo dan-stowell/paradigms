@@ -1,0 +1,19 @@
+Running as unit: run-r1a9dadd6a2ef4f09acc1f13faceb9fa5.scope; invocation ID: c96a2d7344904cf29fd4020022e2db1b
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 0 of function image has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call image.update(0).unscheduled() to suppress this warning.
+In file included from /home/exedev/paradigms-c/systems/halide/cells/p3.cpp:7:
+/home/exedev/paradigms-c/systems/halide/cells/../../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      |
+<command-line>: note: this is the location of the previous definition
+built p3
+Running as unit: run-r5cd6161db8c44f11ae5323636cdbe123.scope; invocation ID: 8dff6fb7a1c6445a985c5ef4bce370fe
+In file included from /home/exedev/paradigms-c/systems/halide/cells/p3.cpp:7:
+/home/exedev/paradigms-c/systems/halide/cells/../../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      |
+<command-line>: note: this is the location of the previous definition
+built p3

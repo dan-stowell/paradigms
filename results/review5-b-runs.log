@@ -1,0 +1,414 @@
+Independent oracle: image=109486380 bytes, placed=76359886, original nonplaced differing bytes=26212864
+Independent comparator rejects placed byte corruption at 4096
+Independent comparator rejects gap byte corruption at 0
+RUN 1 goose8-4k-file 2026-11-16T19:45:26Z
+ 19:45:26 up  4:29,  0 user,  load average: 3.79, 5.67, 5.84
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 161.3 ms  3a 13.9 ms  3b relocate+file (4 KB pages, x64) 86.1 / 118.5 / 156.7 ms min/median/max (slowest worker 117.5 ms, 26736 minor faults/rep in workers, 0 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 116.9 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 99.9 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 1 goose8-2m-file 2026-11-16T19:45:34Z
+ 19:45:34 up  4:30,  0 user,  load average: 5.08, 5.88, 5.91
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 157.9 ms  3a 20.4 ms  3b relocate+file (2 MB pages, x64) 78.8 / 98.6 / 254.6 ms min/median/max (slowest worker 71.0 ms, 1339 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 94.4 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 99.2 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 1 goose1-4k-file 2026-11-16T19:45:41Z
+ 19:45:41 up  4:30,  0 user,  load average: 4.68, 5.77, 5.87
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 99.8 ms  3a layout 15.2 ms  3b inputs 10.9 ms  3b relocate+file (fresh image, 4 KB pages, x64) 149.8 / 154.1 / 170.7 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 1 goose1-4k-kernel 2026-11-16T19:45:51Z
+ 19:45:51 up  4:30,  0 user,  load average: 4.83, 5.76, 5.87
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 73.2 ms  3a layout 15.7 ms  3b inputs 11.3 ms  3b (fresh image, 4 KB pages, x64) 88.5 / 92.4 / 117.5 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 1 goose1-2m-file 2026-11-16T19:45:58Z
+ 19:45:58 up  4:30,  0 user,  load average: 4.60, 5.70, 5.85
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 78.0 ms  3a layout 18.7 ms  3b inputs 13.1 ms  3b relocate+file (fresh image, 2 MB pages, x64) 101.2 / 104.5 / 132.1 ms min/median/max, 402 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 1 goose1-2m-kernel 2026-11-16T19:46:05Z
+ 19:46:05 up  4:30,  0 user,  load average: 4.39, 5.64, 5.83
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 70.7 ms  3a layout 15.5 ms  3b inputs 11.1 ms  3b (fresh image, 2 MB pages, x64) 38.5 / 40.3 / 53.9 ms min/median/max, 273 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 1 c1-4k-file 2026-11-16T19:46:08Z
+ 19:46:08 up  4:30,  0 user,  load average: 4.28, 5.60, 5.81
+p3a (1 core): layout 12.013677 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.012014 s
+p3b reps 64 (4 KB pages, 1 threads): min 145.2 median 167.3 max 315.4 ms per rep, 26731 minor faults per rep
+p3b (1 threads): copy + relocate 187.8 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 1 c1-4k-kernel 2026-11-16T19:46:20Z
+ 19:46:20 up  4:30,  0 user,  load average: 3.93, 5.48, 5.77
+p3a (1 core): layout 8.776092 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.008776 s
+p3b reps 64 (4 KB pages, 1 threads): min 59.1 median 60.7 max 78.1 ms per rep, 19109 minor faults per rep
+p3b (1 threads): copy + relocate 61.5 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 1 c1-2m-file 2026-11-16T19:46:24Z
+ 19:46:24 up  4:30,  0 user,  load average: 3.86, 5.43, 5.75
+p3a (1 core): layout 13.625603 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.013626 s
+p3b reps 64 (2 MB pages, 1 threads): min 107.8 median 120.8 max 179.6 ms per rep, 53 minor faults per rep
+p3b (1 threads): copy + relocate 112.3 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 1 c1-2m-kernel 2026-11-16T19:46:32Z
+ 19:46:32 up  4:30,  0 user,  load average: 3.57, 5.32, 5.71
+p3a (1 core): layout 8.533694 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.008534 s
+p3b reps 64 (2 MB pages, 1 threads): min 28.5 median 28.9 max 39.4 ms per rep, 39 minor faults per rep
+p3b (1 threads): copy + relocate 28.8 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 2 goose8-2m-file 2026-11-16T19:46:34Z
+ 19:46:34 up  4:31,  0 user,  load average: 3.57, 5.32, 5.71
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 158.2 ms  3a 13.9 ms  3b relocate+file (2 MB pages, x64) 77.1 / 106.1 / 154.6 ms min/median/max (slowest worker 98.4 ms, 826 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 64.2 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 91.1 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 2 goose1-4k-file 2026-11-16T19:46:42Z
+ 19:46:42 up  4:31,  0 user,  load average: 4.35, 5.43, 5.74
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 109.5 ms  3a layout 13.4 ms  3b inputs 10.8 ms  3b relocate+file (fresh image, 4 KB pages, x64) 148.4 / 153.4 / 192.9 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 2 goose1-4k-kernel 2026-11-16T19:46:52Z
+ 19:46:52 up  4:31,  0 user,  load average: 4.50, 5.43, 5.74
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 74.1 ms  3a layout 15.1 ms  3b inputs 10.9 ms  3b (fresh image, 4 KB pages, x64) 83.2 / 87.6 / 98.4 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 2 goose1-2m-file 2026-11-16T19:46:58Z
+ 19:46:58 up  4:31,  0 user,  load average: 4.30, 5.37, 5.72
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 67.7 ms  3a layout 14.4 ms  3b inputs 11.4 ms  3b relocate+file (fresh image, 2 MB pages, x64) 99.8 / 103.4 / 121.0 ms min/median/max, 60 minor faults/rep (111149056 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 2 goose1-2m-kernel 2026-11-16T19:47:05Z
+ 19:47:05 up  4:31,  0 user,  load average: 4.12, 5.32, 5.70
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 65.0 ms  3a layout 15.5 ms  3b inputs 11.1 ms  3b (fresh image, 2 MB pages, x64) 38.3 / 40.2 / 46.6 ms min/median/max, 397 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 2 c1-4k-file 2026-11-16T19:47:08Z
+ 19:47:08 up  4:31,  0 user,  load average: 3.95, 5.26, 5.68
+p3a (1 core): layout 8.447954 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.008448 s
+p3b reps 64 (4 KB pages, 1 threads): min 138.5 median 160.8 max 298.8 ms per rep, 26731 minor faults per rep
+p3b (1 threads): copy + relocate 169.0 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 2 c1-4k-kernel 2026-11-16T19:47:20Z
+ 19:47:20 up  4:31,  0 user,  load average: 4.21, 5.27, 5.68
+p3a (1 core): layout 11.297478 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.011297 s
+p3b reps 64 (4 KB pages, 1 threads): min 58.6 median 60.9 max 75.5 ms per rep, 19109 minor faults per rep
+p3b (1 threads): copy + relocate 61.4 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 2 c1-2m-file 2026-11-16T19:47:24Z
+ 19:47:24 up  4:31,  0 user,  load average: 4.11, 5.23, 5.66
+p3a (1 core): layout 9.824023 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.009824 s
+p3b reps 64 (2 MB pages, 1 threads): min 105.8 median 128.4 max 381.5 ms per rep, 53 minor faults per rep
+p3b (1 threads): copy + relocate 107.2 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 2 c1-2m-kernel 2026-11-16T19:47:33Z
+ 19:47:33 up  4:31,  0 user,  load average: 4.38, 5.26, 5.67
+p3a (1 core): layout 8.542237 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.008542 s
+p3b reps 64 (2 MB pages, 1 threads): min 28.8 median 29.8 max 39.8 ms per rep, 39 minor faults per rep
+p3b (1 threads): copy + relocate 30.4 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 2 goose8-4k-file 2026-11-16T19:47:35Z
+ 19:47:35 up  4:32,  0 user,  load average: 4.38, 5.26, 5.67
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 132.4 ms  3a 15.3 ms  3b relocate+file (4 KB pages, x64) 83.0 / 102.8 / 155.6 ms min/median/max (slowest worker 74.6 ms, 26736 minor faults/rep in workers, 0 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 104.0 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 98.3 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 3 goose1-4k-file 2026-11-16T19:47:43Z
+ 19:47:43 up  4:32,  0 user,  load average: 5.05, 5.36, 5.70
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 79.2 ms  3a layout 20.7 ms  3b inputs 12.1 ms  3b relocate+file (fresh image, 4 KB pages, x64) 155.9 / 158.4 / 201.0 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 3 goose1-4k-kernel 2026-11-16T19:47:54Z
+ 19:47:54 up  4:32,  0 user,  load average: 4.65, 5.27, 5.66
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 73.9 ms  3a layout 15.6 ms  3b inputs 10.8 ms  3b (fresh image, 4 KB pages, x64) 87.1 / 91.7 / 141.7 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 3 goose1-2m-file 2026-11-16T19:48:00Z
+ 19:48:00 up  4:32,  0 user,  load average: 5.00, 5.33, 5.68
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 64.4 ms  3a layout 14.8 ms  3b inputs 10.7 ms  3b relocate+file (fresh image, 2 MB pages, x64) 101.5 / 104.9 / 134.1 ms min/median/max, 225 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 3 goose1-2m-kernel 2026-11-16T19:48:07Z
+ 19:48:07 up  4:32,  0 user,  load average: 5.13, 5.35, 5.68
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 73.2 ms  3a layout 19.8 ms  3b inputs 12.2 ms  3b (fresh image, 2 MB pages, x64) 38.1 / 39.7 / 46.8 ms min/median/max, 385 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 3 c1-4k-file 2026-11-16T19:48:10Z
+ 19:48:10 up  4:32,  0 user,  load average: 5.13, 5.35, 5.68
+p3a (1 core): layout 13.673865 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.013674 s
+p3b reps 64 (4 KB pages, 1 threads): min 141.9 median 153.7 max 308.5 ms per rep, 26731 minor faults per rep
+p3b (1 threads): copy + relocate 148.4 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 3 c1-4k-kernel 2026-11-16T19:48:21Z
+ 19:48:21 up  4:32,  0 user,  load average: 4.73, 5.26, 5.65
+p3a (1 core): layout 17.835587 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.017836 s
+p3b reps 64 (4 KB pages, 1 threads): min 59.3 median 62.0 max 69.4 ms per rep, 19109 minor faults per rep
+p3b (1 threads): copy + relocate 61.8 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 3 c1-2m-file 2026-11-16T19:48:26Z
+ 19:48:26 up  4:32,  0 user,  load average: 4.51, 5.20, 5.63
+p3a (1 core): layout 9.072533 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.009073 s
+p3b reps 64 (2 MB pages, 1 threads): min 108.1 median 134.9 max 191.3 ms per rep, 53 minor faults per rep
+p3b (1 threads): copy + relocate 137.7 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 3 c1-2m-kernel 2026-11-16T19:48:34Z
+ 19:48:34 up  4:33,  0 user,  load average: 4.79, 5.25, 5.64
+p3a (1 core): layout 12.527073 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.012527 s
+p3b reps 64 (2 MB pages, 1 threads): min 28.6 median 29.0 max 45.4 ms per rep, 39 minor faults per rep
+p3b (1 threads): copy + relocate 29.2 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 3 goose8-4k-file 2026-11-16T19:48:37Z
+ 19:48:37 up  4:33,  0 user,  load average: 4.57, 5.19, 5.62
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 181.8 ms  3a 15.3 ms  3b relocate+file (4 KB pages, x64) 79.5 / 92.6 / 117.5 ms min/median/max (slowest worker 73.3 ms, 26736 minor faults/rep in workers, 0 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 97.1 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 94.8 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 3 goose8-2m-file 2026-11-16T19:48:43Z
+ 19:48:43 up  4:33,  0 user,  load average: 4.92, 5.25, 5.64
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 150.9 ms  3a 19.6 ms  3b relocate+file (2 MB pages, x64) 77.3 / 96.2 / 122.5 ms min/median/max (slowest worker 84.1 ms, 1080 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 95.2 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 96.9 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 4 goose1-4k-kernel 2026-11-16T19:48:50Z
+ 19:48:50 up  4:33,  0 user,  load average: 4.85, 5.23, 5.63
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 63.0 ms  3a layout 15.3 ms  3b inputs 10.8 ms  3b (fresh image, 4 KB pages, x64) 83.4 / 88.1 / 94.5 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 4 goose1-2m-file 2026-11-16T19:48:56Z
+ 19:48:56 up  4:33,  0 user,  load average: 4.62, 5.18, 5.61
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 65.5 ms  3a layout 17.0 ms  3b inputs 11.6 ms  3b relocate+file (fresh image, 2 MB pages, x64) 99.1 / 104.4 / 146.9 ms min/median/max, 269 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 4 goose1-2m-kernel 2026-11-16T19:49:03Z
+ 19:49:03 up  4:33,  0 user,  load average: 4.78, 5.19, 5.61
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 79.2 ms  3a layout 19.4 ms  3b inputs 10.5 ms  3b (fresh image, 2 MB pages, x64) 38.1 / 39.2 / 53.3 ms min/median/max, 448 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 4 c1-4k-file 2026-11-16T19:49:06Z
+ 19:49:06 up  4:33,  0 user,  load average: 4.78, 5.19, 5.61
+p3a (1 core): layout 10.991929 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.010992 s
+p3b reps 64 (4 KB pages, 1 threads): min 139.3 median 160.8 max 325.4 ms per rep, 26731 minor faults per rep
+p3b (1 threads): copy + relocate 171.7 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 4 c1-4k-kernel 2026-11-16T19:49:18Z
+ 19:49:18 up  4:33,  0 user,  load average: 4.79, 5.18, 5.60
+p3a (1 core): layout 10.354600 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.010355 s
+p3b reps 64 (4 KB pages, 1 threads): min 59.6 median 60.3 max 67.2 ms per rep, 19109 minor faults per rep
+p3b (1 threads): copy + relocate 59.9 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 4 c1-2m-file 2026-11-16T19:49:22Z
+ 19:49:22 up  4:33,  0 user,  load average: 4.48, 5.11, 5.57
+p3a (1 core): layout 9.713536 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.009714 s
+p3b reps 64 (2 MB pages, 1 threads): min 105.3 median 116.4 max 191.6 ms per rep, 53 minor faults per rep
+p3b (1 threads): copy + relocate 116.1 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 4 c1-2m-kernel 2026-11-16T19:49:30Z
+ 19:49:30 up  4:33,  0 user,  load average: 4.28, 5.06, 5.55
+p3a (1 core): layout 19.985471 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.019985 s
+p3b reps 64 (2 MB pages, 1 threads): min 28.8 median 29.5 max 59.1 ms per rep, 39 minor faults per rep
+p3b (1 threads): copy + relocate 31.4 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 4 goose8-4k-file 2026-11-16T19:49:32Z
+ 19:49:32 up  4:33,  0 user,  load average: 4.26, 5.04, 5.54
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 123.9 ms  3a 14.2 ms  3b relocate+file (4 KB pages, x64) 79.2 / 96.8 / 121.3 ms min/median/max (slowest worker 70.3 ms, 26736 minor faults/rep in workers, 0 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 115.1 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 93.4 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 4 goose8-2m-file 2026-11-16T19:49:39Z
+ 19:49:39 up  4:34,  0 user,  load average: 4.64, 5.11, 5.56
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 118.0 ms  3a 13.8 ms  3b relocate+file (2 MB pages, x64) 77.4 / 106.6 / 145.1 ms min/median/max (slowest worker 90.8 ms, 1336 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 121.0 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 91.2 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 4 goose1-4k-file 2026-11-16T19:49:46Z
+ 19:49:46 up  4:34,  0 user,  load average: 4.67, 5.10, 5.56
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 81.0 ms  3a layout 14.0 ms  3b inputs 10.7 ms  3b relocate+file (fresh image, 4 KB pages, x64) 151.6 / 157.0 / 181.4 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 5 goose1-2m-file 2026-11-16T19:49:57Z
+ 19:49:57 up  4:34,  0 user,  load average: 4.10, 4.97, 5.51
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 76.5 ms  3a layout 13.5 ms  3b inputs 11.0 ms  3b relocate+file (fresh image, 2 MB pages, x64) 103.3 / 105.1 / 120.8 ms min/median/max, 315 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 5 goose1-2m-kernel 2026-11-16T19:50:04Z
+ 19:50:04 up  4:34,  0 user,  load average: 3.86, 4.90, 5.48
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 80.9 ms  3a layout 15.6 ms  3b inputs 11.4 ms  3b (fresh image, 2 MB pages, x64) 39.5 / 41.0 / 51.4 ms min/median/max, 160 minor faults/rep (109051904 bytes on huge pages); 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+RUN 5 c1-4k-file 2026-11-16T19:50:07Z
+ 19:50:07 up  4:34,  0 user,  load average: 3.71, 4.85, 5.46
+p3a (1 core): layout 9.515615 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.009516 s
+p3b reps 64 (4 KB pages, 1 threads): min 145.1 median 155.1 max 213.9 ms per rep, 26731 minor faults per rep
+p3b (1 threads): copy + relocate 168.7 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 5 c1-4k-kernel 2026-11-16T19:50:18Z
+ 19:50:18 up  4:34,  0 user,  load average: 3.29, 4.72, 5.42
+p3a (1 core): layout 11.138580 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.011139 s
+p3b reps 64 (4 KB pages, 1 threads): min 59.3 median 62.2 max 67.9 ms per rep, 19109 minor faults per rep
+p3b (1 threads): copy + relocate 59.3 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 5 c1-2m-file 2026-11-16T19:50:22Z
+ 19:50:22 up  4:34,  0 user,  load average: 3.19, 4.68, 5.40
+p3a (1 core): layout 10.536955 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.010537 s
+p3b reps 64 (2 MB pages, 1 threads): min 108.2 median 121.9 max 219.9 ms per rep, 53 minor faults per rep
+p3b (1 threads): copy + relocate 115.4 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+Independent full file check OK
+RUN 5 c1-2m-kernel 2026-11-16T19:50:31Z
+ 19:50:31 up  4:34,  0 user,  load average: 3.01, 4.62, 5.37
+p3a (1 core): layout 14.909788 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.014910 s
+p3b reps 64 (2 MB pages, 1 threads): min 28.4 median 29.0 max 31.2 ms per rep, 39 minor faults per rep
+p3b (1 threads): copy + relocate 28.8 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+
+RUN 5 goose8-4k-file 2026-11-16T19:50:33Z
+ 19:50:33 up  4:34,  0 user,  load average: 2.85, 4.56, 5.35
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 124.3 ms  3a 13.7 ms  3b relocate+file (4 KB pages, x64) 77.0 / 96.4 / 112.5 ms min/median/max (slowest worker 75.4 ms, 26736 minor faults/rep in workers, 0 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 99.1 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 90.6 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 5 goose8-2m-file 2026-11-16T19:50:39Z
+ 19:50:39 up  4:35,  0 user,  load average: 2.86, 4.53, 5.34
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+full normalized image: 109486380 bytes, 0 differ
+p3par goose (8 workers): spawn+load 120.1 ms  3a 13.7 ms  3b relocate+file (2 MB pages, x64) 72.3 / 104.7 / 129.5 ms min/median/max (slowest worker 100.6 ms, 1080 minor faults/rep in workers, 117440512 bytes on huge pages)  check: file read setup 0.0 ms  check: file read 91.8 ms  (26730 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b 86.0 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 5 goose1-4k-file 2026-11-16T19:50:47Z
+ 19:50:47 up  4:35,  0 user,  load average: 2.94, 4.50, 5.32
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 79.4 ms  3a layout 15.1 ms  3b inputs 10.9 ms  3b relocate+file (fresh image, 4 KB pages, x64) 151.5 / 156.5 / 176.8 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+Independent full file check OK
+RUN 5 goose1-4k-kernel 2026-11-16T19:50:57Z
+ 19:50:57 up  4:35,  0 user,  load average: 2.65, 4.38, 5.27
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 74.8 ms  3a layout 14.5 ms  3b inputs 11.0 ms  3b (fresh image, 4 KB pages, x64) 86.8 / 94.7 / 115.0 ms min/median/max, 26731 minor faults/rep; 76359886 bytes, 2053801 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+
+SUMMARY: min/median/max of five per-process minima (ms)
+goose8-4k-file 77.0 79.5 86.1
+goose8-2m-file 72.3 77.3 78.8
+goose1-4k-file 148.4 151.5 155.9
+goose1-4k-kernel 83.2 86.8 88.5
+goose1-2m-file 99.1 101.2 103.3
+goose1-2m-kernel 38.1 38.3 39.5
+c1-4k-file 138.5 141.9 145.2
+c1-4k-kernel 58.6 59.3 59.6
+c1-2m-file 105.3 107.8 108.2
+c1-2m-kernel 28.4 28.6 28.8

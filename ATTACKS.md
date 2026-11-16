@@ -82,7 +82,14 @@ rep**: the same 2x as the explicit MAP_HUGETLB, from an environment variable. (p
 tunable is wrong: it reports the allocation path, not the page size.) Any paradigm whose runtime allocates through
 glibc malloc gets the attack for free, given reserved huge pages (`vm.nr_hugepages`).
 The tunable also speeds the hash join: p1compact's join on 1 thread 20.5-21.2 vs 30.1-32.3 ms (3 interleaved, 16:40Z)
--- its tables and records are malloc'd and probed at random, so this is TLB reach, not faults. The floods (p2par, p2lazy)
+-- its tables and records are malloc'd and probed at random. The original "TLB reach, not faults"
+explanation was unmeasured. [Five-round join-only perf checks](results/codex-review5.md#c-p1compact-tlb-reach-and-first-touch-faults)
+now show **both mechanisms, in different phases**: a first join has median 28,407 vs 72 minor faults;
+a warmed join has zero faults in either mode, but median page-walk requests fall from 113,467 to 46,073
+and L1 dTLB misses from 1,095,355 to 389,057 per join. `smaps` verifies 188 MiB of explicit hugetlb
+allocations with the tunable (zero without). Warm mean times are 31.582 vs 26.495 ms median, with
+overlapping ranges: this noisy window does not reproduce a precise speedup. Translation pressure
+falls after prefaulting; fault savings also matter on the first execution. The floods (p2par, p2lazy)
 don't move (within noise): their inputs are mmap'd files, which the tunable doesn't touch.
 
 **Note for the grid.** hlink with `vm.nr_hugepages=512` vs `0`, 6 interleaved rounds on 8 cores (16:15Z, load 1.9-2.5):

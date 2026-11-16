@@ -27,7 +27,16 @@ struct AddrPart { lo: i64, vals: u32[] }
 struct Seg { at: i64, bytes: u8[] }
 struct Ready { k: i64 }
 struct Go { go: bool }
-struct Done { k: i64, ms: f64, faults: i64, huge: i64 }
+struct Done { k: i64, ms: f64, faults: i64, huge: i64, nerr: i64 }
+
+// P3_FILE is an explicit output path; every repetition recreates and assembles it.
+extern fn flat_create(path: const u8[:], size: i64) -> bool;
+extern fn flat_write_at(path: const u8[:], data: const u8[:], elem: i64, at: i64) -> bool;
+fn file_path() -> u8[>..] {
+    var path: u8[>..] = [];
+    env("P3_FILE", path);
+    return path;
+}
 
 fn rnd(v: u32, a: u32) -> u32 { (v + a - 1) & ~(a - 1) }
 
@@ -199,11 +208,16 @@ fn run<T>(k: i64, W: i64, tag: T) {
         let ta = clock();
         let hb = fresh_pages(seg, a1 - a0, huge);
         nerr = build_segment(a0, a1, seg);
+        if env_set("P3_FILE") {
+            guard flat_write_at(file_path(), seg[..], 1, a0) else { abort("cannot write image range"); }
+        }
         t2 = clock();
-        qput(Done { k: k, ms: (t2 - ta) * 1000.0, faults: minor_faults(true) - f0, huge: hb });
+        qput(Done { k: k, ms: (t2 - ta) * 1000.0, faults: minor_faults(true) - f0, huge: hb, nerr: nerr });
     }
-    let g = qget<Mail<T, Go>>();
-    qput(Seg { at: a0, bytes: seg[..] });
+    if !env_set("P3_FILE") {
+        let g = qget<Mail<T, Go>>();
+        qput(Seg { at: a0, bytes: seg[..] });
+    }
     if nerr != 0 { print("worker ", k, ": ", nerr, " relocation errors"); }
     var note: u8[>..] = [];
     format(note, "  worker ", k, ": symbols ", lo, "..", hi, ", image ", a0, "..", a1, "; ");
@@ -310,8 +324,11 @@ fn main() {
     var wmax = 0.0;
     var flt = 0;
     var hb = 0;
+    var nerr = 0;
+    let file = env_set("P3_FILE");
     for rep in reps {
         let ta = clock();
+        if file { guard flat_create(file_path(), meta("image_bytes")) else { abort("cannot create image"); } }
         for j in W { send(j, Go { go: true }); }
         wmax = 0.0;
         flt = 0;
@@ -321,6 +338,7 @@ fn main() {
             wmax = max(wmax, d.ms);
             flt += d.faults;
             hb += if d.huge > 0 { d.huge } else { 0 };
+            nerr += d.nerr;
         }
         times.push((clock() - ta) * 1000.0);
     }
@@ -329,13 +347,19 @@ fn main() {
     var img: u8[>..] = [];
     let f0 = minor_faults(false);
     let t2b = clock();
-    let mhb = fresh_pages(img, meta("image_bytes"), huge);
-    img.resize(meta("image_bytes"), 0);
-    let t2c = clock();
-    for j in W { send(j, Go { go: true }); }
-    for j in W {
-        let s = qget<Seg>();
-        img[s.at..s.at + s.bytes.len].move_from(s.bytes[..]);
+    var mhb = 0;
+    var t2c = t2b;
+    if file {
+        guard flat_read(file_path(), img, 1) else { abort("cannot read assembled image"); }
+    } else {
+        mhb = fresh_pages(img, meta("image_bytes"), huge);
+        img.resize(meta("image_bytes"), 0);
+        t2c = clock();
+        for j in W { send(j, Go { go: true }); }
+        for j in W {
+            let s = qget<Seg>();
+            img[s.at..s.at + s.bytes.len].move_from(s.bytes[..]);
+        }
     }
     let t3 = clock();
     let gflt = minor_faults(false) - f0;
@@ -349,20 +373,29 @@ fn main() {
     load("oracle/p3_image.bin", want);
     let imageBase = meta("imageBase");
     var nbad = 0;
+    // The oracle is a full ELF: headers and unplaced data are outside P3.
+    // Normalize only the expected buffer; compare all produced bytes, including zero gaps.
+    var expected: u8[>..] = [];
+    expected.resize(want.len, 0);
     for i in Lm {
         guard pbucket[i] < bBSS else { continue; }
         let o = oaddr[i] - imageBase;
         let n = psize[i] as i64;
+        expected[o..o + n].move_from(want[o..o + n]);
         if img[o..o + n] != want[o..o + n] {
             if nbad < 5 { print("  symbol ", i, " (bucket ", pbucket[i], ") differs"); }
             nbad++;
         }
     }
+    if img.len != expected.len || img[..] != expected[..] {
+        print("full normalized image differs (including zero gaps)");
+        nbad++;
+    } else { print("full normalized image: ", img.len, " bytes, 0 differ"); }
     var note: u8[>..] = [];
     format(note, "p3par goose (", W, " workers): ");
     report(note, "spawn+load", t0, t1);
     report(note, "3a", t1, t2);
-    format(note, "3b distributed (", if huge { "2 MB" } else { "4 KB" }, " pages, x", reps, ") ");
+    format(note, if file { "3b relocate+file (" } else { "3b distributed (" }, if huge { "2 MB" } else { "4 KB" }, " pages, x", reps, ") ");
     sort(times) { x, y => x < y };
     format_flt(note, times[0], 1);
     format(note, " / ");
@@ -372,15 +405,15 @@ fn main() {
     format(note, " ms min/median/max (slowest worker ");
     format_flt(note, wmax, 1);
     format(note, " ms, ", flt, " minor faults/rep in workers, ", hb, " bytes on huge pages)  ");
-    report(note, "gather: image alloc", t2b, t2c);
-    report(note, "segments into it", t2c, t3);
+    report(note, if file { "check: file read setup" } else { "gather: image alloc" }, t2b, t2c);
+    report(note, if file { "check: file read" } else { "segments into it" }, t2c, t3);
     format(note, "(", gflt, " faults in the process, ", mhb, " image bytes on huge pages)  ");
-    format(note, "warm 3a + best 3b distributed ");
+    format(note, "warm 3a + best 3b ");
     format_flt(note, ms(t1, t2) + times[0], 1);
     format(note, " ms  ");
     format(note, nbad, " placed symbols differ from oracle/p3_image.bin");
     print(note);
-    bad += nbad;
+    bad += nbad + nerr;
     print(if bad == 0 { "P3 OK" } else { "P3 FAIL" });
     if bad != 0 { exit(1); }
 }

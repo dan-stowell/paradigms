@@ -1,0 +1,6 @@
+# started on Mon Nov 16 19:42:07 2026
+
+2830652,,dTLB-load-misses,2546179689,100.00,,
+17651536,,ls_l1_d_tlb_miss.all:u,2546179689,100.00,,
+2830652,,ls_l1_d_tlb_miss.all_l2_miss:u,2546179689,100.00,,
+0,,page-faults:u,2546179689,100.00,,

@@ -73,12 +73,19 @@ int main(int argc, char **argv) {
     u32 unreach = (u32)metaGet("addr_unreachableMethod"), mapinit = (u32)metaGet("addr_mapinitnoop");
     double tload = now();
 
-    Buffer<u32, 1> addr(L);  // 3b alone (mode = a reloc name) starts from the oracle addresses
-    memcpy(addr.data(), FMAP(u32, "oracle/p3_addr.u32", NULL), 4 * (size_t)L);
+    Buffer<u32, 1> addr(L);
+    const int skipUnit = getenv("P3_SKIP_UNIT") ? atoi(getenv("P3_SKIP_UNIT")) : -1;
+    if (skipUnit < -1 || skipUnit >= (int)nunits) { fprintf(stderr, "invalid P3_SKIP_UNIT\n"); return 2; }
     u8 *imgp = (u8 *)calloc(nimg + 8, 1);  // + 8 scratch bytes (gen_p3.cpp)
     Buffer<u8, 1> img(imgp, (int)nimg + 8);
     Buffer<int32_t, 0> nerr = Buffer<int32_t, 0>::make_scalar();
-    auto runLayout = [&](int v) { layouts[v].fn(bucket, cls, size, unit, bstart, bmin, tlstrB, soffB, sbinB, (int)nunits, (int)ntl, minFunc, addr); };
+    auto runLayout = [&](int v) {
+        // Poison before EVERY invocation: a preceding warm run must not hide an omitted store.
+        // addr is u32, so UINT32_MAX is the address poison (not a truncated oracle value).
+        memset(addr.data(), 0xff, sizeof(u32) * (size_t)L);
+        int rc = layouts[v].fn(bucket, cls, size, unit, bstart, bmin, tlstrB, soffB, sbinB, (int)nunits, (int)ntl, minFunc, skipUnit, addr);
+        if (rc) { fprintf(stderr, "layout failed: %d\n", rc); exit(2); }
+    };
     auto runReloc = [&](int v) {
         relocs[v].fn(bucket, addr, doff, dbin, rstart, roff, rsiz, rkind, radd, rtgt, addrAll, sect, imageBase, unreach, mapinit, img, nerr);
     };
@@ -104,13 +111,15 @@ int main(int argc, char **argv) {
         double t0 = now();
         runLayout(lv);
         double t1 = now();
+        // Check every address before a failed layout can feed out-of-bounds relocations.
+        if (check32("addr", addr.data(), L, "oracle/p3_addr.u32")) { printf("P3 FAIL\n"); return 1; }
+        double tr = now();
         runReloc(rv);
         double t2 = now();
         if (argc > 5) { FILE *f = fopen(argv[5], "wb"); fwrite(imgp, 1, nimg, f); fclose(f); }
         double t3 = now();
         printf("e2e threads=%s layout=%s reloc=%s: load %.1f ms, 3a %.1f ms, 3b %.1f ms, write %.1f ms, total %.1f ms\n", th ? th : "default",
-               layouts[lv].name, relocs[rv].name, (tload - tstart) * 1e3, (t1 - t0) * 1e3, (t2 - t1) * 1e3, (t3 - t2) * 1e3, (t3 - tstart) * 1e3);
-        bad += check32("addr", addr.data(), L, "oracle/p3_addr.u32") != 0;
+               layouts[lv].name, relocs[rv].name, (tload - tstart) * 1e3, (t1 - t0) * 1e3, (t2 - tr) * 1e3, (t3 - t2) * 1e3, (t3 - tstart) * 1e3);
         bad += checkImage();
     } else {
         printf("threads=%s\n", th ? th : "default");
@@ -118,11 +127,13 @@ int main(int argc, char **argv) {
             if (mode != "all" && mode != "3a" && mode != layouts[v].name) continue;
             Stat s = timeRuns([&] { runLayout(v); });
             printf("3a %-16s " STAT_FMT "   ", layouts[v].name, STAT_ARGS(s));
+            runLayout(v);  // independent poisoned checked run, outside the timed repetitions
             bad += check32("addr", addr.data(), L, "oracle/p3_addr.u32") != 0;
         }
-        memcpy(addr.data(), FMAP(u32, "oracle/p3_addr.u32", NULL), 4 * (size_t)L);
         for (int v = 0; v < nRelocs; v++) {
             if (mode != "all" && mode != "3b" && mode != relocs[v].name) continue;
+            // Isolated 3b runs intentionally use oracle addresses; 3a never does.
+            memcpy(addr.data(), FMAP(u32, "oracle/p3_addr.u32", NULL), sizeof(u32) * (size_t)L);
             // warm: the image buffer is reused (its pages are already mapped)
             memset(imgp, 0, nimg);
             Stat s = timeRuns([&] { runReloc(v); });

@@ -262,6 +262,14 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+	// Optional comparable file-output measurement, including create/truncate and close.
+	const char *bench_file = getenv("P3_FILE");
+	if (bench_file) {
+		FILE *f = fopen(bench_file, "wb");
+		if (!f) { perror("P3_FILE fopen"); return 2; }
+		if (fwrite(img, 1, nimg, f) != nimg) { perror("P3_FILE fwrite"); fclose(f); return 2; }
+		if (fclose(f)) { perror("P3_FILE fclose"); return 2; }
+	}
 	t3 = now();
 	getrusage(RUSAGE_SELF, &ru1);
 	rt[rep] = (t3 - t2) * 1e3;

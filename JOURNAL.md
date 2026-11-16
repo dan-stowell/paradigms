@@ -140,3 +140,5 @@ do since the last milestone? If it stalled, what is the blocker, and what am I d
 stayed at 4 backed entries but 3 and 4 gained measured extensions. Not stalled. The grid's frame is filled, so the
 next gains are outside it: Differential Dataflow asks whether a relink after a small edit needs most of this work at
 all (builder running), and a Halide cell on the flattened P4 stream tests whether ATTACKS 4 transfers (builder running).
+
+2026-11-16T19:53Z codex-review5: answered skeptic A/B/C with poisoned Halide layout + real skipped-unit failure; Goose disjoint file assembly (8-worker 2 MB 77.3 ms median vs 101.2 Goose1 /107.8 C1 including writes); five-round join-only perf verifies zero warmed faults and 2.46x fewer walk requests, plus first-touch fault reduction 28,407 -> 72. Independent checks pass. Results: results/codex-review5.md. Commit locally on codex-review5; no push per user.

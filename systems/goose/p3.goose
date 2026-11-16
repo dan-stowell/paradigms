@@ -9,6 +9,10 @@
 // and the minor faults of a rep. P3_THP=1: those pages are 2 MB hugetlb pages (ATTACKS.md 2; flatio.c).
 import flat;
 
+// Optional file-output benchmark: include creation and write-out in every rep.
+extern fn flat_create(path: const u8[:], size: i64) -> bool;
+extern fn flat_write_at(path: const u8[:], data: const u8[:], elem: i64, at: i64) -> bool;
+
 let t_start = clock();
 
 let bText: u8 = 1;
@@ -183,6 +187,8 @@ fn main() {
     var nerr = 0;
     var flt = 0;
     var hbytes = 0;
+    var file: u8[>..] = [];
+    let write = env("P3_FILE", file);
     for rep in reps {
         img.clear();
         let f0 = minor_faults(false);
@@ -190,6 +196,9 @@ fn main() {
         hbytes = fresh_pages(img, nimg, huge);
         img.resize(nimg, 0);
         nerr = relocate(oaddr, all, img);
+        if write {
+            guard flat_create(file, nimg) && flat_write_at(file, img[..], 1, 0) else { abort("cannot write image"); }
+        }
         let tb = clock();
         flt = minor_faults(false) - f0;
         times.push((tb - ta) * 1000.0);
@@ -214,7 +223,7 @@ fn main() {
     report(note, "load", t_start, t0);
     report(note, "3a layout", t0, t1);
     report(note, "3b inputs", t1, t2);
-    format(note, "3b (fresh image, ", if huge { "2 MB" } else { "4 KB" }, " pages, x", reps, ") ");
+    format(note, if write { "3b relocate+file (fresh image, " } else { "3b (fresh image, " }, if huge { "2 MB" } else { "4 KB" }, " pages, x", reps, ") ");
     sort(times) { x, y => x < y };
     format_flt(note, times[0], 1);
     format(note, " / ");

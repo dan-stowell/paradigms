@@ -18,3 +18,5 @@
 4. Futhark sequential worklist beats its parallel flood, ATTACKS said "no worklist" -> **accept, fixed** in ATTACKS 3 (the fastest Futhark flood is the one that drops data parallelism).
 5. ATTACKS 3 in Halide unmeasured -> **accept, measured** (results/halide-levelfree.md; lead reran 19:30Z): batching k levels per call is 1.0-1.2x slower; calls ~0.02 ms each, the per-level passes are the cost.
 6. None found.
+
+2026-11-16 codex-review5 follow-up to 20261116T1930-codex-skeptic-full.md: accept Halide oracle-prefill weakness (poison + skipped-unit rejection), accept Goose one-array verdict scope (measured checked file assembly), accept unproven TLB-only attribution (join-gated perf shows faults on first execution and TLB reduction after warmup). Evidence and qualifications: results/codex-review5.md. Source review remains read-only in sibling clone.

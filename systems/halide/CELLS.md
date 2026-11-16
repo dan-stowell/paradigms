@@ -21,7 +21,7 @@ capped later lists) cut the calls 98 -> 17-58 but are 1.0-1.2x slower (1 thr 299
 66; p2par 26.7 / 10.3 in the same window). Forced: RDom bounds cannot come from data, so later levels in a call
 loop to a cap. gen_p2 274 + driver 188 lines with the variants.
 
-**3a. lay out** — correct: `$B/p3 $D 3a` (addr 0 differ). 53-58 / **20-23** · in e2e 22-31 · 154 lines.
+**3a. lay out** — correct: `$B/p3 $D 3a` (addr 0 differ). Output is poisoned before every run; all 360,315 addresses checked, and `P3_SKIP_UNIT=0` fails (results/review5-a.md). 53-58 / **20-23** · in e2e 22-31 · 154 lines.
 Easy: sizes, per-unit sums, alignment walk. Forced: two-site cursor bump as a phase RVar; merge sort with merge-path
 binary search + extern comparator (no sort). Impossible: none.
 

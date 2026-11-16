@@ -131,7 +131,7 @@ sort, plus three message rounds, are most of it.
 - **3a** easy: count per (unit, bucket, class), scan, assign; `sort` with a block comparator for typelinks. Forced: on 8,
   counts to main and bases back (three message rounds). Impossible: nothing.
 - **3b** easy: `img[base..].move_from(bytes)` and a match on relocation kind. Forced: byte-wise stores; the hugetlb
-  output only through C under the runtime. Impossible: one image written by 8 workers in place (they can't share it);
+  output only through C under the runtime. Impossible: one Goose image array written by 8 workers in place (they can't share it);
   the gathered 8-worker image is slower than 1 thread.
 
 ### Falls down
@@ -139,6 +139,17 @@ sort, plus three message rounds, are most of it.
 - **8-core 3b with one output array**: two attempts (workers build segments and main gathers: 3b 53-150 ms gathered;
   then the image left distributed, which is fast, 17-24 ms, but is not one array). Reason: no shared memory, and a queue
   hop copies twice. Distributed is the idiomatic answer and the one reported as the cell.
+  **Review correction:** this does not imply failure to produce one output file.
+  `P3_FILE=/absolute/path` now has all workers `pwrite` disjoint ranges via the existing C sidecar,
+  timing create/truncate, relocation and write-out together. Every produced byte is checked against
+  the normalized P3 oracle (placed bytes from the full ELF, zero gaps). Five-round comparisons with
+  one-worker Goose and C, including matching file-output variants: `results/codex-review5.md`, finding B.
+  2026-11-16T19:45–19:51Z, load 2.65–5.13, five interleaved rounds ×64 reps: 8-worker
+  relocate+file **72.3 / 77.3 / 78.8 ms** on 2 MiB pages versus 1-worker Goose
+  **99.1 / 101.2 / 103.3** and C **105.3 / 107.8 / 108.2** with file writes included.
+  On 4 KiB: **77.0 / 79.5 / 86.1** versus **148.4 / 151.5 / 155.9** and
+  **138.5 / 141.9 / 145.2**. Buffered completion, no fsync; compare with C's kernel-only
+  **28.4 / 28.6 / 28.8 ms** on 2 MiB only when the output-file cost is excluded on both sides.
 - **8-core P2 near C**: CSR and lazy floods both scale ~1.7x over 8 workers (two attempts: one queue type per owner with
   batched inboxes and BSP; the lazy variant; a third, asynchronous with no supersteps, p2async: 1.3-1.5x faster than BSP
   under load, still ~1.3-1.9x over 1 worker). Reason: per-superstep message rounds; Goose has no shared-memory

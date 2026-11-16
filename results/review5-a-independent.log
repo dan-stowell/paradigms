@@ -1,0 +1,12 @@
+fault=False, exit=0
+Running as unit: run-rdd88a1912b244322bb24b27833db542b.scope; invocation ID: c38c1667628541f68035b1384c130622
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+e2e threads=8 layout=layout_c3_w1 reloc=reloc_f0_pt_v32: load 18.5 ms, 3a 36.1 ms, 3b 51.5 ms, write 0.0 ms, total 106.4 ms
+image: 0 placed symbols differ from oracle/p3_image.bin, 0 relocation errors
+P3 OK
+fault=True, exit=1
+Running as unit: run-r29fefdee0bb24e06b062959b52c69053.scope; invocation ID: c0dc2fd1da7f43ea9da02725dc03ce0e
+  addr[0] = 4294967295, oracle 4198400
+  addr[1] = 4294967295, oracle 96599872
+addr: 360315 entries, 2 differ from oracle/p3_addr.u32
+P3 FAIL
