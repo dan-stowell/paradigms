@@ -22,9 +22,34 @@ int main(int argc, char **argv) {
 	if (strcmp(cell, "2") == 0) {
 		SYNC();
 		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		int64_t levels;
+		fut_check(futhark_entry_reach_levels(ctx, &levels, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), "levels");
+		SYNC();
+		printf("%lld levels\n", (long long)levels);
 		TIMEIT(cell, {
 			if (out) futhark_free_u32_1d(ctx, out);
 			fut_check(futhark_entry_reach(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), cell);
+		});
+	} else if (strcmp(cell, "2hyb") == 0) {
+		// the hybrid flood (ATTACKS.md 3): P2LO (frontier width below which a level is drained sequentially,
+		// default 4096), P2HI (the drain hands back once its stack exceeds this, default 4 x P2LO), P2BUDGET
+		// (or after this many pops, default unbounded)
+		const char *e;
+		int64_t lo = (e = getenv("P2LO")) ? atoll(e) : 4096;
+		int64_t hi = (e = getenv("P2HI")) ? atoll(e) : 4 * lo;
+		int64_t budget = (e = getenv("P2BUDGET")) ? atoll(e) : INT64_MAX;
+		SYNC();
+		printf("load %.1f ms\n", (now() - tl0) * 1e3);
+		struct futhark_i64_1d *st;
+		fut_check(futhark_entry_hybrid_stats(ctx, &st, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, lo, hi, budget), "stats");
+		int64_t s[6];
+		futhark_values_i64_1d(ctx, st, s);
+		SYNC();
+		printf("hybrid lo %lld hi %lld budget %lld: %lld data-parallel levels, %lld sequential drains, %lld expanded in levels, %lld pops in drains\n",
+		       (long long)lo, (long long)hi, (long long)budget, (long long)s[0], (long long)s[1], (long long)s[2], (long long)s[3]);
+		TIMEIT(cell, {
+			if (out) futhark_free_u32_1d(ctx, out);
+			fut_check(futhark_entry_reach_hybrid(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr, lo, hi, budget), cell);
 		});
 	} else {
 		struct futhark_u32_1d *canon = LOAD(u32, "oracle/p1_canon.u32"), *builtin = LOAD(u32, "oracle/p1_builtin.u32");
