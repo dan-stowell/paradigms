@@ -135,5 +135,9 @@ Common kill-test conventions: "grid" = MinIO columns (5.2 M slots, 9.4 M relocs,
   level-synchronously, then switch to fewer, fatter rounds (e.g. iterate the whole remaining edge set to a fixpoint
   with a dense `live` bitmap pass per round); dead if the round count times a full pass (~9.4 M edges, ~5 ms) is
   not below 111 x 0.9 ms.
+  **Measured (results/levelfree.md): dead as stated.** The flood has 45 levels, not 111. A hybrid that drains
+  the narrow levels sequentially cuts 45 -> 15 levels (1,211 -> 437 parallel ops) and is within noise of the
+  original; a fully sequential worklist in Futhark (`2seq`) is ~2x faster at 1 core (min 73-79 vs 137-141). The
+  floor is per element (the flattened level's ~26 passes), not per level.
 - **I17. The I1 idea (expand-based BFS) does not carry the lazy decode cheaply.** Lazy (decode inside the flood)
   165-200 ms vs eager flood 97-119 ms at 1 core in Futhark, the reverse of C (52.6 vs 108.7 incl. decode).

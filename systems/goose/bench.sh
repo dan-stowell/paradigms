@@ -12,7 +12,7 @@ R=${1:-5}
 D=${2:-/home/exedev/paradigms/data/minio}
 G=${GOOSE:-/home/exedev/tools/goose/rel/goose-v2026.4-linux-x64/goose}
 mkdir -p bin
-for p in p1 p1par p2 p2lazy p2par p3 p3par; do $G build $p.goose -o bin/$p >/dev/null 2>&1 || { echo "build $p failed"; exit 1; }; done
+for p in p1 p1par p2 p2lazy p2par p2async p3 p3par; do $G build $p.goose -o bin/$p >/dev/null 2>&1 || { echo "build $p failed"; exit 1; }; done
 run() { systemd-run --user --scope -q -p MemoryMax=8G "$@"; }
 out=$(mktemp)
 wall() { local t0 t1; t0=$(date +%s%N); "$@" >/dev/null 2>&1 || echo "FAIL $*" >&2; t1=$(date +%s%N); echo "scale=1; ($t1-$t0)/1000000" | bc; }
@@ -39,6 +39,9 @@ for r in $(seq "$R"); do
   echo "p2-csr 8 e2e $(P2REPS=1 wall run bin/p2par "$D" 8)" >>"$out"
   echo "p2-lazy 8 warm $(P2REPS=20 run bin/p2par "$D" 8 lazy | num 'best flood')" >>"$out"
   echo "p2-lazy 8 e2e $(P2REPS=1 wall run bin/p2par "$D" 8 lazy)" >>"$out"
+  echo "p2-async 8 warm $(P2REPS=20 run bin/p2async "$D" 8 | num 'best flood')" >>"$out"
+  echo "p2-async-f4k 8 warm $(P2REPS=20 P2FLUSH=4096 run bin/p2async "$D" 8 | num 'best flood')" >>"$out"
+  echo "p2-async-lazy 8 warm $(P2REPS=20 run bin/p2async "$D" 8 lazy | num 'best flood')" >>"$out"
   x=$(run bin/p3 "$D")
   echo "p3a 1 warm $(echo "$x" | num '3a layout')" >>"$out"
   echo "p3b-4k 1 warm $(P3_REPS=20 run bin/p3 "$D" | grep -o 'x20) [0-9.]*' | awk '{print $2}')" >>"$out"

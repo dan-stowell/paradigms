@@ -20,6 +20,8 @@ cells="1a p1 20 40
 1b_scan p1 10 40
 1c p1 10 20
 2 p2 8 20
+2hyb p2 8 20
+2seq p2 8 20
 2lazy p2 6 20
 3a p3 80 100
 3a_loop p3 80 100

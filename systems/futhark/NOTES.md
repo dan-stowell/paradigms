@@ -8,6 +8,17 @@ the outputs with the oracles. Build: `systems/futhark/build.sh` (`YIELD=1` also 
 
 ## Surprises
 
+0. **A sequential worklist written in Futhark beats Futhark's data-parallel flood, and halving the levels does
+   nothing** (ATTACKS 3, results/levelfree.md, 17:40-17:51Z, load 17-26). The flood has **45 levels** (not 111:
+   that is the C level-by-level count; this flood checks methods every level), **1,211 parallel operations**.
+   Cell `2seq` (p2.fut `flood_hybrid` with the drain always on: a `loop` in host code, in-place updates, 45
+   parallel ops of setup only): 1 core min 73-79 ms vs 137-141 for the original, 8 threads 67-130 vs 156-258
+   (ranges apart, first window). The hybrid (`2hyb`: parallel levels while the frontier is >= 4 K, else a
+   sequential drain; 15 levels, 437 ops, 40% of pops sequential) is within noise of the original. So the cost is
+   the ~26 passes per element of a flattened level, not the number of levels. Second attempt, batched levels
+   (`2bat`, a worklist loop inside a map over frontier chunks): 35-45 rounds, duplicate expansions, 1.5-2.5x
+   slower. Trap on the way: a growable (`++`, existential-size) stack in the drain cost several memory-block
+   reference-count updates per push in the generated C, 3x slower than a fixed-size stack.
 1. **2 MB pages for the whole runtime are a 1.2-1.7x win on every cell, with no code change.**
    `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` makes glibc back its large mallocs with MAP_HUGETLB, and the Futhark
    runtime gets every array from malloc. Intermediate arrays are allocated per entry call and part of that
@@ -30,8 +41,8 @@ the outputs with the oracles. Build: `systems/futhark/build.sh` (`YIELD=1` also 
    wait-policy knob. `YIELD=1 build.sh` patches the generated C (sed, 7-26 `sched_yield()` per program) so a
    waiting thread yields. Interleaved P2 at 8 threads, load 10-12 (16:21Z): eager flood medians 156-310 ms
    spinning vs 120-297 yielding; lazy 235-459 vs 106-181. Under load 13 (bench at 16:30Z) neither helps:
-   8-thread P2 is slower than 1 core. At 111 levels x ~25 parallel operations per level, the flood is ~2,800
-   barriers, and each one waits for the slowest descheduled thread. Read all 8-thread numbers below as
+   8-thread P2 is slower than 1 core. At 45 levels x ~26 parallel operations per level (1,211 per flood,
+   counted: see Surprise 0), each one a join that waits for the slowest descheduled thread. Read all 8-thread numbers below as
    upper bounds measured on an oversubscribed machine.
 3. **The binary search a data-parallel program reaches for first is the slow part.** "Which row owns item j" as
    a binary search per item (1b, 3b) vs a scatter of row starts + a max-scan: 1b 455-471 -> 47-103 ms on 1 core;
@@ -89,9 +100,9 @@ Best 8-core warm (min, 2 MB pages): 1a 24, 1b 18, 1c 38, 2 58, 2lazy 90, 3a 7.3-
   pages) / 196-224 (4 KB). The eager Futhark pipeline would be its own 1b (47-48 ms) + a CSR build (not written)
   + the flood over p2_edge (97-119 ms), > 144 ms: also above 108.7. 8 threads: lazy 90-137 ms median, eager flood
   58-102, at load 5-7.
-- **Why.** Futhark's flood is level-synchronous: 111 levels, each ~25 data-parallel operations (filters,
+- **Why.** Futhark's flood is level-synchronous: 45 levels (counted, `reach_levels`), each ~26 data-parallel operations (filters,
   expands = scan + scatter + segmented iota, scatters, the dedup), each a full pass with its own allocation. At
-  1 core the eager flood costs ~0.9 ms per level against C's 0.4; the lazy flood adds an expand and a
+  1 core the eager flood costs ~2 ms per level (45 levels, not the 111 assumed earlier); the lazy flood adds an expand and a
   segmented scan per level, so in Futhark lazy *loses* to eager (165 vs 97 ms) where in C it wins. What makes
   the lazy shape cheap in C (a sequential walk of a row, decode and mark in the same loop) is a nested,
   irregular loop with writes to shared state, which Futhark must flatten into separate passes.
@@ -115,6 +126,41 @@ Best 8-core warm (min, 2 MB pages): 1a 24, 1b 18, 1c 38, 2 58, 2lazy 90, 3a 7.3-
   3b itself is 2-4.5x the C reference (C 1 core 49 / 24 ms on 4 KB / 2 MB pages): the copy and the patch are
   scatters of (index, byte) pairs (one per byte of data, 8 per relocation), which is how a scatter must be
   shaped in Futhark: there is no memcpy of a run into a slice of a shared array from inside a map.
+
+## ATTACKS 3 (is the level count the cost?)
+
+Answer: **no** (full write-up, counts and both timing windows: results/levelfree.md). Cells, all P2 OK
+(`build/p2_c.exe $D 1 1 2hyb` -> P2hyb OK; `2seq`, `2bat` the same; knobs in env, p2.c):
+
+| cell | levels / rounds | parallel ops | 1 core min / med / max | 8 threads min / med / max |
+|---|---|---|---|---|
+| 2 (original) | 45 | 1,211 | 137 / 171 / 313 | 156 / 201 / 258 |
+| 2hyb lo 4 K hi 16 K | 15 + 2 drains | 437 | 161 / 197 / 280 | 129 / 171 / 335 |
+| 2hyb lo 1 K hi 4 K | 16 + 2 drains | 463 | 116 / 119 / 168 | 102 / 178 / 339 |
+| 2seq (one worklist) | 0 + 1 drain | 45 | 79 / 156 / 175 | **67 / 102 / 130** |
+| 2bat C 64 B 1 K | 35-42 rounds | 1,576 | 220 / 340 / 555 | 211 / 370 / 490 |
+
+(17:40Z, 5 interleaved rounds, load 17-20, 4 KB pages; `systems/futhark/levelfree.sh time`.) Easy: the drain is
+a worklist `loop` with `with` updates, outside any map, so it compiles to plain sequential C; the frontier
+handoff is one `ex` array. Forced: a fixed-size stack (bounded by hi + widest row + 3 x methods), because an
+existential-size one costs refcount traffic per push (3x); the batched version's per-chunk buffers must be
+initialised every round (no uninitialised arrays). Impossible: a shared visited set inside a parallel map
+(the chunks of `2bat` each keep their own table and duplicate work). Lines: hybrid 155 (with comments), batch 131.
+
+```futhark
+              let c = stack[sp - 1]
+              let sp = sp - 1
+              let nd = if gotype c && iface[c] then 2u8 else 1u8
+              in if nd <= ex[c] then (live, iface, ex, stack, sp, sig_seen, named, reflect, pbuf, np, pops, true)
+              else
+              let ex = ex with [c] = nd
+              ...
+                loop (live, iface, stack, sp, sig_seen, named) for e in i64.u32 eoff[c]..<i64.u32 eoff[c + 1] do
+                  let t = i64.u32 edst[e]
+                  let k = ekind[e]
+                  in if k == 0 then
+                       let (live, stack, sp) = mark_live live stack sp t
+```
 
 ## Per cell: easy / forced / impossible
 

@@ -1,5 +1,6 @@
 // p2.c: driver for p2.fut. Loads the flat files, calls the entries, times them, checks against the oracle.
-//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2lazy / 2lazy_look (relocation edges decoded
+//   p2 DATADIR THREADS REPS CELL [nocheck]     CELL: 2 (flood over p2_edge_*), 2hyb / 2seq / 2bat (ATTACKS.md 3:
+//   hybrid level/worklist flood, one sequential worklist, batched levels; knobs in env, below), 2lazy / 2lazy_look (relocation edges decoded
 //   from the rel_* columns inside the flood; the aux CSR of funcdata + kinds 1-3 is built once, untimed, by the
 //   aux_edges entry, as ref/flat/p2lazy.c does). 2lazy takes 1a's canon/builtin from the oracle.
 #include "p2.h"
@@ -30,13 +31,14 @@ int main(int argc, char **argv) {
 			if (out) futhark_free_u32_1d(ctx, out);
 			fut_check(futhark_entry_reach(ctx, &out, nids, flags, eoff, edst, ekind, roots, sname, stype, moff, mname, mtyp, mifn, mtfn, mexp, nstr), cell);
 		});
-	} else if (strcmp(cell, "2hyb") == 0) {
+	} else if (strcmp(cell, "2hyb") == 0 || strcmp(cell, "2seq") == 0) {
 		// the hybrid flood (ATTACKS.md 3): P2LO (frontier width below which a level is drained sequentially,
 		// default 4096), P2HI (the drain hands back once its stack exceeds this, default 4 x P2LO), P2BUDGET
-		// (or after this many pops, default unbounded)
+		// (or after this many pops, default unbounded). 2seq: one sequential worklist (lo infinite, hi 1 M).
 		const char *e;
-		int64_t lo = (e = getenv("P2LO")) ? atoll(e) : 4096;
-		int64_t hi = (e = getenv("P2HI")) ? atoll(e) : 4 * lo;
+		int seq = strcmp(cell, "2seq") == 0;
+		int64_t lo = (e = getenv("P2LO")) ? atoll(e) : seq ? INT64_MAX : 4096;
+		int64_t hi = (e = getenv("P2HI")) ? atoll(e) : seq ? 1000000 : 4 * lo;
 		int64_t budget = (e = getenv("P2BUDGET")) ? atoll(e) : INT64_MAX;
 		SYNC();
 		printf("load %.1f ms\n", (now() - tl0) * 1e3);
