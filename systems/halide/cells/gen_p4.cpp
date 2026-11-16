@@ -127,6 +127,7 @@ class Layout : public Generator<Layout> {
 public:
     GeneratorParam<bool> par{"par", false};  // blocked parallel scan (a different algorithm: Halide has no scan)
     GeneratorParam<int> blk{"blk", 1 << 14};
+    GeneratorParam<bool> lenRoot{"lenRoot", false};  // the item lengths computed first (vectorized gathers), then scanned
     ITEM_INPUTS
     Input<int> nmark{"nmark"};
     Output<Func> lay{"lay", {UInt(32), UInt(32)}, 1};  // nitem + 1: (at, rat)
@@ -138,6 +139,11 @@ public:
         Func len("len");  // (length, relocations) of item i, 0 past the end
         Item it = item(*this, min(i, n - 1));
         len(i) = Tuple(select(i < n, u32(it.len), u32(0)), select(i < n, u32(it.nrel), u32(0)));
+        if (lenRoot) {
+            Var io("io"), ii("ii");
+            len.compute_root().split(i, io, ii, 1 << 14, TailStrategy::GuardWithIf).vectorize(ii, 16, TailStrategy::GuardWithIf);
+            if (par) len.parallel(io);
+        }
         if (!par) {
             // the scan, straight into the output
             RDom r(1, n, "r");
@@ -186,6 +192,9 @@ public:
     // inline in each loop (item -> node -> template -> segment, a dozen dependent loads, three times);
     // 1 = computed once into a table (compute_root), which the loops then read in order
     GeneratorParam<int> info{"info", 0};
+    GeneratorParam<int> only{"only", 0};
+    // loop fusion (compute_with) at the chunk level: 1 = each chunk's relocations right after its patches
+    GeneratorParam<int> fuse{"fuse", 0};  // diagnostics (wrong output): 1 = the copy only, 2 = copy and patch, no relocations
     ITEM_INPUTS
     Input<Buffer<uint32_t, 1>> relHole{"relHole"};
     Input<Buffer<uint8_t, 1>> src{"src"};  // glue.bin, then tmpl.bin (segSrc points into it)
@@ -241,15 +250,18 @@ public:
         Expr nfn = fnItem.dim(0).extent() - 1;
         Expr nsrc = src.dim(0).extent();
 
-        // ---- the per-item facts
-        Func inf("info");
+        // ---- the per-item facts (info 2: one copy of the Func per loop, each computed at its loop's item level)
         Var iv("iv");
-        {
+        auto mkInfo = [&](const std::string &name) {
+            Func inf(name);
             Item d = item(*this, iv);
             inf(iv) = Tuple(d.src, i32(at(iv)) - d.lo, d.h0, d.nh, d.opBase, select(d.glue, d.g0, d.r0), cast<uint8_t>(d.glue));
-        }
+            return inf;
+        };
+        Func inf = mkInfo("info"), infC = info == 2 ? mkInfo("infoC") : inf, infP = info == 2 ? mkInfo("infoP") : inf,
+             infR = info == 2 ? mkInfo("infoR") : inf;
         struct I { Expr src, pb, h0, nh, ob, rel0, glue, at, len; };
-        auto I_ = [&](Expr i) {
+        auto I_ = [&](Expr i, Func inf) {
             I r;
             r.src = inf(i)[0], r.pb = inf(i)[1], r.h0 = inf(i)[2], r.nh = inf(i)[3], r.ob = inf(i)[4], r.rel0 = inf(i)[5];
             r.glue = inf(i)[6] != 0;
@@ -276,7 +288,7 @@ public:
                 bs(tl) = Tuple(select(go && le, mid, a), select(go && !le, mid - 1, b));
             }
             first(tl) = inside(bs(min(tl, ntile))[0], 0, n - 1);
-            auto delta = [&](Expr i) { i = inside(i, 0, n - 1); return I_(i).src - i32(at(i)); };
+            auto delta = [&](Expr i) { i = inside(i, 0, n - 1); return I_(i, inf).src - i32(at(i)); };
             const int NONE = -(1 << 30);
             mark(xi, tl) = NONE;
             RDom ri(1, 1 << 22, "ri");
@@ -294,13 +306,13 @@ public:
         if (gform == 1) {
         } else if (vec == 0) {  // (byte, item, chunk): the where on the byte is the inner loop's bound
             oc = over({Range(0, 1 << 24)}, false, "rc");  // (an item is < 16 MB: a whole function, with P4_TOPK)
-            I ci = I_(oc.i);
+            I ci = I_(oc.i, infC);
             oc.r.where(oc.r[0] < select(oc.real, ci.len, 0));
             code(inside(i32(at(oc.i)) + oc.r[0], 0, NC - 1)) = src(inside(ci.src + oc.r[0], 0, nsrc - 1));
         } else {         // (lane, word, item, chunk, parity): the where on the word is its bound
             const int W = vec;
             oc = over({Range(0, W), Range(0, (1 << 24) / W)}, true, "rc");
-            I ci = I_(oc.i);
+            I ci = I_(oc.i, infC);
             Expr len = select(oc.real, ci.len, 0);
             oc.r.where(oc.r[1] * W < len);
             Expr b = oc.r[1] * W + oc.r[0];
@@ -310,16 +322,19 @@ public:
 
         // ---- patch: (byte, hole in segment, item, chunk[, parity])
         Over op = over({Range(0, 8), Range(0, 1 << 15)}, pform == 1, "rp");
+        if (only == 1) op.r.where(op.r[1] < 0);
         {
-            I pi = I_(op.i);
+            I pi = I_(op.i, infP);
             op.r.where(op.r[1] < select(op.real, pi.nh, 0));
             Expr h = inside(pi.h0 + op.r[1], 0, holeAt.dim(0).extent() - 1);
             Expr o = inside(pi.ob + h, 0, opVal.dim(0).extent() - 1);
             Expr enc = holeEnc(h), w = i32(holeW(h)), bx = op.r[0];
             Expr P = pi.pb + i32(holeAt(h));
             Expr v = opVal(o);
-            // (a real clamp: v is a jump's item only when enc says so)
-            Expr val = select(enc == encRel32, i64(at(clamp(i32(v), 0, n))) + opAux(o) - i64(P + 4), v);
+            // (both sides of a select are evaluated: a hole that is not a jump reads at[0], not at[its operand],
+            // which is a random cache miss for an immediate)
+            Expr tgt = select(enc == encRel32, clamp(i32(v), 0, n), 0);
+            Expr val = select(enc == encRel32, i64(at(tgt)) + opAux(o) - i64(P + 4), v);
             Expr own = enc != encReloc && bx < w;  // byte bx of this hole is written
             Expr byte = cast<uint8_t>(val >> i64(8 * bx));
             if (pform == 0) {
@@ -337,13 +352,15 @@ public:
         RDom rm(0, 1 << 16, 0, FC, 0, (nfn + FC - 1) / FC, "rm");
         Expr f = min(rm.z * FC + rm.y, nfn - 1);
         rm.where(rm.x < select(rm.z * FC + rm.y < nfn, i32(fnMarkOff(f + 1) - fnMarkOff(f)), 0));
+        if (only) rm.where(rm.x < 0);
         Expr m = inside(i32(fnMarkOff(f)) + rm.x, 0, markOff.dim(0).extent() - 1);
         rel(inside(m, 0, NR - 1)) = Tuple(u64(at_(at, fnItem(f)) + markOff(m)), markType(m), markSym(m), markAdd(m), cast<uint8_t>(0));
         // the item's relocations: (relocation of the item, item, chunk). A glue run's are its own list; a node
         // segment's are its template's relocation holes in the segment (relHole), their symbols its operands
         Over orl = over({Range(0, 1 << 16)}, false, "rl");
+        if (only) orl.r.where(orl.r[0] < 0);
         {
-            I li = I_(orl.i);
+            I li = I_(orl.i, infR);
             Expr kx = orl.r[0];
             orl.r.where(kx < select(orl.real, i32(rat(orl.i + 1) - rat(orl.i)), 0));
             // (real clamps: both branches of the selects below are evaluated, and rel0 means one or the other)
@@ -360,7 +377,11 @@ public:
         // ---- the schedule
         int pc = oc.ic + 1, pp = op.ic + 1;  // the chunk RVar of each update
         int pu = gform == 1 ? 0 : 1;          // the patch's update
-        if (info) {
+        if (info == 2) {
+            if (gform == 0) infC.compute_at(code, oc.r[oc.ic]);
+            infP.compute_at(code, op.r[op.ic]);  // (RVar names are unique: no stage index needed)
+            infR.compute_at(rel, orl.r[orl.ic]);
+        } else if (info == 1) {
             inf.compute_root();
             Var io("io"), ii("ii");
             if (par) inf.split(iv, io, ii, 1 << 14, TailStrategy::GuardWithIf).parallel(io);
@@ -383,6 +404,10 @@ public:
             rel.update(0).allow_race_conditions().parallel(rm.z);
             rel.update(1).allow_race_conditions().parallel(orl.r[orl.ic + 1]);
         }
+        // (compute_with matches the fused loops by name: the chunk RVars are renamed to the patch's)
+        if (fuse >= 1) rel.update(1).rename(orl.r[orl.ic + 1], RVar(op.r[pp].name())).compute_with(code.update(pu), op.r[pp]);
+        // (fusing the copy and the patch, two updates of one Func, is refused: "Cannot schedule code.update(1) to be
+        // computed with code.s1")
     }
 };
 

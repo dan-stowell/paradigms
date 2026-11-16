@@ -3,7 +3,9 @@
 // and the relocations, sorted, against oracle/p4_rel_*.
 //   p4 DATA [all|layout|NAME]   every schedule variant (or those whose name starts with NAME), warm (bench.h), checked
 //   p4 DATA e2e LV EV [out]     one run of layout variant LV and emit variant EV (index into the tables), checked
-// Env: HL_NUM_THREADS (Halide's pool); P4_HUGE=1 maps the code output on 2 MB pages (MAP_HUGETLB).
+// Env: HL_NUM_THREADS (Halide's pool); P4_HUGE=1 maps the code output on 2 MB pages (MAP_HUGETLB); P4_TOPK=K
+// emits only the nodes of the K commonest templates (the rest as glue); P4_NOCHECK=1 skips the e2e check;
+// BENCH_CPU=1 times warm runs by process CPU time (bench.h).
 #include "../../../ref/flat/flat.h"
 #include "HalideBuffer.h"
 #include <algorithm>
@@ -279,6 +281,7 @@ int main(int argc, char **argv) {
         printf("e2e threads=%s layout=%s emit=%s huge=%d: load %.1f ms, templates %.1f, layout %.1f, emit %.1f, write %.1f, total %.1f ms\n",
                th ? th : "default", layouts[lv].name, emits[ev].name, huge, (tload - tstart) * 1e3, (t1 - t0) * 1e3, (t2 - t1) * 1e3,
                (t3 - t2) * 1e3, (t4 - t3) * 1e3, (t4 - tstart) * 1e3);
+        if (getenv("P4_NOCHECK")) return 0;  // (bench.sh's e2e wall times: the process without the oracle check)
         bad += checkLayout();
         bad += checkEmit();
     } else {
@@ -297,6 +300,7 @@ int main(int argc, char **argv) {
             memset(codep, 0, ncode + 64);
             s = timeRuns([&] { runEmit(v); });
             printf("4 %-16s " STAT_FMT "   ", emits[v].name, STAT_ARGS(s));
+            if (strncmp(emits[v].name, "diag", 4) == 0) { printf("(diagnostic: not checked)\n"); continue; }
             bad += checkEmit();
         }
     }
