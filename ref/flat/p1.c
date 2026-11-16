@@ -3,6 +3,7 @@
 // oracle/p1_reltarget.u32 and (the content-hash join, 1c) oracle/p1c_canon.u32.
 //   ref/flat/p1 data/minio
 #include "flat.h"
+#include "p1c.h"
 
 #define rankDef (1u << 29)
 #define PkgIdxSelf 2147483643u
@@ -95,55 +96,8 @@ int main(int argc, char **argv) {
 
 	// 1c. the content-hash join over the copies the flood reached (mark 1) or names without following (2)
 	double t3 = now();
-	typedef struct {
-		u64 k1, k2;
-		u32 win;
-	} hent;
-	u64 hs = 1;
-	while (hs < 4 * (u64)(N / 2)) hs <<= 1;
-	hent *ht = calloc(hs, sizeof(hent));
-	u64 hm = hs - 1;
-	// a group: the same kind (short or long hash) and key; short: the largest copy wins, then the lowest id;
-	// long: the lowest id; a copy marked 2 never beats one marked 1
-#define HFIND(g, e)                                                                                         \
-	do {                                                                                                    \
-		u64 k1 = hkey[2 * (size_t)(g)], k2 = kind[g] == 2 ? 0 : hkey[2 * (size_t)(g) + 1] | (1ull << 63);  \
-		for (u64 h = mix64(k1 ^ k2) & hm;; h = (h + 1) & hm) {                                             \
-			if (ht[h].win == 0) {                                                                           \
-				ht[h].k1 = k1, ht[h].k2 = k2;                                                               \
-				e = &ht[h];                                                                                 \
-				break;                                                                                      \
-			}                                                                                               \
-			if (ht[h].k1 == k1 && ht[h].k2 == k2) {                                                         \
-				e = &ht[h];                                                                                 \
-				break;                                                                                      \
-			}                                                                                               \
-		}                                                                                                   \
-	} while (0)
-	for (u32 g = 1; g <= N; g++) {
-		if ((kind[g] != 2 && kind[g] != 3) || hmark[g] == 0) continue;
-		hent *e;
-		HFIND(g, e);
-		if (e->win == 0) { e->win = g; continue; }
-		u32 w = e->win;
-		int wr = hmark[w] == 2, gr = hmark[g] == 2;
-		int better;
-		if (wr != gr) better = wr; // a reached copy beats one only named
-		else if (kind[g] == 2) better = hkey[2 * (size_t)g + 1] > hkey[2 * (size_t)w + 1]; // larger; ties: lower id (g > w)
-		else better = 0;
-		if (better) e->win = g;
-	}
 	u32 *canon2 = malloc(4 * ((size_t)N + 1));
-	memcpy(canon2, canon, 4 * ((size_t)N + 1));
-	for (u32 g = 1; g <= N; g++) {
-		if ((kind[g] != 2 && kind[g] != 3) || hmark[g] == 0) continue;
-		hent *e;
-		HFIND(g, e);
-		u32 w = e->win;
-		if (hmark[w] == 2 || w == g) continue; // nothing reached the class: not in the output
-		if (kind[g] == 2 && hmark[g] == 2 && hkey[2 * (size_t)g + 1] > hkey[2 * (size_t)w + 1]) continue;
-		canon2[g] = w;
-	}
+	contentJoin(N, kind, hmark, hkey, canon, canon2, 1);
 	double t4 = now();
 	printf("p1c (1 core): content-hash join %.1f ms\n", (t4 - t3) * 1e3);
 	bad += check32("canon after 1c", canon2, (size_t)N + 1, "oracle/p1c_canon.u32");

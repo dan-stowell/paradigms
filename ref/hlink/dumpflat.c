@@ -255,6 +255,8 @@ static void dumpFlat(void) {
 	umInit(&sigs, 1 << 12);
 	long nMethErr = 0;
 	vecu32 tmp = {0};
+	struct timespec p2t0, p2t1; // decode-to-CSR cost, for ATTACKS 1 (one core, eager: every canonical definition with relocations)
+	clock_gettime(CLOCK_MONOTONIC, &p2t0);
 	for (u32 g = 1; g <= N; g++) {
 		u8 f1 = flatFL1[g];
 		u8 sf = SF(g);
@@ -403,6 +405,9 @@ static void dumpFlat(void) {
 		}
 #undef EMIT
 	}
+	clock_gettime(CLOCK_MONOTONIC, &p2t1);
+	fprintf(stderr, "dumpflat: P2 decode to CSR (1 core): %.1f ms, %zu edges, %zu methods\n",
+	        (p2t1.tv_sec - p2t0.tv_sec) * 1e3 + (p2t1.tv_nsec - p2t0.tv_nsec) / 1e6, edst.n, mName.n);
 	eoff[N + 1] = (u32)edst.n;
 	moff[N + 1] = (u32)mName.n;
 	eoff[0] = moff[0] = 0;
@@ -537,6 +542,28 @@ static void dumpFlat(void) {
 	u32 rend = (u32)rOffv.n;
 	VPUSH(prel, rend);
 	meta("p3_placed", psym.n);
+	// Relocation targets that the linker places outside 3a's buckets (its own symbols: runtime.firstmoduledata,
+	// runtime.buildVersion, ...): their addresses are a given input of 3b, like the bucket starts are of 3a.
+	{
+		u8 *isPlaced = calloc(nids, 1), *isFixed = calloc(nids, 1);
+		for (size_t i = 0; i < psym.n; i++) isPlaced[psym.a[i]] = 1;
+		vecu32 fid = {0}, fad = {0};
+		for (size_t i = 0; i < rTgt.n; i++) {
+			u32 tg = rTgt.a[i], c = tg <= N ? canon[tg] : tg;
+			if (c < nids && !isPlaced[c] && addr[c] != 0) isFixed[c] = 1;
+		}
+		for (u32 c = 0; c < nids; c++)
+			if (isFixed[c]) {
+				u32 a_ = addr[c];
+				VPUSH(fid, c);
+				VPUSH(fad, a_);
+			}
+		meta("p3_fixed", fid.n);
+		WVEC("p3_fixed_id.u32", fid);
+		WVEC("p3_fixed_addr.u32", fad);
+		free(isPlaced);
+		free(isFixed);
+	}
 	meta("p3_rel", rOffv.n);
 	meta("p3_rel_unsupported", (u64)nUnsup);
 	meta("p3_data_bytes", dbin.n);

@@ -1,6 +1,6 @@
 // p3.c: problem 3 (lay out, then relocate) from the flat files, plainly, on one core. Checks itself against
 // oracle/p3_addr.u32 (3a) and the bytes of every placed symbol in oracle/p3_image.bin (3b).
-//   ref/flat/p3 data/minio [out.img]
+//   ref/flat/p3 data/minio [--pipeline] [out.img]
 #include "flat.h"
 
 enum { bText = 1, bTextFIPS = 2, bTypelink = 6, bBSS = 13, bNoptrBSS = 14, bCov = 15, nBuckets = 16, nClasses = 13 };
@@ -21,6 +21,8 @@ static int cmpTL(const void *a, const void *b) {
 
 int main(int argc, char **argv) {
 	flatDir = argc > 1 ? argv[1] : "data/minio";
+	int pipeline = argc > 2 && strcmp(argv[2], "--pipeline") == 0;
+	const char *output = argc > 2 + pipeline ? argv[2 + pipeline] : NULL;
 	u32 L = (u32)metaGet("p3_placed"), nunits = (u32)metaGet("nunits"), minFunc = (u32)metaGet("minFunc");
 	u32 imageBase = (u32)metaGet("imageBase");
 	psym = FMAP(u32, "p3_sym.u32", NULL);
@@ -77,12 +79,32 @@ int main(int argc, char **argv) {
 	}
 	double t1 = now();
 	printf("p3a (1 core): layout %.1f ms (%u symbols, %u sorted by type string)\n", (t1 - t0) * 1e3, L, ntl);
-	long bad = check32("addr", addr, L, "oracle/p3_addr.u32");
+	long bad = 0;
 
-	// ---- 3b. copy and relocate, with the addresses the oracle gives (so 3b does not depend on 3a)
+	// ---- 3b. isolated oracle addresses, or our layout propagated through final 1c canon.
 	size_t nimg;
 	const u8 *want = FMAP(u8, "oracle/p3_image.bin", &nimg);
-	const u32 *oaddr = FMAP(u32, "oracle/p3_addr.u32", NULL), *all = FMAP(u32, "p3_addr_all.u32", NULL);
+	const u32 *oaddr, *all;
+	if (pipeline) {
+		u32 N = (u32)metaGet("nslots"), nids = (u32)metaGet("nids");
+		const u32 *canon = FMAP(u32, "oracle/p1c_canon.u32", NULL);
+		// The final 1c canon includes the name join. Unplaced ids remain zero.
+		// The linker's own symbols (runtime.firstmoduledata, ...) are placed outside 3a's buckets: their addresses
+		// are a given input (p3_fixed_*), like the bucket starts.
+		size_t nfix;
+		const u32 *fid = FMAP(u32, "p3_fixed_id.u32", &nfix), *fad = FMAP(u32, "p3_fixed_addr.u32", NULL);
+		nfix /= 4;
+		u32 *placed = calloc(nids, sizeof(u32)), *resolved = calloc(nids, sizeof(u32));
+		for (u32 i = 0; i < L; i++) placed[psym[i]] = addr[i];
+		for (size_t i = 0; i < nfix; i++) placed[fid[i]] = fad[i];
+		for (u32 g = 0; g < nids; g++) resolved[g] = placed[g <= N ? canon[g] : g];
+		free(placed);
+		oaddr = addr;
+		all = resolved;
+	} else {
+		oaddr = FMAP(u32, "oracle/p3_addr.u32", NULL);
+		all = FMAP(u32, "p3_addr_all.u32", NULL);
+	}
 	const u64 *doff = FMAP(u64, "p3_data.off.u64", NULL);
 	const u8 *dbin = FMAP(u8, "p3_data.bin", NULL);
 	const u32 *rstart = FMAP(u32, "p3_rel_start.u32", NULL), *roff = FMAP(u32, "p3_rel_off.u32", NULL), *rtgt = FMAP(u32, "p3_rel_tgt.u32", NULL);
@@ -149,12 +171,16 @@ int main(int argc, char **argv) {
 	printf("p3b (1 core): copy + relocate %.1f ms, %llu bytes, %u relocations, %ld errors; checksum %016llx\n", (t3 - t2) * 1e3,
 	       (unsigned long long)nbytes, rstart[L], nerr, (unsigned long long)sum);
 	printf("image: %ld placed symbols differ from oracle/p3_image.bin\n", nbad);
-	if (argc > 2) {
-		FILE *f = fopen(argv[2], "wb");
+	if (output) {
+		FILE *f = fopen(output, "wb");
 		fwrite(img, 1, nimg, f);
 		fclose(f);
 	}
+	bad += check32("addr", addr, L, "oracle/p3_addr.u32");
+	// (No comparison with p3_addr_all: hlink's raw addr array also holds PC-table offsets of non-placed symbols,
+	// which no relocation reads; the image is the oracle.)
 	bad += nbad + (nerr != 0);
-	printf(bad ? "P3 FAIL\n" : "P3 OK\n");
+	if (pipeline) printf(bad ? "P3 pipeline FAIL\n" : "P3 pipeline OK\n");
+	else printf(bad ? "P3 FAIL\n" : "P3 OK\n");
 	return bad != 0;
 }
