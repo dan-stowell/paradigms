@@ -23,7 +23,9 @@ abstracts or memory and say so: check before citing):
 
 | Per-source edge dedup before the flood (25% of read edges repeat) | lead, reachfacts.py | p2par on a deduped CSR, 1 thread | killed: ~8% (23.9-29.1 vs 26.2-32.5 ms), 16:09Z |
 | Reach over the eager CSR is the wrong shape; decode in the flood | lead, ATTACKS 1 | p2lazy vs p2pipe | alive: 52.6 / 13.6 vs 108.7 / 30.1 ms |
-| Output on huge pages for relocate | lead, ATTACKS 2 | P3_THP=1 build/p3 | alive: 25-29 vs 48-68 ms on 1 core |
+| Output on huge pages for relocate | lead, ATTACKS 2 | P3_THP=1 build/p3 | alive: 24 vs 49 ms 1 thread, 5.4-6.8 vs 14 on 8 (at the bandwidth bound), 16:13Z |
+| A barrier-free flood (async worklist, no level sync) is robust where a level-synchronous one collapses under a shared machine | lead, 16:20Z: p2par 8 threads 14 ms -> 900-1300 ms under builder load with spinning OMP barriers (111 levels), 14-55 passive | an asynchronous p2par variant (per-thread worklists + stealing, termination by counter) vs p2par, both wait policies, quiet and loaded, 5 interleaved | open |
+| Resolve's join is bound by passes over the dense slot arrays (15% keyed) | lead, 16:17Z | codex-f: p1compact (one dense pass) vs p1par | measuring |
 
 ## New columns suggested
 
