@@ -1,0 +1,84 @@
+// Problem 2, reach, lazy shape (ATTACKS 1): no relocation graph is built. When a symbol becomes live, the rule for
+// `plain` decodes its relocations from the flat columns (rel_pkg, rel_idx, rel_type; slot_rel ranges) through its
+// object's package table and the 1a canon, as hlink does on raw objects. The funcdata aux edges and kinds 1-3 come
+// from p2x_edge_* (p2_edge minus the relocation edges; prep_lazy.c, untimed, as in ref/flat/p2lazy.c).
+// Run it with -F build/lazyfacts.
+
+.type id = unsigned
+.type str = unsigned
+
+.decl root(s: id)
+.input root(IO=flat, cols="p2_roots.u32")
+.decl flag(s: id, f: unsigned)                       // 1 def, 4 reflect, 8 gotype, 16 iface, 32 has something to follow
+.input flag(IO=flat, index="true", cols="p2_flags.u8")
+.decl edge(s: id, t: unsigned, kind: unsigned)       // aux (kind 0), useiface 1, ifacemethod 2, namedmethod 3
+.input edge(IO=flat, csr="p2x_edge_off.u32", cols="p2x_edge_dst.u32,p2x_edge_kind.u8")
+.decl sigdef(x: unsigned, name: str, typ: id)
+.input sigdef(IO=flat, index="true", cols="p2_sig_name.u32,p2_sig_type.u32")
+.decl method(t: id, name: str, mtyp: id, ifn: id, tfn: id, exported: unsigned)
+.input method(IO=flat, csr="p2_meth_off.u32", cols="p2_meth_name.u32,p2_meth_mtyp.u32,p2_meth_ifn.u32,p2_meth_tfn.u32,p2_meth_exported.u8")
+
+// ---- the relocations, as the objects name them (problem 1b's inputs), and the 1a canon
+.decl rel(s: id, pkg: unsigned, idx: unsigned, ty: unsigned)
+.input rel(IO=flat, csr="slot_rel.u32", cols="rel_pkg.u32,rel_idx.u32,rel_type.u16")
+.decl slotobj(s: id, o: unsigned)
+.input slotobj(IO=flat, index="true", cols="slot_obj.u32")
+.decl objpkg(o: unsigned, t: unsigned, base: id)     // entry t of object o's package table
+.input objpkg(IO=flat, csr="obj_pkg_off.u32", pos="true", cols="obj_pkg.u32")
+.decl canon(g: id, c: id)
+.input canon(IO=flat, index="true", cols="oracle/p1_canon.u32")
+.decl builtin(i: unsigned, w: id)
+.input builtin(IO=flat, index="true", cols="oracle/p1_builtin.u32")
+
+.decl npkg(o: unsigned, n: unsigned)                 // the special indices Self, Builtin, ... are entries npkg+0..4
+npkg(o, to_unsigned(n) - 5) :- objpkg(o, 0, _), n = count : { objpkg(o, _, _) }.
+.decl plainty(ty: unsigned) inline                   // relocation types the flood follows (not weak, not 22-26, 102)
+plainty(ty) :- ty band 32768 = 0, ty != 22, ty != 23, ty != 24, ty != 25, ty != 26, ty != 102.
+.decl source(s: id)                                  // a canonical definition with relocations to follow
+source(s) :- flag(s, f), f band 33 = 33, canon(s, s).
+
+// ---- static part (small)
+.decl gotype(s: id)
+gotype(s) :- flag(s, f), f band 9 = 9.
+.decl typemethod(t: id, name: str, mtyp: id, ifn: id, tfn: id, exported: unsigned)
+typemethod(t, n, mt, ifn, tfn, ex) :- gotype(t), method(t, n, mt, ifn, tfn, ex).
+.decl ifacemethod(s: id, name: str, typ: id)
+ifacemethod(s, n, ty) :- edge(s, x, 2), sigdef(x, n, ty).
+.decl reflectcall(s: id)
+reflectcall(s) :- flag(s, f), f band 5 = 5.
+
+// ---- the flood
+.decl live(s: id)
+.decl plain(s: id, t: id)                            // a live source's plain edges, decoded when it became live
+.decl iface(t: id)
+.decl sig(name: str, typ: id)
+.decl named(name: str)
+.decl reflect()
+.decl cand(name: str, mtyp: id, ifn: id, tfn: id, exported: unsigned)
+
+plain(s, t) :- live(s), source(s), rel(s, p, i, ty), plainty(ty), p < 2147483643,
+               slotobj(s, o), objpkg(o, p, b), b != 0xFFFFFFFF, canon(b + i, t), t != 0.
+plain(s, t) :- live(s), source(s), rel(s, p, i, ty), plainty(ty), p >= 2147483643, p != 2147483644,
+               slotobj(s, o), npkg(o, n), objpkg(o, n + p - 2147483643, b), b != 0xFFFFFFFF, canon(b + i, t), t != 0.
+plain(s, t) :- live(s), source(s), rel(s, 2147483644, i, ty), plainty(ty),
+               slotobj(s, o), npkg(o, n), objpkg(o, n + 1, b), b != 0xFFFFFFFF, builtin(i, x), x != 0, canon(x, t), t != 0.
+plain(s, t) :- live(s), edge(s, t, 0).
+
+live(r)    :- root(r).
+live(t)    :- plain(_, t).
+iface(t)   :- flag(t, f), f band 16 != 0.
+iface(t)   :- live(s), edge(s, t, 1).
+iface(t)   :- iface(s), gotype(s), plain(s, t), gotype(t).
+sig(n, ty) :- live(s), ifacemethod(s, n, ty).
+named(n)   :- live(s), edge(s, n, 3).
+reflect()  :- live(s), reflectcall(s).
+
+iface(mt), cand(n, mt, ifn, tfn, ex) :- live(s), iface(s), typemethod(s, n, mt, ifn, tfn, ex).
+
+.decl called(mtyp: id, ifn: id, tfn: id)
+called(mt, ifn, tfn) :- cand(_, mt, ifn, tfn, 1), reflect().
+called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), sig(n, mt).
+called(mt, ifn, tfn) :- cand(n, mt, ifn, tfn, _), named(n).
+live(x) :- (called(x, _, _) ; called(_, x, _) ; called(_, _, x)), x != 0.
+
+.output live(IO=flat, cols="p2_live.u32", exitafter="1")
