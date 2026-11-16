@@ -36,8 +36,8 @@ static GrB_Vector keyIndex(GrB_Vector k1, GrB_Vector k2, ix n) {
 // a strided slice of an interleaved u64x2 column: x[part::2]
 static GrB_Vector half(GrB_Vector kk, ix n, int part) {
 	GrB_Vector v = V(GrB_UINT64, n);
-	ix I[3] = {part, 2 * n - 2 + part, 2};
-	OK(GrB_Vector_extract(v, NULL, NULL, kk, I, GxB_STRIDE, NULL));
+	ix Ix[3] = {part, 2 * n - 2 + part, 2};
+	OK(GrB_Vector_extract(v, NULL, NULL, kk, Ix, GxB_STRIDE, NULL));
 	return v;
 }
 // group by key index: w(h(i)) = MAX over i of x(i); h and x have the same pattern. With the guard, also check that
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 		// builtin package: builtin(idx), 0 past the end (a zero appended at nb)
 		GrB_Vector bz = V(GrB_UINT32, nb + 1);
 		OK(GrB_Vector_assign_UINT32(bz, NULL, NULL, 0, GrB_ALL, nb + 1, NULL));
-		{ ix I[2] = {0, nb - 1}; OK(GrB_Vector_assign(bz, NULL, NULL, builtin, I, GxB_RANGE, NULL)); }
+		{ ix Ix[2] = {0, nb - 1}; OK(GrB_Vector_assign(bz, NULL, NULL, builtin, Ix, GxB_RANGE, NULL)); }
 		GrB_Vector s1 = V(GrB_BOOL, nrel);
 		SEL(s1, NULL, GrB_VALUEEQ_UINT32, sp, 1, UINT32, NULL);
 		AP2(bi, NULL, GrB_MIN_UINT32, ri, (u32)nb, UINT32, NULL);

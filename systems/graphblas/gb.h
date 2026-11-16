@@ -18,17 +18,17 @@ static void gbInit(void) {
 	OK(GrB_Scalar_setElement_BOOL(TRUE_, 1));
 }
 // an iso-true boolean matrix from tuples (duplicates collapse)
-static GrB_Matrix boolMatrix(ix nr, ix nc, const ix *I, const ix *J, ix n) {
+static GrB_Matrix boolMatrix(ix nr, ix nc, const ix *Ix, const ix *J, ix n) {
 	GrB_Matrix A;
 	OK(GrB_Matrix_new(&A, GrB_BOOL, nr, nc));
-	OK(GxB_Matrix_build_Scalar(A, I, J, TRUE_, n));
+	OK(GxB_Matrix_build_Scalar(A, Ix, J, TRUE_, n));
 	OK(GrB_Matrix_wait(A, GrB_MATERIALIZE));
 	return A;
 }
-static GrB_Vector boolVector(ix n, const ix *I, ix k) {
+static GrB_Vector boolVector(ix n, const ix *Ix, ix k) {
 	GrB_Vector v;
 	OK(GrB_Vector_new(&v, GrB_BOOL, n));
-	OK(GxB_Vector_build_Scalar(v, I, TRUE_, k));
+	OK(GxB_Vector_build_Scalar(v, Ix, TRUE_, k));
 	OK(GrB_Vector_wait(v, GrB_MATERIALIZE));
 	return v;
 }
@@ -37,11 +37,11 @@ static ix nm(GrB_Matrix a) { ix n; OK(GrB_Matrix_nvals(&n, a)); return n; }
 // the sorted indices of a vector's entries, as u32
 static u32 *indices32(GrB_Vector v, ix *n) {
 	*n = nv(v);
-	ix *I = malloc(8 * (*n + 1)), k = *n;
-	OK(GrB_Vector_extractTuples_BOOL(I, NULL, &k, v));
+	ix *Ix = malloc(8 * (*n + 1)), k = *n;
+	OK(GrB_Vector_extractTuples_BOOL(Ix, NULL, &k, v));
 	u32 *o = malloc(4 * (*n + 1));
-	for (ix i = 0; i < k; i++) o[i] = (u32)I[i];
-	free(I);
+	for (ix i = 0; i < k; i++) o[i] = (u32)Ix[i];
+	free(Ix);
 	return o;
 }
 static void writeFile(const char *path, const void *p, size_t n) {

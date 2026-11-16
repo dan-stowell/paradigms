@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
 	FMAP(u64, "p2_str.off.u64", &nstr);
 	nroots /= 4, nsig /= 4, nmeth /= 4, nstr = nstr / 8 - 1;
 	gbInit();
+	if (getenv("GB_CHUNK")) OK(GxB_Global_Option_set_FP64(GxB_CHUNK, atof(getenv("GB_CHUNK"))));
 
 	// ---- loading: the flat files' CSR rows as (row, col) tuples per edge kind (the only plain loops) ----
 	double tLoad = now();
@@ -83,6 +84,8 @@ int main(int argc, char **argv) {
 	GrB_Matrix SN = boolMatrix(nsig, nstr + 1, sI, sN, nsig), ST = boolMatrix(nsig, N, sI, sT, nsig);
 	GrB_Vector E = boolVector(nmeth, eI, nE), rootv = boolVector(N, rI, nroots);
 	GrB_Vector gtdef = flagVec(flv, fGoType | fDef, N), refl = flagVec(flv, fReflect | fDef, N), iface0 = flagVec(flv, fIface, N);
+	OK(GrB_Vector_set_INT32(gtdef, GxB_BITMAP, GxB_SPARSITY_CONTROL)); // flag tests are O(1) lookups
+	OK(GrB_Vector_set_INT32(refl, GxB_BITMAP, GxB_SPARSITY_CONTROL));
 	GrB_Matrix A0T = NULL;
 	if (!strcmp(dir, "pull")) { OK(GrB_Matrix_new(&A0T, GrB_BOOL, N, N)); OK(GrB_transpose(A0T, NULL, NULL, A0, NULL)); }
 	if (!strcmp(dir, "col")) OK(GrB_Matrix_set_INT32(A0, GrB_COLMAJOR, GrB_STORAGE_ORIENTATION_HINT));
@@ -90,53 +93,47 @@ int main(int argc, char **argv) {
 	double tBuilt = now();
 
 	GrB_Semiring sr = GxB_ANY_PAIR_BOOL;
-	GrB_Vector live, iface, fr, delta, src, t1, t2, cand, call, cm, sig, named, csig, cnam, rv;
-	GrB_Matrix AT, S, S1;
+	GrB_Vector live, iface, fr, delta, src, t1, t2, cand, call, cm, sig, named, csig, cnam, rv, start = NULL;
+	GrB_Matrix S, S1;
 	double best = 1e9, bestRules = 1e9, sum = 0;
 	long levels = 0, ilevels = 0, rounds = 0, nvxm = 0;
 	for (int rep = 0; rep < reps; rep++) {
-		double t0 = now();
-		// rule matrices that are joins: the iface rule's plain edges between defined gotypes (AT = D A0 D),
-		// and S(sig, m) = same name and same type ((SN MN') .* (ST MT0'))
-		GrB_Matrix D;
-		OK(GrB_Matrix_new(&D, GrB_BOOL, N, N));
-		OK(GrB_Matrix_diag(&D, gtdef, 0));
-		OK(GrB_Matrix_new(&AT, GrB_BOOL, N, N));
-		OK(GrB_mxm(AT, NULL, NULL, sr, D, A0, NULL));
-		OK(GrB_mxm(AT, NULL, NULL, sr, AT, D, NULL));
-		OK(GrB_Matrix_new(&S1, GrB_BOOL, nsig, nmeth));
-		OK(GrB_Matrix_new(&S, GrB_BOOL, nsig, nmeth));
-		OK(GrB_mxm(S1, NULL, NULL, sr, SN, MN, GrB_DESC_T1));
-		OK(GrB_mxm(S, S1, NULL, sr, ST, MT0, GrB_DESC_ST1));
-		OK(GrB_Matrix_wait(AT, GrB_MATERIALIZE)); OK(GrB_Matrix_wait(S, GrB_MATERIALIZE));
-		double t0b = now();
-
+		// the state (outside the timing, like the C references' clearing): live and iface as bitmaps
 		OK(GrB_Vector_dup(&live, rootv));
 		OK(GrB_Vector_set_INT32(live, GxB_BITMAP, GxB_SPARSITY_CONTROL));
 		OK(GrB_Vector_dup(&iface, iface0));
 		OK(GrB_Vector_set_INT32(iface, GxB_BITMAP, GxB_SPARSITY_CONTROL));
 		OK(GrB_Vector_dup(&fr, rootv));
-		delta = NULL;
-		OK(GrB_Vector_new(&src, GrB_BOOL, N));
+		OK(GrB_Vector_new(&delta, GrB_BOOL, N)); OK(GrB_Vector_new(&src, GrB_BOOL, N));
 		OK(GrB_Vector_new(&t1, GrB_BOOL, N)); OK(GrB_Vector_new(&t2, GrB_BOOL, N));
 		OK(GrB_Vector_new(&cand, GrB_BOOL, nmeth)); OK(GrB_Vector_new(&cm, GrB_BOOL, nmeth));
 		OK(GrB_Vector_new(&call, GrB_BOOL, nmeth)); OK(GrB_Vector_new(&csig, GrB_BOOL, nmeth));
 		OK(GrB_Vector_new(&cnam, GrB_BOOL, nmeth)); OK(GrB_Vector_new(&rv, GrB_BOOL, N));
 		OK(GrB_Vector_new(&sig, GrB_BOOL, nsig)); OK(GrB_Vector_new(&named, GrB_BOOL, nstr + 1));
+		OK(GrB_Vector_dup(&start, rootv)); OK(GrB_Vector_clear(start));
+		double t0 = now();
+		// the rule matrix that is a join: S(sig, m) = same name and same type ((SN MN') .* (ST MT0'))
+		OK(GrB_Matrix_new(&S1, GrB_BOOL, nsig, nmeth));
+		OK(GrB_Matrix_new(&S, GrB_BOOL, nsig, nmeth));
+		OK(GrB_mxm(S1, NULL, NULL, sr, SN, MN, GrB_DESC_T1));
+		OK(GrB_mxm(S, S1, NULL, sr, ST, MT0, GrB_DESC_ST1));
+		OK(GrB_Matrix_wait(S, GrB_MATERIALIZE));
+		double t0b = now();
 		int reflect = 0;
 		levels = ilevels = rounds = nvxm = 0;
 		for (;;) {
 			rounds++;
 			// 1. the flood over plain edges: a masked BFS to a fixpoint; delta collects this round's new live set
-			GrB_free(&delta);
-			OK(GrB_Vector_dup(&delta, fr));
 			while (nv(fr)) {
 				if (A0T) OK(GrB_mxv(fr, live, NULL, sr, A0T, fr, GrB_DESC_RSC)); // pull: rows of A0' not yet live
 				else OK(GrB_vxm(fr, live, NULL, sr, fr, A0, GrB_DESC_RSC));      // push
 				OK(GrB_Vector_assign_BOOL(live, fr, NULL, 1, GrB_ALL, N, GrB_DESC_S));
-				OK(GrB_Vector_assign_BOOL(delta, fr, NULL, 1, GrB_ALL, N, GrB_DESC_S));
 				levels++, nvxm++;
 			}
+			// delta: what this round made live (the method rule's additions and the BFS)
+			OK(GrB_Vector_apply(delta, start, NULL, GrB_IDENTITY_BOOL, live, GrB_DESC_RSC));
+			GrB_free(&start);
+			OK(GrB_Vector_dup(&start, live));
 			// 2. what the new live set says: useiface, signatures, names, reflect
 			OK(GrB_vxm(t1, iface, NULL, sr, delta, A1, GrB_DESC_RSC));   // t1 = newly iface
 			OK(GrB_Vector_assign_BOOL(iface, t1, NULL, 1, GrB_ALL, N, GrB_DESC_S));
@@ -152,7 +149,8 @@ int main(int argc, char **argv) {
 				ilevels++;
 				OK(GrB_vxm(cm, NULL, NULL, sr, src, M, NULL));                 // its methods are candidates
 				OK(GrB_Vector_assign_BOOL(cand, cm, NULL, 1, GrB_ALL, nmeth, GrB_DESC_S));
-				OK(GrB_vxm(t1, iface, NULL, sr, src, AT, GrB_DESC_RSC));       // iface along plain edges
+				OK(GrB_vxm(t1, iface, NULL, sr, src, A0, GrB_DESC_RSC));       // iface along plain edges ...
+				OK(GrB_eWiseMult(t1, NULL, NULL, GrB_FIRST_BOOL, t1, gtdef, NULL)); // ... to defined gotypes
 				OK(GrB_vxm(t2, iface, NULL, sr, cm, Mtyp, GrB_DESC_RSC));      // iface(m.mtyp)
 				OK(GrB_eWiseAdd(t1, NULL, NULL, GrB_LOR, t1, t2, NULL));
 				OK(GrB_Vector_assign_BOOL(iface, t1, NULL, 1, GrB_ALL, N, GrB_DESC_S));
@@ -177,9 +175,9 @@ int main(int argc, char **argv) {
 		if (t1t - t0b < best) best = t1t - t0b;
 		if (t1t - t0 < bestRules) bestRules = t1t - t0;
 		sum += t1t - t0b;
-		GrB_free(&D); GrB_free(&AT); GrB_free(&S); GrB_free(&S1);
+		GrB_free(&S); GrB_free(&S1);
 		if (rep < reps - 1) {
-			GrB_Vector *vs[] = {&live, &iface, &fr, &delta, &src, &t1, &t2, &cand, &call, &cm, &sig, &named, &csig, &cnam, &rv};
+			GrB_Vector *vs[] = {&live, &iface, &fr, &delta, &start, &src, &t1, &t2, &cand, &call, &cm, &sig, &named, &csig, &cnam, &rv};
 			for (size_t i = 0; i < sizeof vs / sizeof *vs; i++) GrB_free(vs[i]);
 		}
 	}
@@ -188,7 +186,7 @@ int main(int argc, char **argv) {
 	system("mkdir -p out");
 	writeFile("out/p2_live.u32", list, 4 * nlive);
 	double tEnd = now();
-	printf("p2gb (%d threads, %s): flood best %.1f ms (mean %.1f), with rule joins (AT, S) best %.1f ms; %lu live, "
+	printf("p2gb (%d threads, %s): flood best %.1f ms (mean %.1f), with rule join (S) best %.1f ms; %lu live, "
 	       "%ld BFS levels + %ld iface levels in %ld rounds, %ld vxm/mxv calls\n",
 	       nthreads(), dir, best * 1e3, sum / reps * 1e3, bestRules * 1e3, (unsigned long)nlive, levels, ilevels, rounds, nvxm);
 	printf("setup: load+tuples %.1f ms, builds %.1f ms; process to here %.1f ms\n", (tLoad - tStart) * 1e3,

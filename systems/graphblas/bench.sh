@@ -18,7 +18,7 @@ date -u +%Y-%m-%dT%H:%M:%SZ; uptime
 for r in $(seq "$R"); do
 	for t in 1 8; do
 		export GB_THREADS=$t OMP_NUM_THREADS=$t
-		run ./p2gb "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*with rule joins (AT, S) best \([0-9.]*\) ms.*/P2-flood $t warm \1\nP2-flood+rulejoins $t warm \2/p" >>"$T/x"
+		run ./p2gb "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*with rule join (S) best \([0-9.]*\) ms.*/P2-flood $t warm \1\nP2-flood+rulejoins $t warm \2/p" >>"$T/x"
 		run "$C/p2par" "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*/C-p2par $t warm \1/p" >>"$T/x"
 		run "$C/p2lazy" "$D" "$REPS" | sed -n "s/.*flood best \([0-9.]*\) ms.*/C-p2lazy $t warm \1/p" >>"$T/x"
 		run ./p1gb "$D" "$REPS" | sed -n "s/.*1a \([0-9.]*\) ms, 1b \([0-9.]*\) ms, 1c \([0-9.]*\) ms, all \([0-9.]*\) ms.*/P1a $t warm \1\nP1b $t warm \2\nP1c $t warm \3\nP1-all $t warm \4/p" >>"$T/x"
