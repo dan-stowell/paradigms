@@ -1,0 +1,65 @@
+COMMAND: systems/halide/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:27:55 up  2:12,  0 user,  load average: 17.77, 15.93, 9.52
+# 2026-11-16T17:27:55Z  17:27:55 up  2:12,  0 user,  load average: 17.77, 15.93, 9.52
+p1 threads=1 warm counts           min    27.26  med    35.68  max    61.16 ms (x25)  (nkeyed 1833034, ncopies 1905176)
+p1 threads=1 warm 1a resolve_f     min   502.87  med   579.73  max   657.91 ms (x3)
+p1 threads=1 warm 1b reltarget_f   min    85.31  med   105.18  max   110.49 ms (x7)
+p1 threads=1 warm 1c contentjoin_f min   295.76  med   302.37  max   341.33 ms (x2)
+p2 threads=1 warm 2 flood_t_f        min   815.06  med   899.27  max   938.03 ms (x2)  88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+p2 threads=1 warm 2 flood_f_f        min   589.35  med   615.15  max   733.41 ms (x2)  88 levels in 7 rounds, 215333 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+p3 threads=1 warm 3a layout_c0_w0     min    90.89  med    98.70  max   107.51 ms (x10)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c0_w1     min    95.59  med   100.15  max   105.42 ms (x11)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c1_w0     min   102.40  med   114.00  max   125.00 ms (x10)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c1_w1     min   100.04  med   115.26  max   121.02 ms (x8)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c2_w0     min   100.74  med   103.92  max   108.52 ms (x10)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c2_w1     min   100.27  med   104.08  max   111.71 ms (x11)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c3_w0     min    89.61  med    93.16  max   111.78 ms (x10)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3a layout_c3_w1     min    87.60  med    90.88  max   103.83 ms (x10)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=1 warm 3b reloc_f0_pf_v0   warm        min   113.91  med   116.41  max   123.22 ms (x10)
+p3 threads=1 warm 3b reloc_f0_pf_v0   fresh 4KB min   146.25  med   172.28  max   193.23 ms (x6), 18440 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pf_v0   fresh 2MB min   105.06  med   105.48  max   113.17 ms (x10), 38 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pf_v32  warm        min   105.18  med   106.07  max   108.03 ms (x10)
+p3 threads=1 warm 3b reloc_f0_pf_v32  fresh 4KB min   144.42  med   145.88  max   148.27 ms (x7), 18440 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pf_v32  fresh 2MB min   109.71  med   110.37  max   122.76 ms (x9), 38 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pt_v0   warm        min   105.20  med   106.86  max   113.41 ms (x10)
+p3 threads=1 warm 3b reloc_f0_pt_v0   fresh 4KB min   142.97  med   144.58  max   154.63 ms (x8), 18440 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pt_v0   fresh 2MB min   112.42  med   113.21  max   123.47 ms (x10), 38 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pt_v32  warm        min   110.64  med   111.98  max   129.01 ms (x9)
+p3 threads=1 warm 3b reloc_f0_pt_v32  fresh 4KB min   141.97  med   144.36  max   152.10 ms (x7), 18440 minor faults/run
+p3 threads=1 warm 3b reloc_f0_pt_v32  fresh 2MB min   110.20  med   111.86  max   112.94 ms (x9), 38 minor faults/run
+p1 threads=8 warm counts           min     5.11  med     6.71  max     7.22 ms (x136)  (nkeyed 1833034, ncopies 1905176)
+p1 threads=8 warm 1a resolve_t     min    79.41  med    84.46  max    94.32 ms (x9)
+p1 threads=8 warm 1b reltarget_t   min    19.80  med    22.67  max    38.96 ms (x36)
+p1 threads=8 warm 1c contentjoin_t min   125.65  med   147.42  max   163.86 ms (x12)
+p2 threads=8 warm 2 flood_t_t        min   350.00  med   399.29  max   410.53 ms (x3)  88 levels in 7 rounds, 215353 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+p2 threads=8 warm 2 flood_f_t        min   294.99  med   328.94  max   344.29 ms (x3)  89 levels in 7 rounds, 215214 blocks of 16 ids; live: 926486 entries, 0 differ from oracle/p2_live.u32
+p3 threads=8 warm 3a layout_c0_w0     min    46.93  med    48.04  max    59.51 ms (x15)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c0_w1     min    46.76  med    47.80  max    48.37 ms (x22)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c1_w0     min    54.26  med    57.02  max    58.58 ms (x15)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c1_w1     min    53.86  med    56.89  max    59.50 ms (x16)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c2_w0     min    48.00  med    53.95  max    58.48 ms (x20)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c2_w1     min    43.80  med    50.53  max    58.37 ms (x24)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c3_w0     min    47.38  med    49.14  max   101.58 ms (x21)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3a layout_c3_w1     min    71.56  med    84.44  max   137.00 ms (x8)   addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 threads=8 warm 3b reloc_f0_pf_v0   warm        min   123.04  med   187.72  max   201.33 ms (x5)
+p3 threads=8 warm 3b reloc_f0_pf_v0   fresh 4KB min   263.76  med   285.11  max   352.86 ms (x4), 18440 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pf_v0   fresh 2MB min   170.93  med   186.20  max   189.83 ms (x4), 38 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pf_v32  warm        min   141.76  med   163.06  max   172.87 ms (x7)
+p3 threads=8 warm 3b reloc_f0_pf_v32  fresh 4KB min   189.92  med   230.12  max   246.29 ms (x5), 18440 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pf_v32  fresh 2MB min   136.13  med   139.89  max   169.52 ms (x8), 38 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pt_v0   warm        min    62.16  med    66.76  max    72.31 ms (x13)
+p3 threads=8 warm 3b reloc_f0_pt_v0   fresh 4KB min   111.90  med   136.34  max   154.57 ms (x8), 18495 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pt_v0   fresh 2MB min    80.40  med    97.18  max   112.40 ms (x10), 107 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pt_v32  warm        min    49.25  med    86.54  max    96.07 ms (x11)
+p3 threads=8 warm 3b reloc_f0_pt_v32  fresh 4KB min    83.71  med   113.51  max   151.62 ms (x7), 18497 minor faults/run
+p3 threads=8 warm 3b reloc_f0_pt_v32  fresh 2MB min    71.49  med    78.57  max    81.21 ms (x14), 129 minor faults/run
+p1 threads=1 e2e wall s: 1.05 1.10 1.13 1.32 2.04 
+p2-lazy threads=1 e2e wall s: 1.18 1.22 1.38 1.39 2.16 
+p2-eager threads=1 e2e wall s: 1.11 1.27 1.40 1.48 2.03 
+p3 threads=1 e2e wall s: 0.41 0.42 0.60 0.60 0.68 
+p1 threads=8 e2e wall s: 0.71 0.72 0.77 0.84 1.03 
+p2-lazy threads=8 e2e wall s: 0.88 0.96 1.29 1.40 1.96 
+p2-eager threads=8 e2e wall s: 1.01 1.13 1.56 1.77 1.91 
+p3 threads=8 e2e wall s: 0.30 0.30 0.37 0.40 0.40 
+EXIT: 0
+ 17:34:28 up  2:18,  0 user,  load average: 18.23, 15.66, 11.31

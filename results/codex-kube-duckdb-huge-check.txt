@@ -1,0 +1,38 @@
+CHECK COMMAND: DK_THP=1 ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql
+     132.16 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+       8.68 ms  CREATE OR REPLACE TABLE addr3 AS FROM addr3_v
+     253.37 ms  CREATE OR REPLACE TABLE addrall AS FROM addrall_v
+-- 3b
+     160.16 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+      30.82 ms  (the scatter into the image: 317 minor faults)
+       1.87 ms  CREATE OR REPLACE TEMP VIEW patch AS
+    1112.60 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+      30.44 ms  (the scatter into the image: 0 minor faults)
+     705.63 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 434.1 ms
+cell 3b: 1335.9 ms; 84299 minor faults
+total process: 2602.4 ms
+RUN STATUS 3b-hugepages 1 0
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-hugepages 1 0
+CHECK COMMAND: DK_THP=1 ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql
+      55.09 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+       5.69 ms  CREATE OR REPLACE TABLE addr3 AS FROM addr3_v
+      55.42 ms  CREATE OR REPLACE TABLE addrall AS FROM addrall_v
+-- 3b
+      59.69 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+      27.78 ms  (the scatter into the image: 124 minor faults)
+       1.76 ms  CREATE OR REPLACE TEMP VIEW patch AS
+     254.93 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+      30.22 ms  (the scatter into the image: 0 minor faults)
+     163.83 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 157.1 ms
+cell 3b: 374.4 ms; 100400 minor faults
+total process: 814.9 ms
+RUN STATUS 3b-hugepages 8 0
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-hugepages 8 0

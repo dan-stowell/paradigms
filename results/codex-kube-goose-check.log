@@ -1,0 +1,104 @@
+ 17:21:11 up  2:05,  0 user,  load average: 10.26, 4.68, 3.78
++ systems/goose/bin/p1 /home/exedev/paradigms/data/kube-apiserver 1
+p1 goose (1 thread, x1): load 621.2 ms  1a join by name 430.7/430.7/430.7 ms  1b relocation targets 165.5/165.5/165.5 ms  1c content-hash join 1274.4/1274.4/1274.4 ms  load+all reps 2491.9 ms  
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+exit=0
++ systems/goose/bin/p1 /home/exedev/paradigms/data/kube-apiserver 8
+p1 goose (1 thread, x1): load 536.4 ms  1a join by name 464.9/464.9/464.9 ms  1b relocation targets 159.4/159.4/159.4 ms  1c content-hash join 607.6/607.6/607.6 ms  load+all reps 1768.3 ms  
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+exit=0
++ systems/goose/bin/p1par /home/exedev/paradigms/data/kube-apiserver 1
+p1par goose (1 workers): spawn+load 558.0 ms  x1: 1a 705.2/705.2/705.2 ms  1b 266.0/266.0/266.0 ms  1c 459.5/459.5/459.5 ms  warm 1a+1b+1c 1430.7/1430.7/1430.7 ms  exit 61.4 ms  
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+exit=0
++ systems/goose/bin/p1par /home/exedev/paradigms/data/kube-apiserver 8
+p1par goose (8 workers): spawn+load 200.8 ms  x1: 1a 321.3/321.3/321.3 ms  1b 373.4/373.4/373.4 ms  1c 250.3/250.3/250.3 ms  warm 1a+1b+1c 945.0/945.0/945.0 ms  exit 180.4 ms  
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+exit=0
++ systems/goose/bin/p2 /home/exedev/paradigms/data/kube-apiserver 1
+p2 goose (1 thread): load 412.5 ms  flood 72.5 ms  list 14.2 ms  926486 live, 7 rounds; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p2 /home/exedev/paradigms/data/kube-apiserver 8
+p2 goose (1 thread): load 399.4 ms  flood 129.8 ms  list 9.2 ms  926486 live, 7 rounds; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p2lazy /home/exedev/paradigms/data/kube-apiserver 1
+p2lazy goose (1 thread): load+cut 2183.0 ms  lazy flood best of 1 343.1 ms  1592404 non-relocation edges kept, 926486 live, 7 rounds; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p2lazy /home/exedev/paradigms/data/kube-apiserver 8
+p2lazy goose (1 thread): load+cut 1304.1 ms  lazy flood best of 8 133.3 ms  1592404 non-relocation edges kept, 926486 live, 7 rounds; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p2par /home/exedev/paradigms/data/kube-apiserver 1
+  worker 0: ids 0..13270151, 15600772 edges; load 434.1 ms  flood 97.7 ms  (drain 96.9, flush 0.0, apply inbox 0.0) 2 rounds
+p2par goose (1 workers): spawn+load 440.2 ms  flood x5 695.3 ms  best flood 97.8 ms  collect 53.5 ms  total 1189.1 ms  2 supersteps, 0 messages, 926486 live; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p2par /home/exedev/paradigms/data/kube-apiserver 8
+  worker 7: ids 11659239..13270151, 1950087 edges; load 221.2 ms  flood 75.6 ms  (drain 1.8, flush 0.4, apply inbox 0.0) 12 rounds
+  worker 3: ids 4651168..6279833, 1950096 edges; load 353.7 ms  flood 75.2 ms  (drain 20.1, flush 1.4, apply inbox 0.3) 12 rounds
+  worker 5: ids 8402212..10013968, 1950098 edges; load 369.9 ms  flood 75.6 ms  (drain 6.4, flush 1.4, apply inbox 0.2) 12 rounds
+  worker 4: ids 6279833..8402212, 1950096 edges; load 261.7 ms  flood 67.5 ms  (drain 17.8, flush 0.9, apply inbox 0.1) 12 rounds
+  worker 0: ids 0..1518429, 1950099 edges; load 396.5 ms  flood 73.4 ms  (drain 16.5, flush 0.3, apply inbox 8.0) 12 rounds
+  worker 1: ids 1518429..2962382, 1950097 edges; load 373.3 ms  flood 70.9 ms  (drain 17.2, flush 1.5, apply inbox 0.4) 12 rounds
+  worker 2: ids 2962382..4651168, 1950095 edges; load 237.0 ms  flood 74.4 ms  (drain 12.3, flush 1.9, apply inbox 0.4) 12 rounds
+  worker 6: ids 10013968..11659239, 1950104 edges; load 256.3 ms  flood 73.4 ms  (drain 13.2, flush 1.6, apply inbox 0.2) 12 rounds
+p2par goose (8 workers): spawn+load 398.1 ms  flood x5 452.5 ms  best flood 63.0 ms  collect 178.5 ms  total 1029.2 ms  12 supersteps, 1327527 messages, 926486 live; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p3 /home/exedev/paradigms/data/kube-apiserver 1
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 141.3 ms  3a layout 64.8 ms  3b inputs 70.5 ms  3b (fresh image, 4 KB pages, x1) 545.2 / 545.2 / 545.2 ms min/median/max, 29599 minor faults/rep; 72579169 bytes, 2823088 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+exit=0
++ systems/goose/bin/p3 /home/exedev/paradigms/data/kube-apiserver 8
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread): load 142.8 ms  3a layout 64.0 ms  3b inputs 54.8 ms  3b (fresh image, 4 KB pages, x1) 199.6 / 199.6 / 199.6 ms min/median/max, 29599 minor faults/rep; 72579169 bytes, 2823088 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+exit=0
++ systems/goose/bin/p3par /home/exedev/paradigms/data/kube-apiserver 1
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3par goose (1 workers): spawn+load 276.8 ms  3a 113.7 ms  3b distributed (4 KB pages, x1) 366.3 / 366.3 / 366.3 ms min/median/max (slowest worker 366.2 ms, 29599 minor faults/rep in workers, 0 bytes on huge pages)  gather: image alloc 142.5 ms  segments into it 407.5 ms  (118401 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b distributed 480.0 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+exit=0
++ systems/goose/bin/p3par /home/exedev/paradigms/data/kube-apiserver 8
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3par goose (8 workers): spawn+load 1004.6 ms  3a 102.0 ms  3b distributed (4 KB pages, x1) 141.9 / 141.9 / 141.9 ms min/median/max (slowest worker 135.0 ms, 29600 minor faults/rep in workers, 0 bytes on huge pages)  gather: image alloc 326.0 ms  segments into it 350.7 ms  (92496 faults in the process, 0 image bytes on huge pages)  warm 3a + best 3b distributed 243.9 ms  0 placed symbols differ from oracle/p3_image.bin
+P3 OK
+exit=0
++ systems/goose/bin/p2par /home/exedev/paradigms/data/kube-apiserver 8 lazy
+  worker 5: ids 8402212..10013968, 183207 edges; load 1640.3 ms  flood 121.8 ms  (drain 14.7, flush 10.4, apply inbox 0.1) 12 rounds
+  worker 3: ids 4651168..6279833, 233884 edges; load 1481.1 ms  flood 119.0 ms  (drain 13.2, flush 9.3, apply inbox 0.3) 12 rounds
+  worker 4: ids 6279833..8402212, 232451 edges; load 1386.2 ms  flood 118.9 ms  (drain 29.2, flush 1.4, apply inbox 0.1) 12 rounds
+  worker 6: ids 10013968..11659239, 207136 edges; load 1282.0 ms  flood 117.8 ms  (drain 30.8, flush 1.4, apply inbox 0.2) 12 rounds
+  worker 1: ids 1518429..2962382, 177164 edges; load 1670.3 ms  flood 121.8 ms  (drain 42.3, flush 4.8, apply inbox 0.6) 12 rounds
+  worker 0: ids 0..1518429, 176008 edges; load 1437.9 ms  flood 128.0 ms  (drain 41.2, flush 0.3, apply inbox 5.9) 12 rounds
+  worker 2: ids 2962382..4651168, 155891 edges; load 1733.9 ms  flood 123.2 ms  (drain 12.4, flush 1.4, apply inbox 0.2) 12 rounds
+  worker 7: ids 11659239..13270151, 226663 edges; load 1354.2 ms  flood 111.5 ms  (drain 6.9, flush 0.4, apply inbox 0.0) 12 rounds
+p2par goose (8 workers, lazy decode): spawn+load 1754.2 ms  flood x5 779.4 ms  best flood 121.8 ms  collect 346.7 ms  total 2880.3 ms  12 supersteps, 1326531 messages, 926486 live; 0 differ from oracle/p2_live.u32
+P2 OK
+exit=0
++ systems/goose/bin/p3 /home/exedev/paradigms/data/kube-apiserver --pipeline
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+p3 goose (1 thread, pipeline): load 143.9 ms  3a layout 51.8 ms  3b inputs 181.2 ms  3b (fresh image, 4 KB pages, x1) 160.6 / 160.6 / 160.6 ms min/median/max, 29599 minor faults/rep; 72579169 bytes, 2823088 relocations, 0 errors; 0 placed symbols differ from oracle/p3_image.bin
+P3 pipeline OK
+exit=0
+ 17:21:40 up  2:06,  0 user,  load average: 13.94, 6.07, 4.28

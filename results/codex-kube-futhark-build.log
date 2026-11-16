@@ -1,0 +1,30 @@
+Running as unit: run-r7b462899b334464597c09c65fb4b5f44.scope; invocation ID: c34c2cb814de40e5b69e24ddf522802a
+p1: 7 yields
+In file included from drv.h:4,
+                 from p1.c:5:
+../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+p2: 26 yields
+In file included from drv.h:4,
+                 from p2.c:6:
+../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+build/p3_multicore.c: In function ‘futrts_cell_starts_8289.constprop.isra’:
+build/p3_multicore.c:27781:47: warning: ‘__builtin_memset’ specified bound between 9223372036854776960 and 18446744073709549952 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+27781 |         ((int64_t *) mem_34588)[nest_i_34788] = (int64_t) 0;
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+p3: 13 yields
+In file included from drv.h:4,
+                 from p3.c:4:
+../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+build/p3_mcy.c: In function ‘futrts_cell_starts_8289.constprop.isra’:
+build/p3_mcy.c:27794:47: warning: ‘__builtin_memset’ specified bound between 9223372036854776960 and 18446744073709549952 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+27794 |         ((int64_t *) mem_34588)[nest_i_34788] = (int64_t) 0;
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~

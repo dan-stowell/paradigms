@@ -13,7 +13,7 @@ D=${2:-/home/exedev/paradigms/data/minio}
 G=${GOOSE:-/home/exedev/tools/goose/rel/goose-v2026.4-linux-x64/goose}
 mkdir -p bin
 for p in p1 p1par p2 p2lazy p2par p2async p3 p3par; do $G build $p.goose -o bin/$p >/dev/null 2>&1 || { echo "build $p failed"; exit 1; }; done
-run() { systemd-run --user --scope -q -p MemoryMax=8G "$@"; }
+run() { systemd-run --user --scope -q -p MemoryMax=10G "$@"; }
 out=$(mktemp)
 wall() { local t0 t1; t0=$(date +%s%N); "$@" >/dev/null 2>&1 || echo "FAIL $*" >&2; t1=$(date +%s%N); echo "scale=1; ($t1-$t0)/1000000" | bc; }
 num() { grep -o "$1 [0-9.]*" | head -1 | awk '{print $NF}'; }      # the number after a label

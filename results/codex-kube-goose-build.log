@@ -1,0 +1,20 @@
+p1.goose:49: warning: redundant `as u64`: a u32 converts to u64 implicitly here
+    let v = (rank[g] as u64) << 32 | (~(g as! u32)) as u64;
+                                      ^~~~~~~~~~~~~~~~~~~~
+building the package p1's C
+built bin/p1
+p1par.goose:72: warning: redundant `as u64`: a u32 converts to u64 implicitly here
+    let v = (r as u64) << 32 | (~g) as u64;
+                                ^~~~~~~~~~
+building the package p1par's C
+built bin/p1par
+building the package p2's C
+built bin/p2
+building the package p2lazy's C
+built bin/p2lazy
+building the package p2par's C
+built bin/p2par
+building the package p3's C
+built bin/p3
+building the package p3par's C
+built bin/p3par

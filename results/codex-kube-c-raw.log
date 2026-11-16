@@ -1,0 +1,550 @@
+ROUND 1 2026-11-16T17:21:55Z
+ 17:21:55 up  2:06,  0 user,  load average: 13.66, 6.39, 4.41
+THREADS 1
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (1 threads): best 158.0 ms = join by name 95.5 + relocation targets 62.5
+p1par mean: join 115.134816 ms total 181.312749 ms (10 reps, 1.813127 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 85.2 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (1 threads): flood best 51.2 ms, 926486 live, 103 levels in 7 rounds
+mean 68.818 ms, total 2.064542 s, 103 barriers, 945245 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (1 threads): lazy-decode flood best 95.8 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 17.571070 ms (430349 symbols, 45475 sorted by type string), reps 57 total 1.001551 s
+phase allocate ms 0.170888 read 0 write 4298100
+phase classify ms 3.252513 read 5661086 write 3260892
+phase bucket_prefix ms 2.325568 read 4351320 write 2254616
+phase scatter ms 1.471325 read 5433711 write 3260892
+phase sort ms 9.910540 read 50286632 write 5272824
+phase typelink_walk ms 0.439490 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 22.923675 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.022924 s
+p3b reps 30 (4 KB pages, 1 threads): min 63.7 median 81.4 max 91.7 ms per rep, 18441 minor faults per rep
+p3b (1 threads): copy + relocate 73.8 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 33.931128 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.033931 s
+p3b reps 30 (2 MB pages, 1 threads): min 31.2 median 35.6 max 64.6 ms per rep, 38 minor faults per rep
+p3b (1 threads): copy + relocate 43.0 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+THREADS 8
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (8 threads): best 89.9 ms = join by name 61.6 + relocation targets 28.3
+p1par mean: join 75.035518 ms total 111.312436 ms (10 reps, 1.113124 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 46.2 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (8 threads): flood best 55.2 ms, 926486 live, 103 levels in 7 rounds
+mean 72.174 ms, total 2.165217 s, 103 barriers, 939085 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 94.2 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 14.020582 ms (430349 symbols, 45475 sorted by type string), reps 72 total 1.009482 s
+phase allocate ms 0.132995 read 0 write 4298100
+phase classify ms 2.549521 read 5661086 write 3260892
+phase bucket_prefix ms 1.729511 read 4351320 write 2254616
+phase scatter ms 1.095354 read 5433711 write 3260892
+phase sort ms 8.133685 read 50286632 write 5272824
+phase typelink_walk ms 0.378634 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 21.968696 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.021969 s
+p3b reps 30 (4 KB pages, 8 threads): min 22.6 median 28.8 max 47.1 ms per rep, 18470 minor faults per rep
+p3b (8 threads): copy + relocate 23.2 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 23.221587 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.023222 s
+p3b reps 30 (2 MB pages, 8 threads): min 17.8 median 23.9 max 52.8 ms per rep, 158 minor faults per rep
+p3b (8 threads): copy + relocate 27.9 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+ 17:22:22 up  2:06,  0 user,  load average: 14.05, 7.07, 4.69
+ENDROUND 1 2026-11-16T17:22:22Z
+ROUND 2 2026-11-16T17:27:13Z
+ 17:27:13 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+THREADS 1
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (1 threads): best 171.8 ms = join by name 102.1 + relocation targets 69.7
+p1par mean: join 202.550126 ms total 326.641024 ms (10 reps, 3.266410 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 118.1 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (1 threads): flood best 46.9 ms, 926486 live, 103 levels in 7 rounds
+mean 87.479 ms, total 2.624375 s, 103 barriers, 945245 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (1 threads): lazy-decode flood best 121.4 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 20.027517 ms (430349 symbols, 45475 sorted by type string), reps 50 total 1.001376 s
+phase allocate ms 0.075229 read 0 write 4298100
+phase classify ms 3.198261 read 5661086 write 3260892
+phase bucket_prefix ms 1.985737 read 4351320 write 2254616
+phase scatter ms 2.248300 read 5433711 write 3260892
+phase sort ms 12.181063 read 50286632 write 5272824
+phase typelink_walk ms 0.338297 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 40.616654 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.040617 s
+p3b reps 30 (4 KB pages, 1 threads): min 64.6 median 75.7 max 136.2 ms per rep, 18441 minor faults per rep
+p3b (1 threads): copy + relocate 78.0 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 16.721039 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.016721 s
+p3b reps 30 (2 MB pages, 1 threads): min 31.2 median 34.0 max 49.3 ms per rep, 38 minor faults per rep
+p3b (1 threads): copy + relocate 37.1 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+THREADS 8
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (8 threads): best 94.4 ms = join by name 61.5 + relocation targets 32.9
+p1par mean: join 80.131760 ms total 130.034007 ms (10 reps, 1.300340 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 53.2 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (8 threads): flood best 51.3 ms, 926486 live, 103 levels in 7 rounds
+mean 89.046 ms, total 2.671395 s, 103 barriers, 939324 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 110.7 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 14.211843 ms (430349 symbols, 45475 sorted by type string), reps 71 total 1.009041 s
+phase allocate ms 0.074130 read 0 write 4298100
+phase classify ms 2.358561 read 5661086 write 3260892
+phase bucket_prefix ms 1.957998 read 4351320 write 2254616
+phase scatter ms 1.303788 read 5433711 write 3260892
+phase sort ms 8.224036 read 50286632 write 5272824
+phase typelink_walk ms 0.292689 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 27.293249 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.027293 s
+p3b reps 30 (4 KB pages, 8 threads): min 21.9 median 27.7 max 37.2 ms per rep, 18458 minor faults per rep
+p3b (8 threads): copy + relocate 25.4 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 21.372546 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.021373 s
+p3b reps 30 (2 MB pages, 8 threads): min 15.9 median 24.0 max 33.5 ms per rep, 141 minor faults per rep
+p3b (8 threads): copy + relocate 28.0 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+ 17:27:49 up  2:12,  0 user,  load average: 18.82, 16.06, 9.49
+ENDROUND 2 2026-11-16T17:27:49Z
+ROUND between-halide-futhark 2026-11-16T17:34:28Z
+ 17:34:28 up  2:18,  0 user,  load average: 18.23, 15.66, 11.31
+THREADS 1
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (1 threads): best 165.2 ms = join by name 99.1 + relocation targets 66.0
+p1par mean: join 173.404504 ms total 283.430616 ms (10 reps, 2.834306 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 95.4 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (1 threads): flood best 46.5 ms, 926486 live, 103 levels in 7 rounds
+mean 66.779 ms, total 2.003379 s, 103 barriers, 945245 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (1 threads): lazy-decode flood best 90.9 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 14.173598 ms (430349 symbols, 45475 sorted by type string), reps 71 total 1.006325 s
+phase allocate ms 0.093381 read 0 write 4298100
+phase classify ms 2.673146 read 5661086 write 3260892
+phase bucket_prefix ms 1.460983 read 4351320 write 2254616
+phase scatter ms 1.093913 read 5433711 write 3260892
+phase sort ms 8.529184 read 50286632 write 5272824
+phase typelink_walk ms 0.322394 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 17.645961 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.017646 s
+p3b reps 30 (4 KB pages, 1 threads): min 63.6 median 76.2 max 103.2 ms per rep, 18441 minor faults per rep
+p3b (1 threads): copy + relocate 88.5 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 16.062223 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.016062 s
+p3b reps 30 (2 MB pages, 1 threads): min 32.8 median 33.5 max 49.5 ms per rep, 38 minor faults per rep
+p3b (1 threads): copy + relocate 45.3 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+THREADS 8
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (8 threads): best 88.0 ms = join by name 60.1 + relocation targets 28.0
+p1par mean: join 90.890819 ms total 133.657524 ms (10 reps, 1.336575 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 57.1 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (8 threads): flood best 116.9 ms, 926486 live, 103 levels in 7 rounds
+mean 167.818 ms, total 5.034548 s, 103 barriers, 939145 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 135.8 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 21.064972 ms (430349 symbols, 45475 sorted by type string), reps 48 total 1.011119 s
+phase allocate ms 0.120025 read 0 write 4298100
+phase classify ms 3.976287 read 5661086 write 3260892
+phase bucket_prefix ms 2.717959 read 4351320 write 2254616
+phase scatter ms 1.660445 read 5433711 write 3260892
+phase sort ms 12.084164 read 50286632 write 5272824
+phase typelink_walk ms 0.505175 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 28.103330 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.028103 s
+p3b reps 30 (4 KB pages, 8 threads): min 27.8 median 34.1 max 59.5 ms per rep, 18467 minor faults per rep
+p3b (8 threads): copy + relocate 30.2 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 20.177188 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.020177 s
+p3b reps 30 (2 MB pages, 8 threads): min 15.4 median 25.3 max 63.8 ms per rep, 173 minor faults per rep
+p3b (8 threads): copy + relocate 24.2 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+ 17:35:02 up  2:19,  0 user,  load average: 19.88, 16.30, 11.68
+ENDROUND between-halide-futhark 2026-11-16T17:35:02Z
+ROUND 4-after-fh 2026-11-16T17:55:04Z
+ 17:55:04 up  2:39,  0 user,  load average: 14.90, 17.93, 16.91
+THREADS 1
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (1 threads): best 159.2 ms = join by name 95.6 + relocation targets 63.6
+p1par mean: join 125.863303 ms total 207.767589 ms (10 reps, 2.077676 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 103.5 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (1 threads): flood best 49.0 ms, 926486 live, 103 levels in 7 rounds
+mean 74.945 ms, total 2.248361 s, 103 barriers, 945245 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (1 threads): lazy-decode flood best 116.8 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 20.408880 ms (430349 symbols, 45475 sorted by type string), reps 50 total 1.020444 s
+phase allocate ms 0.101631 read 0 write 4298100
+phase classify ms 3.483271 read 5661086 write 3260892
+phase bucket_prefix ms 3.064184 read 4351320 write 2254616
+phase scatter ms 1.700335 read 5433711 write 3260892
+phase sort ms 11.602032 read 50286632 write 5272824
+phase typelink_walk ms 0.456050 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 25.507566 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.025508 s
+p3b reps 30 (4 KB pages, 1 threads): min 66.1 median 82.5 max 102.4 ms per rep, 18441 minor faults per rep
+p3b (1 threads): copy + relocate 70.1 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 37.630125 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.037630 s
+p3b reps 30 (2 MB pages, 1 threads): min 35.3 median 46.4 max 64.4 ms per rep, 38 minor faults per rep
+p3b (1 threads): copy + relocate 37.8 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+THREADS 8
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (8 threads): best 89.7 ms = join by name 56.0 + relocation targets 33.6
+p1par mean: join 81.710981 ms total 123.982562 ms (10 reps, 1.239826 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 60.0 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (8 threads): flood best 67.6 ms, 926486 live, 103 levels in 7 rounds
+mean 80.693 ms, total 2.420787 s, 103 barriers, 939215 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 116.2 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 24.701466 ms (430349 symbols, 45475 sorted by type string), reps 42 total 1.037462 s
+phase allocate ms 0.294498 read 0 write 4298100
+phase classify ms 4.050690 read 5661086 write 3260892
+phase bucket_prefix ms 2.864585 read 4351320 write 2254616
+phase scatter ms 2.540389 read 5433711 write 3260892
+phase sort ms 14.271641 read 50286632 write 5272824
+phase typelink_walk ms 0.678820 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 37.811500 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.037812 s
+p3b reps 30 (4 KB pages, 8 threads): min 44.6 median 59.4 max 83.9 ms per rep, 18461 minor faults per rep
+p3b (8 threads): copy + relocate 60.1 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 50.157248 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.050157 s
+p3b reps 30 (2 MB pages, 8 threads): min 19.7 median 28.1 max 66.4 ms per rep, 182 minor faults per rep
+p3b (8 threads): copy + relocate 27.8 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+ 17:55:36 up  2:40,  0 user,  load average: 13.94, 17.34, 16.75
+ENDROUND 4-after-fh 2026-11-16T17:55:36Z
+ROUND 5-after-duckdb 2026-11-16T18:15:34Z
+ 18:15:34 up  3:00,  0 user,  load average: 2.56, 5.14, 9.59
+THREADS 1
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (1 threads): best 158.8 ms = join by name 97.6 + relocation targets 61.2
+p1par mean: join 109.858684 ms total 176.429295 ms (10 reps, 1.764293 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 84.1 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (1 threads): flood best 39.7 ms, 926486 live, 103 levels in 7 rounds
+mean 43.434 ms, total 1.303034 s, 103 barriers, 945245 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (1 threads): lazy-decode flood best 82.0 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 12.826332 ms (430349 symbols, 45475 sorted by type string), reps 78 total 1.000454 s
+phase allocate ms 0.078779 read 0 write 4298100
+phase classify ms 2.379291 read 5661086 write 3260892
+phase bucket_prefix ms 1.210167 read 4351320 write 2254616
+phase scatter ms 1.039607 read 5433711 write 3260892
+phase sort ms 7.865176 read 50286632 write 5272824
+phase typelink_walk ms 0.252842 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 16.086644 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.016087 s
+p3b reps 30 (4 KB pages, 1 threads): min 62.7 median 64.3 max 73.8 ms per rep, 18441 minor faults per rep
+p3b (1 threads): copy + relocate 63.1 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 14.669261 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.014669 s
+p3b reps 30 (2 MB pages, 1 threads): min 31.6 median 32.2 max 34.6 ms per rep, 38 minor faults per rep
+p3b (1 threads): copy + relocate 33.2 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+THREADS 8
+COMMAND build/p1par /home/exedev/paradigms/data/kube-apiserver 10
+p1par (8 threads): best 36.1 ms = join by name 22.5 + relocation targets 13.7
+p1par mean: join 34.761442 ms total 50.837137 ms (10 reps, 0.508371 s kernel)
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 24.0 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+STATUS 0
+COMMAND build/p2par /home/exedev/paradigms/data/kube-apiserver 30
+p2par (8 threads): flood best 17.7 ms, 926486 live, 103 levels in 7 rounds
+mean 22.895 ms, total 0.686841 s, 103 barriers, 939090 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+STATUS 0
+COMMAND build/p2lazy /home/exedev/paradigms/data/kube-apiserver 20
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 23.7 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+timed decoder: 319307 sources decoded, 0 with a wrong edge hash, 0 live sources never decoded
+P2 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver --layout
+p3a (1 core): layout 12.778294 ms (430349 symbols, 45475 sorted by type string), reps 79 total 1.009485 s
+phase allocate ms 0.080638 read 0 write 4298100
+phase classify ms 2.324522 read 5661086 write 3260892
+phase bucket_prefix ms 1.328529 read 4351320 write 2254616
+phase scatter ms 1.079237 read 5433711 write 3260892
+phase sort ms 7.708373 read 50286632 write 5272824
+phase typelink_walk ms 0.256513 read 409275 write 181900
+sort comparisons 630658 string_prefix_bytes 14726816 merge_read_and_write_each 5272824
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 12.992303 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.012992 s
+p3b reps 30 (4 KB pages, 8 threads): min 10.5 median 11.3 max 19.9 ms per rep, 18471 minor faults per rep
+p3b (8 threads): copy + relocate 10.9 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+COMMAND build/p3par /home/exedev/paradigms/data/kube-apiserver
+p3a (1 core): layout 28.532838 ms (430349 symbols, 45475 sorted by type string), reps 1 total 0.028533 s
+p3b reps 30 (2 MB pages, 8 threads): min 8.3 median 9.8 max 16.8 ms per rep, 210 minor faults per rep
+p3b (8 threads): copy + relocate 8.8 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+STATUS 0
+ 18:15:52 up  3:00,  0 user,  load average: 2.62, 4.99, 9.45
+ENDROUND 5-after-duckdb 2026-11-16T18:15:52Z

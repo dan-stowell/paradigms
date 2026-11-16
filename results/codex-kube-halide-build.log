@@ -1,0 +1,25 @@
+Running as unit: run-rb025e8f8954f4761a83b45bcf9d8e9d3.scope; invocation ID: 7bee7ae4cd4a4aa99cf72b238c75a735
+In file included from /home/exedev/paradigms-w/systems/halide/cells/p1.cpp:6:
+/home/exedev/paradigms-w/systems/halide/cells/../../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+built p1
+Warning: Update definition 0 of function st has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call st.update(0).unscheduled() to suppress this warning.
+In file included from /home/exedev/paradigms-w/systems/halide/cells/p2.cpp:9:
+/home/exedev/paradigms-w/systems/halide/cells/../../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+built p2
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 1 of function addr has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call addr.update(1).unscheduled() to suppress this warning.
+Warning: Update definition 0 of function image has not been scheduled, even though some other definitions have been. You may have forgotten to schedule it. If this was intentional, call image.update(0).unscheduled() to suppress this warning.
+In file included from /home/exedev/paradigms-w/systems/halide/cells/p3.cpp:7:
+/home/exedev/paradigms-w/systems/halide/cells/../../../ref/flat/flat.h:2: warning: "_GNU_SOURCE" redefined
+    2 | #define _GNU_SOURCE
+      | 
+<command-line>: note: this is the location of the previous definition
+built p3

@@ -1,0 +1,231 @@
+COMMAND: systems/futhark/build/p1_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 1a
+ 17:27:09 up  2:11,  0 user,  load average: 20.67, 15.93, 9.16
+load 247.2 ms
+1a             491.6  | min 491.57 med 491.57 max 491.57 ms (threads 1) minflt/rep 52601
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+P1a OK
+EXIT: 0
+ 17:27:10 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+COMMAND: systems/futhark/build/p1_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 1b
+ 17:27:10 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+load 296.9 ms
+1b             1121.7  | min 1121.70 med 1121.70 max 1121.70 ms (threads 1) minflt/rep 19360
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b OK
+EXIT: 0
+ 17:27:11 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+COMMAND: systems/futhark/build/p1_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 1b_scan
+ 17:27:11 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+load 547.4 ms
+1b_scan        526.9  | min 526.94 med 526.94 max 526.94 ms (threads 1) minflt/rep 58080
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b_scan OK
+EXIT: 0
+ 17:27:13 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+COMMAND: systems/futhark/build/p1_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 1c
+ 17:27:13 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+load 597.4 ms
+1c             621.7  | min 621.73 med 621.73 max 621.73 ms (threads 1) minflt/rep 55487
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1c OK
+EXIT: 0
+ 17:27:14 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+COMMAND: systems/futhark/build/p2_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 2
+ 17:27:14 up  2:11,  0 user,  load average: 20.14, 15.90, 9.18
+load 322.8 ms
+2              255.5  | min 255.54 med 255.54 max 255.54 ms (threads 1) minflt/rep 38097
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:15 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+COMMAND: systems/futhark/build/p2_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 2lazy
+ 17:27:15 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+load 606.5 ms
+setup (aux rows, untimed) 1195.1 ms, 1592404 aux edges
+2lazy          878.2  | min 878.17 med 878.17 max 878.17 ms (threads 1) minflt/rep 27718
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2lazy OK
+EXIT: 0
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+COMMAND: systems/futhark/build/p3_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 3a
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+load 14.6 ms
+3a             143.5  | min 143.53 med 143.53 max 143.53 ms (threads 1) minflt/rep 13833
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+EXIT: 0
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+COMMAND: systems/futhark/build/p3_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 3a_loop
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+load 10.6 ms
+3a_loop        97.4  | min 97.38 med 97.38 max 97.38 ms (threads 1) minflt/rep 9816
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a_loop OK
+EXIT: 0
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+COMMAND: systems/futhark/build/p3_c.exe /home/exedev/paradigms/data/kube-apiserver 1 1 3b
+ 17:27:18 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+load 198.4 ms
+3b             235.0  | min 234.96 med 234.96 max 234.96 ms (threads 1) minflt/rep 40310
+copy out 83.9 ms, 0 errors
+image: 0 placed symbols differ from oracle/p3_image.bin
+P3b OK
+EXIT: 0
+ 17:27:19 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+COMMAND: systems/futhark/build/p1_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1a
+ 17:27:19 up  2:11,  0 user,  load average: 19.97, 15.93, 9.23
+load 323.5 ms
+1a             509.3  | min 509.31 med 509.31 max 509.31 ms (threads 8) minflt/rep 53837
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+P1a OK
+EXIT: 0
+ 17:27:20 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+COMMAND: systems/futhark/build/p1_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1b
+ 17:27:20 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+load 422.8 ms
+1b             567.6  | min 567.58 med 567.58 max 567.58 ms (threads 8) minflt/rep 19369
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b OK
+EXIT: 0
+ 17:27:21 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+COMMAND: systems/futhark/build/p1_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1b_scan
+ 17:27:21 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+load 467.4 ms
+1b_scan        320.4  | min 320.38 med 320.38 max 320.38 ms (threads 8) minflt/rep 58402
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b_scan OK
+EXIT: 0
+ 17:27:22 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+COMMAND: systems/futhark/build/p1_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1c
+ 17:27:22 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+load 657.9 ms
+1c             507.1  | min 507.10 med 507.10 max 507.10 ms (threads 8) minflt/rep 56428
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1c OK
+EXIT: 0
+ 17:27:24 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+COMMAND: systems/futhark/build/p2_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 2
+ 17:27:24 up  2:11,  0 user,  load average: 20.05, 16.02, 9.29
+load 276.2 ms
+2              608.1  | min 608.07 med 608.07 max 608.07 ms (threads 8) minflt/rep 40723
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:25 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+COMMAND: systems/futhark/build/p2_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 2lazy
+ 17:27:25 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+load 576.2 ms
+setup (aux rows, untimed) 1524.8 ms, 1592404 aux edges
+2lazy          1072.4  | min 1072.43 med 1072.43 max 1072.43 ms (threads 8) minflt/rep 27437
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2lazy OK
+EXIT: 0
+ 17:27:28 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+COMMAND: systems/futhark/build/p3_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3a
+ 17:27:28 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+load 16.8 ms
+3a             192.1  | min 192.10 med 192.10 max 192.10 ms (threads 8) minflt/rep 35228
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+EXIT: 0
+ 17:27:28 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+COMMAND: systems/futhark/build/p3_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3a_loop
+ 17:27:28 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+load 15.0 ms
+3a_loop        196.1  | min 196.12 med 196.12 max 196.12 ms (threads 8) minflt/rep 31561
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a_loop OK
+EXIT: 0
+ 17:27:29 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+COMMAND: systems/futhark/build/p3_multicore.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3b
+ 17:27:29 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+load 178.8 ms
+3b             281.0  | min 281.00 med 281.00 max 281.00 ms (threads 8) minflt/rep 69028
+copy out 81.5 ms, 0 errors
+image: 0 placed symbols differ from oracle/p3_image.bin
+P3b OK
+EXIT: 0
+ 17:27:29 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+COMMAND: systems/futhark/build/p1_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1a
+ 17:27:29 up  2:11,  0 user,  load average: 20.05, 16.08, 9.35
+load 340.5 ms
+1a             303.6  | min 303.56 med 303.56 max 303.56 ms (threads 8) minflt/rep 53911
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+P1a OK
+EXIT: 0
+ 17:27:30 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+COMMAND: systems/futhark/build/p1_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1b
+ 17:27:30 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+load 330.0 ms
+1b             444.5  | min 444.47 med 444.47 max 444.47 ms (threads 8) minflt/rep 19371
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b OK
+EXIT: 0
+ 17:27:31 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+COMMAND: systems/futhark/build/p1_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1b_scan
+ 17:27:31 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+load 286.8 ms
+1b_scan        201.3  | min 201.29 med 201.29 max 201.29 ms (threads 8) minflt/rep 58381
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+P1b_scan OK
+EXIT: 0
+ 17:27:32 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+COMMAND: systems/futhark/build/p1_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 1c
+ 17:27:32 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+load 288.2 ms
+1c             207.2  | min 207.15 med 207.15 max 207.15 ms (threads 8) minflt/rep 56452
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1c OK
+EXIT: 0
+ 17:27:33 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+COMMAND: systems/futhark/build/p2_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 2
+ 17:27:33 up  2:11,  0 user,  load average: 19.72, 16.08, 9.39
+load 229.9 ms
+2              557.8  | min 557.83 med 557.83 max 557.83 ms (threads 8) minflt/rep 39163
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+EXIT: 0
+ 17:27:33 up  2:12,  0 user,  load average: 19.72, 16.08, 9.39
+COMMAND: systems/futhark/build/p2_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 2lazy
+ 17:27:33 up  2:12,  0 user,  load average: 19.72, 16.08, 9.39
+load 596.4 ms
+setup (aux rows, untimed) 2223.4 ms, 1592404 aux edges
+2lazy          1057.8  | min 1057.78 med 1057.78 max 1057.78 ms (threads 8) minflt/rep 27762
+926486 live
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2lazy OK
+EXIT: 0
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+COMMAND: systems/futhark/build/p3_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3a
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+load 18.9 ms
+3a             215.5  | min 215.46 med 215.46 max 215.46 ms (threads 8) minflt/rep 34987
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a OK
+EXIT: 0
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+COMMAND: systems/futhark/build/p3_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3a_loop
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+load 22.7 ms
+3a_loop        92.2  | min 92.17 med 92.17 max 92.17 ms (threads 8) minflt/rep 31523
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3a_loop OK
+EXIT: 0
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+COMMAND: systems/futhark/build/p3_mcy.exe /home/exedev/paradigms/data/kube-apiserver 8 1 3b
+ 17:27:38 up  2:12,  0 user,  load average: 19.42, 16.08, 9.42
+load 432.8 ms
+3b             365.9  | min 365.91 med 365.91 max 365.91 ms (threads 8) minflt/rep 69227
+copy out 468.8 ms, 0 errors
+image: 0 placed symbols differ from oracle/p3_image.bin
+P3b OK
+EXIT: 0
+ 17:27:39 up  2:12,  0 user,  load average: 19.07, 16.06, 9.45

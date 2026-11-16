@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 D=${1:-/home/exedev/paradigms/data/minio}
 D4=${2:-/home/exedev/paradigms/data/minio-p4}
 [ -n "$NOBUILD" ] || YIELD=1 ./build.sh >/dev/null 2>&1
-run() { prlimit --as=6442450944 "$@"; }
+run() { systemd-run --user --scope -q -p MemoryMax=10G "$@"; }
 # cell program reps(1 core) reps(8 cores)
 cells="1a p1 20 40
 1b p1 10 40

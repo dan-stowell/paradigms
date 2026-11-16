@@ -1,0 +1,305 @@
+ROUND 1
+COMMAND: env NOBUILD=1 HUGE=1 systems/futhark/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:35:02 up  2:19,  0 user,  load average: 19.88, 16.30, 11.68
+# HUGE=1 2026-11-16T17:35:03Z load 19.88 16.30 11.68 data /home/exedev/paradigms/data/kube-apiserver
+1a       1+huge  warm  min 245.60 med 342.68 max 436.14 ms (threads 1) minflt/rep 79
+1a       1+huge  e2e   min 532 med 587 max 617 ms
+1a       8spin+huge warm  min 159.97 med 253.40 max 427.95 ms (threads 8) minflt/rep 99
+1a       8spin+huge e2e   min 484 med 534 max 635 ms
+1a       8yield+huge warm  min 128.03 med 204.00 max 411.97 ms (threads 8) minflt/rep 92
+1a       8yield+huge e2e   min 443 med 526 max 628 ms
+1b       1+huge  warm  min 1014.73 med 1275.39 max 1937.68 ms (threads 1) minflt/rep 3
+1b       1+huge  e2e   min 1274 med 1456 max 2230 ms
+1b       8spin+huge warm  min 290.33 med 331.99 max 417.20 ms (threads 8) minflt/rep 1
+1b       8spin+huge e2e   min 492 med 566 max 595 ms
+1b       8yield+huge warm  min 202.86 med 297.82 max 388.00 ms (threads 8) minflt/rep 1
+1b       8yield+huge e2e   min 418 med 451 max 459 ms
+1b_scan  1+huge  warm  min 96.61 med 99.56 max 107.68 ms (threads 1) minflt/rep 79
+1b_scan  1+huge  e2e   min 231 med 274 max 369 ms
+1b_scan  8spin+huge warm  min 40.27 med 56.92 max 84.07 ms (threads 8) minflt/rep 80
+1b_scan  8spin+huge e2e   min 177 med 189 max 201 ms
+1b_scan  8yield+huge warm  min 38.46 med 44.34 max 66.20 ms (threads 8) minflt/rep 81
+1b_scan  8yield+huge e2e   min 180 med 186 max 199 ms
+1c       1+huge  warm  min 146.45 med 154.16 max 171.91 ms (threads 1) minflt/rep 86
+1c       1+huge  e2e   min 262 med 286 max 390 ms
+1c       8spin+huge warm  min 102.02 med 123.59 max 208.02 ms (threads 8) minflt/rep 105
+1c       8spin+huge e2e   min 265 med 298 max 394 ms
+1c       8yield+huge warm  min 73.51 med 92.34 max 117.54 ms (threads 8) minflt/rep 102
+1c       8yield+huge e2e   min 219 med 240 max 282 ms
+2        1+huge  warm  min 152.33 med 159.19 max 169.09 ms (threads 1) minflt/rep 50
+2        1+huge  e2e   min 266 med 269 max 378 ms
+2        8spin+huge warm  min 195.83 med 311.58 max 478.75 ms (threads 8) minflt/rep 63
+2        8spin+huge e2e   min 404 med 580 max 726 ms
+2        8yield+huge warm  min 134.96 med 174.70 max 285.24 ms (threads 8) minflt/rep 60
+2        8yield+huge e2e   min 282 med 313 max 371 ms
+2lazy    1+huge  warm  min 258.16 med 276.91 max 309.32 ms (threads 1) minflt/rep 49
+2lazy    1+huge  e2e   min 845 med 930 max 1005 ms
+2lazy    8spin+huge warm  min 228.00 med 362.42 max 492.99 ms (threads 8) minflt/rep 63
+2lazy    8spin+huge e2e   min 1051 med 1247 max 1812 ms
+2lazy    8yield+huge warm  min 245.93 med 342.47 max 438.46 ms (threads 8) minflt/rep 56
+2lazy    8yield+huge e2e   min 1066 med 1122 max 1281 ms
+3a       1+huge  warm  min 30.50 med 33.68 max 70.90 ms (threads 1) minflt/rep 9
+3a       1+huge  e2e   min 78 med 84 max 115 ms
+3a       8spin+huge warm  min 25.90 med 41.07 max 125.25 ms (threads 8) minflt/rep 59
+3a       8spin+huge e2e   min 90 med 119 max 132 ms
+3a       8yield+huge warm  min 30.06 med 47.93 max 96.10 ms (threads 8) minflt/rep 58
+3a       8yield+huge e2e   min 109 med 125 max 163 ms
+3a_loop  1+huge  warm  min 20.91 med 21.61 max 34.36 ms (threads 1) minflt/rep 10
+3a_loop  1+huge  e2e   min 83 med 99 max 155 ms
+3a_loop  8spin+huge warm  min 19.67 med 32.64 max 101.44 ms (threads 8) minflt/rep 61
+3a_loop  8spin+huge e2e   min 101 med 117 max 142 ms
+3a_loop  8yield+huge warm  min 20.58 med 28.69 max 51.96 ms (threads 8) minflt/rep 62
+3a_loop  8yield+huge e2e   min 97 med 106 max 122 ms
+3b       1+huge  warm  min 114.61 med 143.66 max 203.20 ms (threads 1) minflt/rep 32
+3b       1+huge  e2e   min 237 med 334 max 352 ms
+3b       8spin+huge warm  min 56.47 med 79.88 max 124.12 ms (threads 8) minflt/rep 124
+3b       8spin+huge e2e   min 219 med 280 max 315 ms
+3b       8yield+huge warm  min 62.68 med 76.33 max 91.09 ms (threads 8) minflt/rep 123
+3b       8yield+huge e2e   min 239 med 262 max 306 ms
+# end 2026-11-16T17:38:16Z load 18.41 16.96 12.83
+EXIT: 0
+ 17:38:16 up  2:22,  0 user,  load average: 18.41, 16.96, 12.83
+ROUND 2
+COMMAND: env NOBUILD=1 HUGE=1 systems/futhark/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:38:16 up  2:22,  0 user,  load average: 18.41, 16.96, 12.83
+# HUGE=1 2026-11-16T17:38:16Z load 18.41 16.96 12.83 data /home/exedev/paradigms/data/kube-apiserver
+1a       1+huge  warm  min 225.71 med 296.44 max 338.47 ms (threads 1) minflt/rep 79
+1a       1+huge  e2e   min 345 med 376 max 421 ms
+1a       8spin+huge warm  min 127.90 med 163.04 max 236.04 ms (threads 8) minflt/rep 103
+1a       8spin+huge e2e   min 323 med 342 max 412 ms
+1a       8yield+huge warm  min 111.39 med 127.99 max 196.50 ms (threads 8) minflt/rep 99
+1a       8yield+huge e2e   min 307 med 320 max 366 ms
+1b       1+huge  warm  min 978.37 med 1066.73 max 1138.49 ms (threads 1) minflt/rep 3
+1b       1+huge  e2e   min 1201 med 1257 max 1292 ms
+1b       8spin+huge warm  min 288.06 med 332.00 max 412.07 ms (threads 8) minflt/rep 1
+1b       8spin+huge e2e   min 521 med 546 max 556 ms
+1b       8yield+huge warm  min 237.40 med 310.17 max 375.99 ms (threads 8) minflt/rep 1
+1b       8yield+huge e2e   min 503 med 506 max 617 ms
+1b_scan  1+huge  warm  min 96.98 med 101.60 max 133.46 ms (threads 1) minflt/rep 79
+1b_scan  1+huge  e2e   min 243 med 260 max 286 ms
+1b_scan  8spin+huge warm  min 67.98 med 88.02 max 124.27 ms (threads 8) minflt/rep 79
+1b_scan  8spin+huge e2e   min 243 med 275 max 300 ms
+1b_scan  8yield+huge warm  min 51.90 med 64.03 max 94.67 ms (threads 8) minflt/rep 77
+1b_scan  8yield+huge e2e   min 228 med 263 max 278 ms
+1c       1+huge  warm  min 150.81 med 158.11 max 170.18 ms (threads 1) minflt/rep 86
+1c       1+huge  e2e   min 311 med 341 max 410 ms
+1c       8spin+huge warm  min 109.50 med 131.29 max 156.39 ms (threads 8) minflt/rep 112
+1c       8spin+huge e2e   min 307 med 323 max 355 ms
+1c       8yield+huge warm  min 91.88 med 101.08 max 132.41 ms (threads 8) minflt/rep 107
+1c       8yield+huge e2e   min 263 med 300 max 312 ms
+2        1+huge  warm  min 170.82 med 191.28 max 222.83 ms (threads 1) minflt/rep 50
+2        1+huge  e2e   min 317 med 327 max 381 ms
+2        8spin+huge warm  min 210.95 med 247.96 max 378.56 ms (threads 8) minflt/rep 66
+2        8spin+huge e2e   min 319 med 394 max 475 ms
+2        8yield+huge warm  min 247.30 med 300.04 max 395.99 ms (threads 8) minflt/rep 62
+2        8yield+huge e2e   min 407 med 550 max 578 ms
+2lazy    1+huge  warm  min 240.20 med 248.99 max 265.46 ms (threads 1) minflt/rep 49
+2lazy    1+huge  e2e   min 745 med 760 max 904 ms
+2lazy    8spin+huge warm  min 383.13 med 589.76 max 861.24 ms (threads 8) minflt/rep 65
+2lazy    8spin+huge e2e   min 1100 med 1200 max 2090 ms
+2lazy    8yield+huge warm  min 299.85 med 384.06 max 491.07 ms (threads 8) minflt/rep 64
+2lazy    8yield+huge e2e   min 1014 med 1112 max 1302 ms
+3a       1+huge  warm  min 32.16 med 46.82 max 64.58 ms (threads 1) minflt/rep 9
+3a       1+huge  e2e   min 115 med 116 max 145 ms
+3a       8spin+huge warm  min 20.90 med 28.89 max 62.92 ms (threads 8) minflt/rep 59
+3a       8spin+huge e2e   min 103 med 156 max 219 ms
+3a       8yield+huge warm  min 28.44 med 44.42 max 67.92 ms (threads 8) minflt/rep 58
+3a       8yield+huge e2e   min 87 med 112 max 134 ms
+3a_loop  1+huge  warm  min 21.84 med 25.10 max 61.65 ms (threads 1) minflt/rep 10
+3a_loop  1+huge  e2e   min 78 med 92 max 129 ms
+3a_loop  8spin+huge warm  min 16.78 med 34.90 max 104.29 ms (threads 8) minflt/rep 61
+3a_loop  8spin+huge e2e   min 92 med 95 max 126 ms
+3a_loop  8yield+huge warm  min 20.28 med 30.24 max 64.24 ms (threads 8) minflt/rep 62
+3a_loop  8yield+huge e2e   min 86 med 108 max 120 ms
+3b       1+huge  warm  min 115.30 med 146.77 max 171.87 ms (threads 1) minflt/rep 32
+3b       1+huge  e2e   min 260 med 279 max 308 ms
+3b       8spin+huge warm  min 47.69 med 60.78 max 127.83 ms (threads 8) minflt/rep 124
+3b       8spin+huge e2e   min 230 med 243 max 306 ms
+3b       8yield+huge warm  min 50.52 med 62.47 max 105.61 ms (threads 8) minflt/rep 123
+3b       8yield+huge e2e   min 237 med 252 max 297 ms
+# end 2026-11-16T17:41:24Z load 17.62 17.52 13.83
+EXIT: 0
+ 17:41:24 up  2:25,  0 user,  load average: 17.62, 17.52, 13.83
+ROUND 3
+COMMAND: env NOBUILD=1 HUGE=1 systems/futhark/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:41:24 up  2:25,  0 user,  load average: 17.62, 17.52, 13.83
+# HUGE=1 2026-11-16T17:41:24Z load 17.62 17.52 13.83 data /home/exedev/paradigms/data/kube-apiserver
+1a       1+huge  warm  min 226.14 med 285.75 max 340.19 ms (threads 1) minflt/rep 79
+1a       1+huge  e2e   min 374 med 395 max 461 ms
+1a       8spin+huge warm  min 132.43 med 176.23 max 245.80 ms (threads 8) minflt/rep 102
+1a       8spin+huge e2e   min 376 med 412 max 510 ms
+1a       8yield+huge warm  min 111.92 med 139.92 max 220.58 ms (threads 8) minflt/rep 101
+1a       8yield+huge e2e   min 296 med 317 max 366 ms
+1b       1+huge  warm  min 1004.86 med 1070.49 max 1090.25 ms (threads 1) minflt/rep 3
+1b       1+huge  e2e   min 1165 med 1227 max 1389 ms
+1b       8spin+huge warm  min 277.76 med 326.43 max 375.97 ms (threads 8) minflt/rep 1
+1b       8spin+huge e2e   min 524 med 550 max 635 ms
+1b       8yield+huge warm  min 269.93 med 336.01 max 411.98 ms (threads 8) minflt/rep 1
+1b       8yield+huge e2e   min 497 med 552 max 584 ms
+1b_scan  1+huge  warm  min 99.12 med 124.99 max 150.85 ms (threads 1) minflt/rep 79
+1b_scan  1+huge  e2e   min 281 med 300 max 331 ms
+1b_scan  8spin+huge warm  min 61.39 med 83.60 max 103.79 ms (threads 8) minflt/rep 80
+1b_scan  8spin+huge e2e   min 269 med 293 max 354 ms
+1b_scan  8yield+huge warm  min 56.13 med 71.98 max 91.92 ms (threads 8) minflt/rep 78
+1b_scan  8yield+huge e2e   min 214 med 265 max 293 ms
+1c       1+huge  warm  min 160.70 med 207.44 max 219.05 ms (threads 1) minflt/rep 86
+1c       1+huge  e2e   min 354 med 379 max 388 ms
+1c       8spin+huge warm  min 98.17 med 140.93 max 203.61 ms (threads 8) minflt/rep 109
+1c       8spin+huge e2e   min 336 med 364 max 410 ms
+1c       8yield+huge warm  min 95.00 med 112.47 max 132.03 ms (threads 8) minflt/rep 111
+1c       8yield+huge e2e   min 270 med 311 max 427 ms
+2        1+huge  warm  min 175.86 med 224.43 max 247.20 ms (threads 1) minflt/rep 50
+2        1+huge  e2e   min 364 med 374 max 419 ms
+2        8spin+huge warm  min 162.88 med 220.04 max 316.38 ms (threads 8) minflt/rep 66
+2        8spin+huge e2e   min 346 med 388 max 681 ms
+2        8yield+huge warm  min 177.25 med 227.91 max 431.97 ms (threads 8) minflt/rep 62
+2        8yield+huge e2e   min 446 med 502 max 736 ms
+2lazy    1+huge  warm  min 265.29 med 311.03 max 374.21 ms (threads 1) minflt/rep 49
+2lazy    1+huge  e2e   min 819 med 996 max 1035 ms
+2lazy    8spin+huge warm  min 206.83 med 384.15 max 1064.08 ms (threads 8) minflt/rep 63
+2lazy    8spin+huge e2e   min 1654 med 2040 max 2553 ms
+2lazy    8yield+huge warm  min 508.04 med 917.94 max 2002.86 ms (threads 8) minflt/rep 56
+2lazy    8yield+huge e2e   min 1600 med 1867 max 2464 ms
+3a       1+huge  warm  min 32.93 med 60.16 max 128.82 ms (threads 1) minflt/rep 9
+3a       1+huge  e2e   min 144 med 160 max 240 ms
+3a       8spin+huge warm  min 35.24 med 80.15 max 191.83 ms (threads 8) minflt/rep 58
+3a       8spin+huge e2e   min 177 med 268 max 353 ms
+3a       8yield+huge warm  min 54.95 med 117.58 max 649.27 ms (threads 8) minflt/rep 59
+3a       8yield+huge e2e   min 153 med 276 max 462 ms
+3a_loop  1+huge  warm  min 21.83 med 42.97 max 119.60 ms (threads 1) minflt/rep 10
+3a_loop  1+huge  e2e   min 83 med 107 max 160 ms
+3a_loop  8spin+huge warm  min 23.84 med 45.32 max 111.64 ms (threads 8) minflt/rep 61
+3a_loop  8spin+huge e2e   min 183 med 208 max 223 ms
+3a_loop  8yield+huge warm  min 24.20 med 72.06 max 517.18 ms (threads 8) minflt/rep 61
+3a_loop  8yield+huge e2e   min 181 med 189 max 328 ms
+3b       1+huge  warm  min 335.30 med 567.02 max 695.58 ms (threads 1) minflt/rep 32
+3b       1+huge  e2e   min 485 med 616 max 827 ms
+3b       8spin+huge warm  min 98.08 med 140.98 max 176.54 ms (threads 8) minflt/rep 116
+3b       8spin+huge e2e   min 426 med 450 max 618 ms
+3b       8yield+huge warm  min 97.64 med 131.05 max 254.87 ms (threads 8) minflt/rep 100
+3b       8yield+huge e2e   min 541 med 699 max 916 ms
+# end 2026-11-16T17:45:33Z load 22.62 19.38 15.38
+EXIT: 0
+ 17:45:33 up  2:30,  0 user,  load average: 22.62, 19.38, 15.38
+ROUND 4
+COMMAND: env NOBUILD=1 HUGE=1 systems/futhark/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:45:33 up  2:30,  0 user,  load average: 22.62, 19.38, 15.38
+# HUGE=1 2026-11-16T17:45:33Z load 22.62 19.38 15.38 data /home/exedev/paradigms/data/kube-apiserver
+1a       1+huge  warm  min 242.94 med 373.24 max 679.57 ms (threads 1) minflt/rep 79
+1a       1+huge  e2e   min 443 med 831 max 1114 ms
+1a       8spin+huge warm  min 244.81 med 419.91 max 661.60 ms (threads 8) minflt/rep 92
+1a       8spin+huge e2e   min 428 med 615 max 784 ms
+1a       8yield+huge warm  min 231.66 med 344.68 max 660.84 ms (threads 8) minflt/rep 87
+1a       8yield+huge e2e   min 681 med 764 max 820 ms
+1b       1+huge  warm  min 1661.49 med 2100.93 max 2930.67 ms (threads 1) minflt/rep 3
+1b       1+huge  e2e   min 1821 med 1914 max 2429 ms
+1b       8spin+huge warm  min 406.23 med 535.80 max 643.98 ms (threads 8) minflt/rep 1
+1b       8spin+huge e2e   min 651 med 885 max 966 ms
+1b       8yield+huge warm  min 377.48 med 527.97 max 900.35 ms (threads 8) minflt/rep 1
+1b       8yield+huge e2e   min 823 med 882 max 1214 ms
+1b_scan  1+huge  warm  min 149.69 med 357.99 max 487.67 ms (threads 1) minflt/rep 79
+1b_scan  1+huge  e2e   min 351 med 706 max 922 ms
+1b_scan  8spin+huge warm  min 88.00 med 157.21 max 243.99 ms (threads 8) minflt/rep 78
+1b_scan  8spin+huge e2e   min 424 med 449 max 543 ms
+1b_scan  8yield+huge warm  min 73.13 med 137.80 max 329.85 ms (threads 8) minflt/rep 77
+1b_scan  8yield+huge e2e   min 416 med 496 max 628 ms
+1c       1+huge  warm  min 146.50 med 268.66 max 455.84 ms (threads 1) minflt/rep 86
+1c       1+huge  e2e   min 593 med 702 max 984 ms
+1c       8spin+huge warm  min 139.58 med 262.21 max 403.27 ms (threads 8) minflt/rep 103
+1c       8spin+huge e2e   min 447 med 544 max 687 ms
+1c       8yield+huge warm  min 130.65 med 217.22 max 249.14 ms (threads 8) minflt/rep 98
+1c       8yield+huge e2e   min 485 med 529 max 660 ms
+2        1+huge  warm  min 239.93 med 309.29 max 404.99 ms (threads 1) minflt/rep 50
+2        1+huge  e2e   min 452 med 517 max 635 ms
+2        8spin+huge warm  min 298.68 med 420.03 max 830.71 ms (threads 8) minflt/rep 60
+2        8spin+huge e2e   min 770 med 782 max 813 ms
+2        8yield+huge warm  min 273.11 med 408.73 max 3194.62 ms (threads 8) minflt/rep 59
+2        8yield+huge e2e   min 424 med 471 max 1785 ms
+2lazy    1+huge  warm  min 277.52 med 320.05 max 344.26 ms (threads 1) minflt/rep 49
+2lazy    1+huge  e2e   min 854 med 885 max 1017 ms
+2lazy    8spin+huge warm  min 252.70 med 375.88 max 830.29 ms (threads 8) minflt/rep 66
+2lazy    8spin+huge e2e   min 1362 med 1473 max 1633 ms
+2lazy    8yield+huge warm  min 335.69 med 420.00 max 788.53 ms (threads 8) minflt/rep 58
+2lazy    8yield+huge e2e   min 995 med 1218 max 1407 ms
+3a       1+huge  warm  min 32.64 med 47.75 max 79.67 ms (threads 1) minflt/rep 9
+3a       1+huge  e2e   min 108 med 128 max 163 ms
+3a       8spin+huge warm  min 26.65 med 66.18 max 118.96 ms (threads 8) minflt/rep 59
+3a       8spin+huge e2e   min 155 med 170 max 209 ms
+3a       8yield+huge warm  min 40.67 med 60.62 max 575.66 ms (threads 8) minflt/rep 59
+3a       8yield+huge e2e   min 129 med 133 max 180 ms
+3a_loop  1+huge  warm  min 22.41 med 34.00 max 98.77 ms (threads 1) minflt/rep 10
+3a_loop  1+huge  e2e   min 96 med 160 max 168 ms
+3a_loop  8spin+huge warm  min 24.01 med 51.15 max 150.02 ms (threads 8) minflt/rep 59
+3a_loop  8spin+huge e2e   min 96 med 125 max 160 ms
+3a_loop  8yield+huge warm  min 20.97 med 32.72 max 252.24 ms (threads 8) minflt/rep 60
+3a_loop  8yield+huge e2e   min 85 med 96 max 130 ms
+3b       1+huge  warm  min 124.89 med 157.92 max 230.86 ms (threads 1) minflt/rep 32
+3b       1+huge  e2e   min 308 med 338 max 400 ms
+3b       8spin+huge warm  min 64.38 med 78.36 max 124.52 ms (threads 8) minflt/rep 125
+3b       8spin+huge e2e   min 256 med 293 max 443 ms
+3b       8yield+huge warm  min 52.06 med 81.90 max 172.55 ms (threads 8) minflt/rep 115
+3b       8yield+huge e2e   min 276 med 316 max 526 ms
+# end 2026-11-16T17:50:38Z load 17.87 20.01 16.93
+EXIT: 0
+ 17:50:38 up  2:35,  0 user,  load average: 17.87, 20.01, 16.93
+ROUND 5
+COMMAND: env NOBUILD=1 HUGE=1 systems/futhark/bench.sh /home/exedev/paradigms/data/kube-apiserver
+ 17:50:38 up  2:35,  0 user,  load average: 17.87, 20.01, 16.93
+# HUGE=1 2026-11-16T17:50:38Z load 17.87 20.01 16.93 data /home/exedev/paradigms/data/kube-apiserver
+1a       1+huge  warm  min 233.45 med 302.78 max 427.21 ms (threads 1) minflt/rep 79
+1a       1+huge  e2e   min 489 med 549 max 681 ms
+1a       8spin+huge warm  min 176.05 med 302.93 max 532.00 ms (threads 8) minflt/rep 95
+1a       8spin+huge e2e   min 466 med 564 max 718 ms
+1a       8yield+huge warm  min 169.65 med 251.24 max 470.86 ms (threads 8) minflt/rep 89
+1a       8yield+huge e2e   min 390 med 440 max 545 ms
+1b       1+huge  warm  min 1111.27 med 1436.40 max 1695.33 ms (threads 1) minflt/rep 3
+1b       1+huge  e2e   min 1457 med 1673 max 2036 ms
+1b       8spin+huge warm  min 332.14 med 440.00 max 666.90 ms (threads 8) minflt/rep 1
+1b       8spin+huge e2e   min 725 med 794 max 857 ms
+1b       8yield+huge warm  min 299.51 med 461.03 max 683.99 ms (threads 8) minflt/rep 1
+1b       8yield+huge e2e   min 723 med 778 max 914 ms
+1b_scan  1+huge  warm  min 97.56 med 139.39 max 175.39 ms (threads 1) minflt/rep 79
+1b_scan  1+huge  e2e   min 296 med 455 max 591 ms
+1b_scan  8spin+huge warm  min 91.95 med 116.00 max 186.55 ms (threads 8) minflt/rep 79
+1b_scan  8spin+huge e2e   min 373 med 466 max 485 ms
+1b_scan  8yield+huge warm  min 56.02 med 116.31 max 360.56 ms (threads 8) minflt/rep 77
+1b_scan  8yield+huge e2e   min 254 med 282 max 536 ms
+1c       1+huge  warm  min 153.41 med 278.01 max 516.39 ms (threads 1) minflt/rep 86
+1c       1+huge  e2e   min 332 med 585 max 688 ms
+1c       8spin+huge warm  min 113.62 med 147.93 max 195.82 ms (threads 8) minflt/rep 110
+1c       8spin+huge e2e   min 300 med 357 max 388 ms
+1c       8yield+huge warm  min 100.36 med 122.16 max 222.46 ms (threads 8) minflt/rep 99
+1c       8yield+huge e2e   min 277 med 346 max 376 ms
+2        1+huge  warm  min 148.98 med 178.14 max 250.66 ms (threads 1) minflt/rep 50
+2        1+huge  e2e   min 274 med 291 max 316 ms
+2        8spin+huge warm  min 179.14 med 270.74 max 441.04 ms (threads 8) minflt/rep 63
+2        8spin+huge e2e   min 419 med 690 max 761 ms
+2        8yield+huge warm  min 327.45 med 671.97 max 1379.05 ms (threads 8) minflt/rep 59
+2        8yield+huge e2e   min 456 med 806 max 1436 ms
+2lazy    1+huge  warm  min 245.80 med 256.24 max 296.12 ms (threads 1) minflt/rep 49
+2lazy    1+huge  e2e   min 822 med 829 max 1024 ms
+2lazy    8spin+huge warm  min 251.91 med 355.31 max 550.33 ms (threads 8) minflt/rep 60
+2lazy    8spin+huge e2e   min 1514 med 1636 max 1732 ms
+2lazy    8yield+huge warm  min 317.45 med 397.32 max 3403.86 ms (threads 8) minflt/rep 55
+2lazy    8yield+huge e2e   min 1091 med 1683 max 2127 ms
+3a       1+huge  warm  min 32.74 med 49.30 max 173.69 ms (threads 1) minflt/rep 9
+3a       1+huge  e2e   min 147 med 167 max 231 ms
+3a       8spin+huge warm  min 27.18 med 54.28 max 134.78 ms (threads 8) minflt/rep 59
+3a       8spin+huge e2e   min 100 med 172 max 180 ms
+3a       8yield+huge warm  min 42.14 med 60.04 max 304.27 ms (threads 8) minflt/rep 59
+3a       8yield+huge e2e   min 137 med 180 max 311 ms
+3a_loop  1+huge  warm  min 22.32 med 34.16 max 148.65 ms (threads 1) minflt/rep 10
+3a_loop  1+huge  e2e   min 93 med 128 max 150 ms
+3a_loop  8spin+huge warm  min 18.73 med 41.44 max 127.21 ms (threads 8) minflt/rep 60
+3a_loop  8spin+huge e2e   min 104 med 117 max 134 ms
+3a_loop  8yield+huge warm  min 23.99 med 32.84 max 135.74 ms (threads 8) minflt/rep 59
+3a_loop  8yield+huge e2e   min 107 med 117 max 134 ms
+3b       1+huge  warm  min 116.96 med 128.06 max 163.44 ms (threads 1) minflt/rep 32
+3b       1+huge  e2e   min 292 med 360 max 599 ms
+3b       8spin+huge warm  min 65.45 med 82.60 max 120.31 ms (threads 8) minflt/rep 130
+3b       8spin+huge e2e   min 299 med 318 max 364 ms
+3b       8yield+huge warm  min 68.29 med 84.66 max 131.46 ms (threads 8) minflt/rep 108
+3b       8yield+huge e2e   min 224 med 273 max 305 ms
+# end 2026-11-16T17:54:56Z load 15.99 18.23 17.00
+EXIT: 0
+ 17:54:56 up  2:39,  0 user,  load average: 15.99, 18.23, 17.00

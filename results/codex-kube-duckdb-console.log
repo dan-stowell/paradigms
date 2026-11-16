@@ -1,0 +1,796 @@
+Mon Nov 16 17:21:30 UTC 2026
+ 17:21:30 up  2:05,  0 user,  load average: 12.34, 5.50, 4.07
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load1.sql sql/p1.sql
+    2662.69 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.57 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.40 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+    1632.78 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       1.37 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     351.16 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     332.87 ms  CREATE OR REPLACE TEMP TABLE win AS
+     812.61 ms  CREATE OR REPLACE TEMP TABLE canon AS
+       9.67 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       4.15 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    6020.94 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+    1640.99 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     551.02 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       1.48 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+    1209.77 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     452.17 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+load (arrow views + CREATE TABLE): 4789.2 ms
+cell 1a: 1506.3 ms; 68537 minor faults
+cell 1b: 6025.1 ms; 279017 minor faults
+cell 1c: 1641.0 ms; 33452 minor faults
+total process: 16427.1 ms
+RUN STATUS P1 1 0
+CHECK COMMAND: cmp out/p1_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_canon.u32
+CHECK STATUS P1 1 p1_canon 0
+CHECK COMMAND: cmp out/p1_builtin.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_builtin.u32
+CHECK STATUS P1 1 p1_builtin 0
+CHECK COMMAND: cmp out/p1_reltarget.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_reltarget.u32
+CHECK STATUS P1 1 p1_reltarget 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS P1 1 p1c_canon 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load2.sql sql/p2prep.sql sql/p2loop.sql
+     944.10 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       0.97 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       0.52 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     362.82 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+     110.08 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.59 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.24 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.48 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.28 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2loop
+       2.34 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+      16.75 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      48.05 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      22.74 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.54 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.21 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.18 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.19 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       0.46 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       0.17 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       0.45 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+       1.71 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.29 ms  INSERT INTO uii FROM du;
+      36.92 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       1.15 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       0.84 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       1.30 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       0.73 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+       2.05 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.25 ms  INSERT INTO iface FROM ni;
+       1.52 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.31 ms  INSERT INTO called SELECT m FROM call;
+       2.40 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       0.62 ms  INSERT INTO live FROM nl;
+       4.07 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.28 ms  INSERT INTO uii FROM du;
+       0.34 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.52 ms  SELECT count(*) FROM live;
+    926486
+      52.36 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 988.7 ms
+cell 2prep: 474.5 ms; 39597 minor faults
+cell 2loop: 6332.4 ms; 34733 minor faults
+total process: 7883.3 ms
+RUN STATUS P2 1 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2 1 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load1.sql sql/p1.sql sql/load2.sql sql/p2prep.sql sql/p2aux.sql sql/p2eager.sql sql/p2loop.sql
+    1485.92 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.71 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.59 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+     955.07 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       1.46 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     214.22 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     186.94 ms  CREATE OR REPLACE TEMP TABLE win AS
+     616.49 ms  CREATE OR REPLACE TEMP TABLE canon AS
+       5.32 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       5.37 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    4523.37 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+    1753.96 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     767.81 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       1.64 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+    1071.07 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     625.88 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+     919.09 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       0.83 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       0.36 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     535.86 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+     196.09 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.65 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.21 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.50 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.30 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2aux
+    2521.20 ms  CREATE OR REPLACE TEMP TABLE rsrc AS
+       0.97 ms  CREATE OR REPLACE MACRO followed(t) AS TABLE
+       0.32 ms  CREATE OR REPLACE TEMP VIEW rsrc_all AS SELECT id, o, unnest(rels, recursive := true) FROM
+   16177.67 ms  CREATE OR REPLACE TEMP TABLE adjx AS
+-- 2eager
+    7541.46 ms  CREATE OR REPLACE TEMP TABLE adj AS
+       0.85 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.17 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.39 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.25 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2loop
+       0.72 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+      20.47 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      53.14 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      21.19 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.33 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.18 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.16 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.17 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       0.39 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       0.16 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       0.33 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+       1.21 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.27 ms  INSERT INTO uii FROM du;
+      37.01 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       0.70 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       0.44 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       0.87 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       0.58 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+       1.59 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.22 ms  INSERT INTO iface FROM ni;
+       1.44 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.22 ms  INSERT INTO called SELECT m FROM call;
+       1.14 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       0.35 ms  INSERT INTO live FROM nl;
+       3.84 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.22 ms  INSERT INTO uii FROM du;
+       0.27 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.36 ms  SELECT count(*) FROM live;
+    926486
+      36.83 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 3753.6 ms
+cell 1a: 1023.0 ms; 67942 minor faults
+cell 1b: 4528.7 ms; 279109 minor faults
+cell 1c: 1754.0 ms; 48788 minor faults
+cell 2prep: 733.6 ms; 39257 minor faults
+cell 2aux: 18700.1 ms; 494540 minor faults
+cell 2eager: 7543.1 ms; 254272 minor faults
+cell 2loop: 6247.9 ms; 22943 minor faults
+total process: 47119.9 ms
+RUN STATUS P2-eager 1 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2-eager 1 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load1.sql sql/p1.sql sql/load2.sql sql/p2prep.sql sql/p2aux.sql sql/p2lazy.sql sql/p2loop.sql
+    1428.47 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.85 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.65 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+    1127.51 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       2.81 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     320.78 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     312.83 ms  CREATE OR REPLACE TEMP TABLE win AS
+    1073.25 ms  CREATE OR REPLACE TEMP TABLE canon AS
+       8.82 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       7.21 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    6405.98 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+    3230.69 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     786.96 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       4.04 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+    1238.86 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     697.55 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+    1000.58 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       1.20 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       0.66 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     423.63 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+     161.72 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.66 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.21 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.50 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.29 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2aux
+    2439.37 ms  CREATE OR REPLACE TEMP TABLE rsrc AS
+       1.30 ms  CREATE OR REPLACE MACRO followed(t) AS TABLE
+       0.42 ms  CREATE OR REPLACE TEMP VIEW rsrc_all AS SELECT id, o, unnest(rels, recursive := true) FROM
+   20408.05 ms  CREATE OR REPLACE TEMP TABLE adjx AS
+-- 2lazy
+       1.37 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.39 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.94 ms  CREATE OR REPLACE MACRO decoded(t) AS TABLE
+       0.65 ms  CREATE OR REPLACE TEMP VIEW rel_dl AS SELECT id, o, unnest(rels, recursive := true) FROM r
+       0.47 ms  CREATE OR REPLACE TEMP VIEW rel_du AS SELECT id, o, unnest(rels, recursive := true) FROM r
+       1.27 ms  CREATE OR REPLACE TEMP VIEW out_dl AS
+       1.40 ms  CREATE OR REPLACE TEMP VIEW out_du AS
+-- 2loop
+       1.26 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+      27.69 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      65.52 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      32.52 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.79 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.44 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.39 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.37 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       0.78 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       0.29 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       0.63 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+       2.46 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.48 ms  INSERT INTO uii FROM du;
+     198.74 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       2.25 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       1.38 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       1.39 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       0.84 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+       8.09 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.67 ms  INSERT INTO iface FROM ni;
+       2.70 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.51 ms  INSERT INTO called SELECT m FROM call;
+       3.23 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       0.85 ms  INSERT INTO live FROM nl;
+       5.13 ms  CREATE OR REPLACE TEMP TABLE du AS
+       1.01 ms  INSERT INTO uii FROM du;
+       0.64 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.32 ms  SELECT count(*) FROM live;
+    926486
+      49.69 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 3971.8 ms
+cell 1a: 1715.7 ms; 67133 minor faults
+cell 1b: 6413.2 ms; 282142 minor faults
+cell 1c: 3230.7 ms; 45613 minor faults
+cell 2prep: 587.0 ms; 39779 minor faults
+cell 2aux: 22849.1 ms; 484530 minor faults
+cell 2lazy: 6.5 ms; 4 minor faults
+cell 2loop: 21112.9 ms; 50482 minor faults
+total process: 63173.5 ms
+RUN STATUS P2-lazy 1 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2-lazy 1 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load3.sql sql/p3a.sql
+      55.15 ms  CREATE OR REPLACE TABLE placed AS FROM placed_v
+       0.46 ms  CREATE OR REPLACE TABLE bucket AS FROM bucket_v
+       7.29 ms  CREATE OR REPLACE TABLE tlstr AS FROM tlstr_v
+-- 3a
+      95.55 ms  CREATE OR REPLACE TEMP TABLE sym3 AS
+      40.43 ms  CREATE OR REPLACE TEMP TABLE blk AS
+     218.53 ms  CREATE OR REPLACE TEMP TABLE ustart AS
+      45.00 ms  CREATE OR REPLACE TEMP TABLE tlk AS
+      39.22 ms  CREATE OR REPLACE TEMP TABLE tlk2 AS
+       3.71 ms  CREATE OR REPLACE TEMP TABLE tlk AS SELECT i, align, n, pad, k FROM tlk2;
+  (1 rounds)
+     255.19 ms  CREATE OR REPLACE TEMP TABLE addr AS
+      18.01 ms  SELECT addr FROM addr ORDER BY i;
+  dumped 430349 rows to out/p3_addr.u32
+load (arrow views + CREATE TABLE): 68.3 ms
+cell 3a: 698.3 ms; 32482 minor faults
+total process: 831.8 ms
+RUN STATUS 3a 1 0
+CHECK COMMAND: cmp out/p3_addr.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p3_addr.u32
+CHECK STATUS 3a 1 p3_addr 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql
+     195.79 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+      17.98 ms  CREATE OR REPLACE TABLE addr3 AS FROM addr3_v
+     463.92 ms  CREATE OR REPLACE TABLE addrall AS FROM addrall_v
+-- 3b
+     164.71 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+      64.27 ms  (the scatter into the image: 18655 minor faults)
+       1.81 ms  CREATE OR REPLACE TEMP VIEW patch AS
+    1417.36 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+      36.40 ms  (the scatter into the image: 1 minor faults)
+    1116.22 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 759.9 ms
+cell 3b: 1684.6 ms; 102714 minor faults
+total process: 3666.6 ms
+RUN STATUS 3b-isolated 1 0
+CHECK COMMAND: python3 -I check3b.py /home/exedev/paradigms/data/kube-apiserver out/p3_image.bin
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-isolated 1 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 1 sql/load1.sql sql/p1.sql sql/load3.sql sql/p3a.sql sql/load3b.sql sql/p3link.sql sql/p3b.sql
+    1571.73 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.58 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.50 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+    1029.37 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       1.06 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     208.41 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     229.92 ms  CREATE OR REPLACE TEMP TABLE win AS
+     898.14 ms  CREATE OR REPLACE TEMP TABLE canon AS
+       5.53 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       4.17 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    6289.56 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+    1344.83 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     639.50 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       1.48 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+    1091.14 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     552.56 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+      28.62 ms  CREATE OR REPLACE TABLE placed AS FROM placed_v
+       0.78 ms  CREATE OR REPLACE TABLE bucket AS FROM bucket_v
+       3.29 ms  CREATE OR REPLACE TABLE tlstr AS FROM tlstr_v
+-- 3a
+      41.82 ms  CREATE OR REPLACE TEMP TABLE sym3 AS
+      19.84 ms  CREATE OR REPLACE TEMP TABLE blk AS
+     175.64 ms  CREATE OR REPLACE TEMP TABLE ustart AS
+      40.55 ms  CREATE OR REPLACE TEMP TABLE tlk AS
+      29.13 ms  CREATE OR REPLACE TEMP TABLE tlk2 AS
+       2.65 ms  CREATE OR REPLACE TEMP TABLE tlk AS SELECT i, align, n, pad, k FROM tlk2;
+  (1 rounds)
+     219.68 ms  CREATE OR REPLACE TEMP TABLE addr AS
+      22.64 ms  SELECT addr FROM addr ORDER BY i;
+  dumped 430349 rows to out/p3_addr.u32
+     119.42 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+       0.45 ms  CREATE OR REPLACE TABLE fixed AS FROM fixed_v
+-- 3link
+      16.87 ms  CREATE OR REPLACE TEMP TABLE addr3 AS SELECT i, addr FROM addr;
+     318.32 ms  CREATE OR REPLACE TEMP TABLE addrall AS
+-- 3b
+     158.76 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+      61.81 ms  (the scatter into the image: 18440 minor faults)
+       1.86 ms  CREATE OR REPLACE TEMP VIEW patch AS
+    1221.47 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+     100.68 ms  (the scatter into the image: 0 minor faults)
+    1110.04 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 3078.8 ms
+cell 1a: 1342.0 ms; 61490 minor faults
+cell 1b: 6293.7 ms; 279071 minor faults
+cell 1c: 1344.8 ms; 36826 minor faults
+cell 3a: 529.9 ms; 13531 minor faults
+cell 3link: 335.2 ms; 8182 minor faults
+cell 3b: 1544.6 ms; 118037 minor faults
+total process: 18509.0 ms
+RUN STATUS 3b-pipeline 1 0
+CHECK COMMAND: python3 -I check3b.py /home/exedev/paradigms/data/kube-apiserver out/p3_image.bin
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-pipeline 1 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load1.sql sql/p1.sql
+    1481.54 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       1.62 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.93 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+     485.12 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       3.98 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     180.55 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     186.84 ms  CREATE OR REPLACE TEMP TABLE win AS
+     434.10 ms  CREATE OR REPLACE TEMP TABLE canon AS
+      16.14 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+      11.09 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    2327.59 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+     799.81 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     296.74 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       1.33 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+     662.19 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     180.73 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+load (arrow views + CREATE TABLE): 3372.7 ms
+cell 1a: 817.6 ms; 64225 minor faults
+cell 1b: 2338.7 ms; 279412 minor faults
+cell 1c: 799.8 ms; 22330 minor faults
+total process: 9074.4 ms
+RUN STATUS P1 8 0
+CHECK COMMAND: cmp out/p1_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_canon.u32
+CHECK STATUS P1 8 p1_canon 0
+CHECK COMMAND: cmp out/p1_builtin.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_builtin.u32
+CHECK STATUS P1 8 p1_builtin 0
+CHECK COMMAND: cmp out/p1_reltarget.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1_reltarget.u32
+CHECK STATUS P1 8 p1_reltarget 0
+CHECK COMMAND: cmp out/p1c_canon.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p1c_canon.u32
+CHECK STATUS P1 8 p1c_canon 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load2.sql sql/p2prep.sql sql/p2loop.sql
+     326.64 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       1.85 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       9.07 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     291.77 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+      61.97 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.71 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.22 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       4.56 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.57 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2loop
+       4.64 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+       6.89 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      35.90 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      14.66 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.62 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.41 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.28 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.33 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       0.63 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       6.58 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       1.06 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+      15.98 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.81 ms  INSERT INTO uii FROM du;
+      27.38 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       1.28 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       0.72 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       1.56 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       7.29 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+       3.65 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.40 ms  INSERT INTO iface FROM ni;
+       1.79 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.51 ms  INSERT INTO called SELECT m FROM call;
+       2.35 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       0.65 ms  INSERT INTO live FROM nl;
+       6.44 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.49 ms  INSERT INTO uii FROM du;
+       0.53 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.39 ms  SELECT count(*) FROM live;
+    926486
+      27.56 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 377.2 ms
+cell 2prep: 359.8 ms; 69148 minor faults
+cell 2loop: 4893.9 ms; 65055 minor faults
+total process: 5744.1 ms
+RUN STATUS P2 8 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2 8 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load1.sql sql/p1.sql sql/load2.sql sql/p2prep.sql sql/p2aux.sql sql/p2eager.sql sql/p2loop.sql
+     721.63 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.68 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.42 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+     488.46 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       7.52 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     159.37 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     169.34 ms  CREATE OR REPLACE TEMP TABLE win AS
+     414.93 ms  CREATE OR REPLACE TEMP TABLE canon AS
+      19.75 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       5.21 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    2013.24 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+     754.72 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     298.05 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       2.97 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+     652.25 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     283.25 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+     352.46 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       6.82 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       7.40 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     381.78 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+     137.92 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.70 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.17 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.39 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.23 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2aux
+     924.24 ms  CREATE OR REPLACE TEMP TABLE rsrc AS
+       3.10 ms  CREATE OR REPLACE MACRO followed(t) AS TABLE
+       0.90 ms  CREATE OR REPLACE TEMP VIEW rsrc_all AS SELECT id, o, unnest(rels, recursive := true) FROM
+    7040.75 ms  CREATE OR REPLACE TEMP TABLE adjx AS
+-- 2eager
+    3243.16 ms  CREATE OR REPLACE TEMP TABLE adj AS
+       0.79 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.18 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.52 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.30 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2loop
+       4.07 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+       9.41 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      27.37 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      27.06 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.71 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.26 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.20 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.28 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       0.77 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       0.21 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       0.57 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+       4.38 ms  CREATE OR REPLACE TEMP TABLE du AS
+       4.42 ms  INSERT INTO uii FROM du;
+      26.65 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       1.56 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       0.85 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       3.14 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       3.56 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+       2.65 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.37 ms  INSERT INTO iface FROM ni;
+       1.91 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.38 ms  INSERT INTO called SELECT m FROM call;
+      15.40 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       1.00 ms  INSERT INTO live FROM nl;
+       7.49 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.66 ms  INSERT INTO uii FROM du;
+       0.57 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.57 ms  SELECT count(*) FROM live;
+    926486
+      28.03 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 2059.1 ms
+cell 1a: 763.4 ms; 69824 minor faults
+cell 1b: 2018.4 ms; 273603 minor faults
+cell 1c: 754.7 ms; 15161 minor faults
+cell 2prep: 521.2 ms; 69964 minor faults
+cell 2aux: 7969.0 ms; 485115 minor faults
+cell 2eager: 3244.9 ms; 261833 minor faults
+cell 2loop: 6201.3 ms; 45315 minor faults
+total process: 25347.7 ms
+RUN STATUS P2-eager 8 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2-eager 8 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load1.sql sql/p1.sql sql/load2.sql sql/p2prep.sql sql/p2aux.sql sql/p2lazy.sql sql/p2loop.sql
+     736.27 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+      10.18 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       3.79 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+     478.22 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       2.26 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     162.76 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     249.09 ms  CREATE OR REPLACE TEMP TABLE win AS
+     479.10 ms  CREATE OR REPLACE TEMP TABLE canon AS
+      12.37 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+      11.06 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    1762.64 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+     880.33 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     260.67 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+       1.55 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+     530.59 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     245.37 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+     251.95 ms  CREATE OR REPLACE TABLE sym AS FROM sym_v
+       0.98 ms  CREATE OR REPLACE TABLE sig AS FROM sig_v
+       2.93 ms  CREATE OR REPLACE TABLE root AS FROM root_v
+-- 2prep
+     242.03 ms  CREATE OR REPLACE TEMP TABLE adj AS SELECT id AS src, out FROM sym WHERE len(out) > 0;
+      65.90 ms  CREATE OR REPLACE TEMP TABLE meth AS SELECT id AS typ, unnest(meths, recursive := true) FR
+       0.66 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.17 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       0.42 ms  CREATE OR REPLACE TEMP VIEW out_dl AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+       0.22 ms  CREATE OR REPLACE TEMP VIEW out_du AS SELECT unnest(out, recursive := true) FROM adj JOIN 
+-- 2aux
+     688.66 ms  CREATE OR REPLACE TEMP TABLE rsrc AS
+       3.30 ms  CREATE OR REPLACE MACRO followed(t) AS TABLE
+       0.53 ms  CREATE OR REPLACE TEMP VIEW rsrc_all AS SELECT id, o, unnest(rels, recursive := true) FROM
+    5394.62 ms  CREATE OR REPLACE TEMP TABLE adjx AS
+-- 2lazy
+       0.72 ms  CREATE OR REPLACE TEMP TABLE dl (id UINTEGER);
+       0.26 ms  CREATE OR REPLACE TEMP TABLE du (id UINTEGER);
+       5.50 ms  CREATE OR REPLACE MACRO decoded(t) AS TABLE
+       0.62 ms  CREATE OR REPLACE TEMP VIEW rel_dl AS SELECT id, o, unnest(rels, recursive := true) FROM r
+       0.49 ms  CREATE OR REPLACE TEMP VIEW rel_du AS SELECT id, o, unnest(rels, recursive := true) FROM r
+       1.28 ms  CREATE OR REPLACE TEMP VIEW out_dl AS
+       3.44 ms  CREATE OR REPLACE TEMP VIEW out_du AS
+-- 2loop
+       5.28 ms  CREATE OR REPLACE TEMP TABLE live AS SELECT DISTINCT id FROM root WHERE id <> 0;
+      12.07 ms  CREATE OR REPLACE TEMP TABLE iface AS SELECT id FROM sym WHERE fl & 16 <> 0;
+      37.65 ms  CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;      -- defined go
+      22.36 ms  CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;     -- callers of
+       0.60 ms  CREATE OR REPLACE TEMP TABLE uii (id UINTEGER);           -- types already handled as used
+       0.22 ms  CREATE OR REPLACE TEMP TABLE sigs (x UINTEGER);           -- interface methods some live c
+       0.22 ms  CREATE OR REPLACE TEMP TABLE named (n UINTEGER);          -- method names called by name
+       0.22 ms  CREATE OR REPLACE TEMP TABLE refl (b INTEGER);            -- one row once reflect's Method
+       1.95 ms  CREATE OR REPLACE TEMP TABLE cand AS SELECT * FROM meth LIMIT 0;  -- methods of used-in-in
+       0.25 ms  CREATE OR REPLACE TEMP TABLE called (m UINTEGER);
+       0.67 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM live;
+       7.28 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.73 ms  INSERT INTO uii FROM du;
+      88.06 ms  CREATE OR REPLACE TEMP TABLE out_l AS FROM out_dl;
+       1.51 ms  INSERT INTO sigs SELECT DISTINCT dst FROM out_l ANTI JOIN sigs ON sigs.x = out_l.dst WHERE
+       1.37 ms  INSERT INTO named SELECT DISTINCT dst FROM out_l ANTI JOIN named ON named.n = out_l.dst WH
+       4.09 ms  INSERT INTO refl SELECT 1 WHERE NOT EXISTS (FROM refl) AND EXISTS (FROM dl SEMI JOIN rf US
+       1.03 ms  INSERT INTO cand SELECT meth.* FROM meth JOIN du ON meth.typ = du.id;
+      11.26 ms  CREATE OR REPLACE TEMP TABLE ni AS
+       0.70 ms  INSERT INTO iface FROM ni;
+       6.97 ms  CREATE OR REPLACE TEMP TABLE call AS
+       0.42 ms  INSERT INTO called SELECT m FROM call;
+       3.57 ms  CREATE OR REPLACE TEMP TABLE nl AS
+       0.54 ms  INSERT INTO live FROM nl;
+       7.50 ms  CREATE OR REPLACE TEMP TABLE du AS
+       0.58 ms  INSERT INTO uii FROM du;
+       0.60 ms  CREATE OR REPLACE TEMP TABLE dl AS FROM nl;
+  (39 rounds)
+       0.35 ms  SELECT count(*) FROM live;
+    926486
+      39.21 ms  SELECT id FROM live ORDER BY id;
+  dumped 926486 rows to out/p2_live.u32
+load (arrow views + CREATE TABLE): 2238.2 ms
+cell 1a: 903.3 ms; 67881 minor faults
+cell 1b: 1773.7 ms; 279569 minor faults
+cell 1c: 880.3 ms; 19501 minor faults
+cell 2prep: 309.4 ms; 64842 minor faults
+cell 2aux: 6087.1 ms; 469041 minor faults
+cell 2lazy: 12.3 ms; 3 minor faults
+cell 2loop: 14549.5 ms; 137618 minor faults
+total process: 28282.7 ms
+RUN STATUS P2-lazy 8 0
+CHECK COMMAND: cmp out/p2_live.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p2_live.u32
+CHECK STATUS P2-lazy 8 p2_live 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load3.sql sql/p3a.sql
+      23.31 ms  CREATE OR REPLACE TABLE placed AS FROM placed_v
+       9.28 ms  CREATE OR REPLACE TABLE bucket AS FROM bucket_v
+      18.52 ms  CREATE OR REPLACE TABLE tlstr AS FROM tlstr_v
+-- 3a
+      53.46 ms  CREATE OR REPLACE TEMP TABLE sym3 AS
+      44.34 ms  CREATE OR REPLACE TEMP TABLE blk AS
+     306.41 ms  CREATE OR REPLACE TEMP TABLE ustart AS
+     107.16 ms  CREATE OR REPLACE TEMP TABLE tlk AS
+      39.83 ms  CREATE OR REPLACE TEMP TABLE tlk2 AS
+      11.56 ms  CREATE OR REPLACE TEMP TABLE tlk AS SELECT i, align, n, pad, k FROM tlk2;
+  (1 rounds)
+     234.23 ms  CREATE OR REPLACE TEMP TABLE addr AS
+      24.29 ms  SELECT addr FROM addr ORDER BY i;
+  dumped 430349 rows to out/p3_addr.u32
+load (arrow views + CREATE TABLE): 55.1 ms
+cell 3a: 799.6 ms; 47179 minor faults
+total process: 960.2 ms
+RUN STATUS 3a 8 0
+CHECK COMMAND: cmp out/p3_addr.u32 /home/exedev/paradigms/data/kube-apiserver/oracle/p3_addr.u32
+CHECK STATUS 3a 8 p3_addr 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load3b.sql sql/load3b_iso.sql sql/p3b.sql
+     156.02 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+      16.97 ms  CREATE OR REPLACE TABLE addr3 AS FROM addr3_v
+     170.60 ms  CREATE OR REPLACE TABLE addrall AS FROM addrall_v
+-- 3b
+     183.42 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+     149.06 ms  (the scatter into the image: 18556 minor faults)
+       2.08 ms  CREATE OR REPLACE TEMP VIEW patch AS
+     856.32 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+     103.82 ms  (the scatter into the image: 7 minor faults)
+     581.48 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 443.6 ms
+cell 3b: 1294.7 ms; 116640 minor faults
+total process: 2638.6 ms
+RUN STATUS 3b-isolated 8 0
+CHECK COMMAND: python3 -I check3b.py /home/exedev/paradigms/data/kube-apiserver out/p3_image.bin
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-isolated 8 0
+RUN COMMAND: ./dk /home/exedev/paradigms/data/kube-apiserver 8 sql/load1.sql sql/p1.sql sql/load3.sql sql/p3a.sql sql/load3b.sql sql/p3link.sql sql/p3b.sql
+     629.55 ms  CREATE OR REPLACE TABLE slot AS FROM slot_v
+       0.95 ms  CREATE OR REPLACE TABLE want AS FROM want_v
+       0.57 ms  CREATE OR REPLACE TABLE builtin AS FROM builtin_v
+     392.62 ms  CREATE OR REPLACE TABLE srel AS FROM srel_v
+       6.75 ms  CREATE OR REPLACE TABLE obj AS FROM obj_v
+-- 1a
+     160.30 ms  CREATE OR REPLACE TEMP TABLE grp AS
+     166.49 ms  CREATE OR REPLACE TEMP TABLE win AS
+     363.39 ms  CREATE OR REPLACE TEMP TABLE canon AS
+      13.90 ms  CREATE OR REPLACE TEMP TABLE builtin_canon AS
+-- 1b
+       6.65 ms  CREATE OR REPLACE TEMP TABLE pkgbase AS
+    2645.35 ms  CREATE OR REPLACE TEMP TABLE reltarget AS
+-- 1c
+     826.45 ms  CREATE OR REPLACE TEMP TABLE canon2 AS
+     410.60 ms  SELECT canon FROM canon ORDER BY id;
+  dumped 13270145 rows to out/p1_canon.u32
+      11.32 ms  SELECT canon FROM builtin_canon ORDER BY i;
+  dumped 299 rows to out/p1_builtin.u32
+     571.70 ms  SELECT tgt FROM reltarget ORDER BY r;
+  dumped 19824324 rows to out/p1_reltarget.u32
+     294.82 ms  SELECT canon FROM canon2 ORDER BY id;
+  dumped 13270145 rows to out/p1c_canon.u32
+      16.14 ms  CREATE OR REPLACE TABLE placed AS FROM placed_v
+       0.81 ms  CREATE OR REPLACE TABLE bucket AS FROM bucket_v
+       3.35 ms  CREATE OR REPLACE TABLE tlstr AS FROM tlstr_v
+-- 3a
+      39.48 ms  CREATE OR REPLACE TEMP TABLE sym3 AS
+      28.55 ms  CREATE OR REPLACE TEMP TABLE blk AS
+     337.37 ms  CREATE OR REPLACE TEMP TABLE ustart AS
+      77.22 ms  CREATE OR REPLACE TEMP TABLE tlk AS
+      49.30 ms  CREATE OR REPLACE TEMP TABLE tlk2 AS
+       6.10 ms  CREATE OR REPLACE TEMP TABLE tlk AS SELECT i, align, n, pad, k FROM tlk2;
+  (1 rounds)
+     216.46 ms  CREATE OR REPLACE TEMP TABLE addr AS
+      11.89 ms  SELECT addr FROM addr ORDER BY i;
+  dumped 430349 rows to out/p3_addr.u32
+     106.57 ms  CREATE OR REPLACE TABLE sym3b AS FROM sym3b_v
+       2.49 ms  CREATE OR REPLACE TABLE fixed AS FROM fixed_v
+-- 3link
+      14.86 ms  CREATE OR REPLACE TEMP TABLE addr3 AS SELECT i, addr FROM addr;
+     285.23 ms  CREATE OR REPLACE TEMP TABLE addrall AS
+-- 3b
+     306.57 ms  SELECT addr - getvariable('imageBase') AS pos, bytes FROM sym3b JOIN addr3 USING (i) WHERE
+      99.49 ms  (the scatter into the image: 19211 minor faults)
+       4.32 ms  CREATE OR REPLACE TEMP VIEW patch AS
+     988.12 ms  SELECT pos, CASE WHEN kind = 4 AND T = 0 THEN 4 ELSE siz END, CASE WHEN kind = 4 AND T = 0
+      68.98 ms  (the scatter into the image: 1 minor faults)
+     456.40 ms  SELECT count(*) AS relocations, count(*) FILTER (err) AS errors FROM patch;
+    2823088 | 0
+load (arrow views + CREATE TABLE): 1489.5 ms
+cell 1a: 704.1 ms; 64786 minor faults
+cell 1b: 2652.0 ms; 278596 minor faults
+cell 1c: 826.4 ms; 21772 minor faults
+cell 3a: 755.3 ms; 17345 minor faults
+cell 3link: 300.1 ms; 3271 minor faults
+cell 3b: 1467.5 ms; 85801 minor faults
+total process: 10669.8 ms
+RUN STATUS 3b-pipeline 8 0
+CHECK COMMAND: python3 -I check3b.py /home/exedev/paradigms/data/kube-apiserver out/p3_image.bin
+72579169 bytes checked, 0 placed symbols differ
+P3b OK
+CHECK STATUS 3b-pipeline 8 0
+Mon Nov 16 17:25:56 UTC 2026
+ 17:25:56 up  2:10,  0 user,  load average: 23.13, 14.90, 8.32
+2026-11-16T17:25:56Z
+ 17:25:56 up  2:10,  0 user,  load average: 23.13, 14.90, 8.32
+1a               1 threads warm  min    877.5 median    991.5 max   1499.9 ms (5 rounds)
+1b               1 threads warm  min   3485.4 median   4189.7 max   6193.3 ms (5 rounds)
+1c               1 threads warm  min   1144.2 median   1472.2 max   2378.1 ms (5 rounds)
+2eager           1 threads warm  min   7317.6 median   8539.1 max  11485.2 ms (5 rounds)
+2loop            1 threads warm  min   5004.1 median   6767.4 max   9075.5 ms (5 rounds)
+2loop-eager      1 threads warm  min   5474.2 median   6842.6 max   9514.3 ms (5 rounds)
+2loop-lazy       1 threads warm  min  12388.4 median  13640.9 max  19550.4 ms (5 rounds)
+2prep            1 threads warm  min    449.7 median    610.0 max    758.3 ms (5 rounds)
+3a               1 threads warm  min    438.6 median    448.2 max    511.4 ms (5 rounds)
+3b               1 threads warm  min   1372.3 median   1612.8 max   2060.6 ms (5 rounds)
+3b-hugepages     1 threads warm  min   1269.0 median   1614.6 max   2877.2 ms (5 rounds)
+P1               1 threads e2e   min  10031.6 median  11407.1 max  14792.3 ms (5 rounds)
+P1-P3            1 threads e2e   min  12946.5 median  14437.6 max  18607.5 ms (5 rounds)
+P2               1 threads e2e   min   6464.0 median   8362.1 max   8991.0 ms (5 rounds)
+P3a              1 threads e2e   min    544.2 median    720.6 max    816.5 ms (5 rounds)
+P3b              1 threads e2e   min   2666.2 median   3303.2 max   4265.4 ms (5 rounds)
+1a               8 threads warm  min    225.9 median    411.2 max    590.1 ms (5 rounds)
+1b               8 threads warm  min    693.7 median   1252.9 max   1473.1 ms (5 rounds)
+1c               8 threads warm  min    238.4 median    438.7 max    586.0 ms (5 rounds)
+2eager           8 threads warm  min   1599.0 median   2856.1 max   3470.0 ms (5 rounds)
+2loop            8 threads warm  min   2767.2 median   3687.5 max   5904.1 ms (5 rounds)
+2loop-eager      8 threads warm  min   2934.7 median   4395.7 max   6786.3 ms (5 rounds)
+2loop-lazy       8 threads warm  min   4489.3 median   9663.5 max  15583.7 ms (5 rounds)
+2prep            8 threads warm  min    158.6 median    272.4 max    374.0 ms (5 rounds)
+3a               8 threads warm  min    326.0 median    594.0 max   1159.0 ms (5 rounds)
+3b               8 threads warm  min    405.4 median    968.5 max   1707.3 ms (5 rounds)
+3b-hugepages     8 threads warm  min    379.3 median    897.9 max   1347.5 ms (5 rounds)
+P1               8 threads e2e   min   2347.5 median   4136.2 max   7483.0 ms (5 rounds)
+P1-P3            8 threads e2e   min   3535.2 median   5739.1 max   9433.7 ms (5 rounds)
+P2               8 threads e2e   min   2919.8 median   4446.3 max   7401.3 ms (5 rounds)
+P3a              8 threads e2e   min    438.5 median    529.0 max   1071.6 ms (5 rounds)
+P3b              8 threads e2e   min    871.7 median   1690.1 max   2484.3 ms (5 rounds)
+cell 3b-hugepages: min 1185.7 median 1269.0 max 1420.3 ms over 5 reps; 81436 minor faults in rep 1, 47814 per later rep
+cell 3b-hugepages: min 1213.1 median 1347.5 max 1513.2 ms over 5 reps; 91613 minor faults in rep 1, 52381 per later rep
+cell 3b-hugepages: min 1264.1 median 1361.6 max 1427.1 ms over 5 reps; 78775 minor faults in rep 1, 45351 per later rep
+cell 3b-hugepages: min 1386.8 median 1614.6 max 2048.2 ms over 5 reps; 80482 minor faults in rep 1, 46617 per later rep
+Mon Nov 16 18:15:01 UTC 2026
+ 18:15:01 up  2:59,  0 user,  load average: 3.76, 5.66, 9.93
