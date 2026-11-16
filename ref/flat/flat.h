@@ -32,6 +32,15 @@ static const void *fmap(const char *name, size_t *n) {
 	void *m = mmap(NULL, lastSize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
 	if (m == MAP_FAILED) { perror(p); exit(2); }
 	close(fd);
+	// FLAT_HUGE=1: copy files of >= 2 MB onto 2 MB pages (MAP_HUGETLB, needs vm.nr_hugepages; falls back to the file
+	// mapping): page-cache mappings are 4 KB, so a random walk over a big column misses the TLB (ATTACKS 2)
+	static int huge = -1;
+	if (huge < 0) huge = getenv("FLAT_HUGE") && atoi(getenv("FLAT_HUGE"));
+	if (huge && lastSize >= (2u << 20)) {
+		size_t hn = (lastSize + (2u << 20) - 1) & ~(size_t)((2u << 20) - 1);
+		void *h = mmap(NULL, hn, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+		if (h != MAP_FAILED) { memcpy(h, m, lastSize); munmap(m, lastSize); return h; }
+	}
 	return m;
 }
 #define FMAP(T, name, cnt) ((const T *)fmap(name, cnt))
