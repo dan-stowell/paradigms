@@ -1,11 +1,11 @@
 # STATUS (at most ten lines; updated at every milestone and whenever Dan is needed)
 
-2026-11-16T16:04:04Z. Campaign 1, M0 done, M1/M2 in flight: builders for Soufflé, Futhark, Halide, Goose, DuckDB (new column) and P4 data.
-Oracle number: 0/20 paradigm cells merged yet (several correct on branches), **1 ATTACKS entry backed by a measurement**.
-Surprise (ATTACKS 1): the pre-decoded graph was the wrong shape for reach. The flood reads 21-29% of its edges; eager
-decode+CSR+flood is 108.7 / 30.1 ms (1/8 threads), decoding relocation columns inside the flood is 52.6 / 13.6 ms,
-vs hlink's raw-object flood 98-103 / 22-23 (caveats in ATTACKS.md). kube-apiserver is the second dataset (all C refs OK).
-C refs now complete: 1c partitioned join 7.2-8.9 ms on 8 threads (hlink 8-9); P3 runs as a real 3a -> 3b pipeline.
+2026-11-16T16:23Z. Campaign 1, M0 done, M1/M2 in flight: five builders resumed (Soufflé, Futhark, Halide, Goose, DuckDB); 0/20 cells merged yet.
+**2 ATTACKS entries backed by measurement.** 1: reach, decoding relocation columns inside the flood is 2x the eager decode+CSR+flood
+(52.6 / 13.6-15.4 vs 108.7 / 30.1 ms; Codex reproduced 2.1-2.6x); the hlink ratio is withdrawn (not equivalent work).
+2: relocate on 2 MB output pages, 24 vs 49 ms on 1 thread and **5.4-6.8 ms on 8 = 1.1-1.4x the 4.92 ms floor** (14 on 4 KB pages).
+Next lead hypothesis (Codex testing): resolve's join is bound by 4 passes over the dense 83 MB key array, of which 15% is keyed.
+VM bandwidth measured: 25 GB/s read on 1 thread, 36 on 8 (FLOOR.md assumes more; floors here are optimistic by ~2x).
 
 ## Decisions for Dan
-- None yet. (DuckDB added as a 6th column before M2: JOURNAL 15:58Z says why.)
+- None. (PLAN.md's campaign text had been truncated by an agent's Now-line edit; restored from git at 16:22Z.)
