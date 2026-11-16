@@ -263,6 +263,18 @@ maintained sequences are not yet covered: skeptic-inc, 20:22Z) (the fuzzer found
 sig count whose remaining sources were its own targets, and a lost re-check across removals in one update). The
 same quiet window corrects DD's 8-worker edit-2 update: 29 ms, not 555 (that was load).
 
+**Observation 4: layout must retain space as well as identities; package slack makes the addition local, not the
+deletion** ([results/c-relayout.md](results/c-relayout.md), `ref/flat/p3inc.c`, C, 1 core, 5 interleaved rounds 20:31Z,
+load 3.4-4.2; lead reran `ref/flat/check-p3inc.sh` 20:52Z: P3INC OK and P3INC INDEPENDENT OK on both edits). Today's
+layout moves **261,723 / 352,863** common placed symbols after edits 1 / 2, changing **1.23 M / 1.82 M** relocation
+values and **35.1 / 76.7 MB** of produced image: even the 5-line addition is a full relink. Retained per-(bucket,
+package) arenas rounded up to the next 4 KB (one global typelink arena) cut that to **3 / 101,483** moved addresses,
+**34 / 869,439** repatches and **1 KB / 32.9 MB** changed. With a reverse target->site index the addition updates in
+**0.44 µs vs 112.8 ms** for the full p3 pipeline; the deletion takes **95.1 vs 98.9 ms**, within noise: no win. Two
+reasons: arenas re-lay-out (compact) inside a changed package, and the typelink arena is a global sort (32,424 moved,
+404,622 repatches). The 4 KB policy costs 58.8 MB of produced slack (54% of the image) where the edits grew arenas by
+only 272 / 7,056 bytes in total: per-arena reservation is the wrong allocator.
+
 **Attack.** (1) Give symbols a stable identity at extraction: (package path, name) or content hash, per-object
 order only as a last resort, and tie-breaks by name hash, not position; then the input diff of an edit is the edit's
 size (31 symbols), and nothing pays 0.7-1.1 s to find it. (2) Keep reach and resolve as maintained collections
