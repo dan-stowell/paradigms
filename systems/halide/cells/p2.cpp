@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
         std::vector<u32> list;
         for (int g = 1; g < nid; g++)
             if (st(g)) list.push_back(g);  // the LIVE region
-        printf("%d levels in %d rounds, %ld blocks of 1024 ids; ", levels, rounds, blocks);
+        printf("%d levels in %d rounds, %ld blocks of 16 ids; ", levels, rounds, blocks);
         return check32("live", list.data(), list.size(), "oracle/p2_live.u32") != 0;
     };
     const char *th = getenv("HL_NUM_THREADS");
