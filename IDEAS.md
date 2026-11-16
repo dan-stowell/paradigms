@@ -41,6 +41,6 @@ abstracts or memory and say so: check before citing):
 
 | test | source | status |
 |---|---|---|
-| BFS level count and frontier-size histogram on the flat graph | resolve-reach 9 | open |
+| BFS level count and frontier-size histogram on the flat graph | resolve-reach 9 | **done 17:35Z** (results/levels.md): 111 levels; 81 have frontier < 4,096 and hold 5.9% of pops; the 8 widest hold 54%. Suggests a hybrid: parallel while wide, sequential drain for the tail |
 | relocation-kind histogram of the 2.05 M live relocations | layout-codegen | open |
 | shape-coverage recount for problem 4 | layout-codegen | open (M4) |
