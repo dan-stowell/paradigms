@@ -72,3 +72,5 @@ reruns of the 8-thread numbers, and the new columns (GraphBLAS for reach as a se
 - 2026-11-16T17:18:19Z M3/M4 launched: 5 Opus builders (Halide P4, Futhark P4, DuckDB P2 + Soufflé 3a second attempts, GraphBLAS, level-free floods) + Codex kube-apiserver runs.
 - 2026-11-16T17:19:05Z frontier histogram (ref/flat/p2levels.c, results/levels.md): 81 of 111 levels < 4K frontier, 6% of work; hybrid wide-parallel / sequential-tail flood suggested.
 - 2026-11-16T17:19:34Z relocation histogram (results/relkinds.*): 8 (kind,width) pairs, rel32 56%, top 100 targets = 30% of 2.05 M.
+
+- 2026-11-16T17:24Z (codex-p4par): implement P4 OpenMP local scans + chunk-base addition, contiguous function emission balanced by item count, private relocation vectors concatenated in deterministic range order, explicit 2 MB output with fallback. Add warm in-process repeats to serial comparator, oracle check at 1/8 threads, and reproducible interleaved benchmark/count scripts. Oracle passes independently including fallback and constrained team; measurements underway in results/codex-p4par-runs.log.

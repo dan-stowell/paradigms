@@ -1,7 +1,8 @@
 // p4.c: problem 4 (code generation by shape) from the flat files, plainly, on one core: every function body
 // fc's tree walker wrote, rebuilt from byte templates and operands. Checks itself against oracle/p4_code.bin
 // (byte for byte) and the relocations against oracle/p4_rel_* (as a sorted list).
-//   ref/p4/p4 data/minio-p4 [out.bin]
+//   build/p4 data/minio-p4 [out.bin]
+// P4_REPS measured iterations after one warmup; buffers reused, sort/check untimed.
 #include "../flat/flat.h"
 
 enum { encInt = 1, encRel32 = 2, encReloc = 3 };
@@ -49,82 +50,93 @@ int main(int argc, char **argv) {
 	const u16 *holeRtype = FMAP(u16, "hole_rtype.u16", NULL);
 
 	// ---- 1. the length of every item (a glue run, or one segment of a node's template), then where it goes
-	double t0 = now();
+	int reps = getenv("P4_REPS") ? atoi(getenv("P4_REPS")) : 1;
+	if (reps < 1) { fprintf(stderr, "P4_REPS must be positive\n"); return 2; }
 	u64 *at = malloc(8 * ((size_t)nitem + 1));
-	u64 pos = 0;
-	for (u32 i = 0; i < nitem; i++) {
-		at[i] = pos;
-		u32 r = itemRef[i];
-		if (itemKind[i] == 0) {
-			pos += glueOff[r + 1] - glueOff[r];
-		} else {
-			u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[t];
-			pos += tsegEnd[b + s] - (s ? tsegEnd[b + s - 1] : 0);
-		}
-	}
-	at[nitem] = pos;
-	double t1 = now();
-
-	// ---- 2. emit: copy each item's bytes, patch the holes of node segments
-	u8 *code = malloc(pos ? pos : 1);
+	u8 *code = malloc(ncode ? ncode : 1);
 	Rel *rel = malloc(sizeof(Rel) * ((size_t)nrel + 1));
-	u64 nr = 0, nerr = 0;
-	for (u32 f = 0; f < nfn; f++) {
-		u64 fstart = at[fnItem[f]];
-		for (u32 m = fnMarkOff[f]; m < fnMarkOff[f + 1]; m++)
-			rel[nr++] = (Rel){fstart + markOff[m], markAdd[m], markSym[m], markType[m], 0};
-		for (u32 i = fnItem[f]; i < fnItem[f + 1]; i++) {
+	double layoutBest = 1e9, emitBest = 1e9, total = 0;
+	u64 pos = 0, nr = 0, nerr = 0;
+	for (int rep = 0; rep <= reps; rep++) { // first iteration warms buffers; excluded
+		double t0 = now();
+		pos = 0;
+		for (u32 i = 0; i < nitem; i++) {
+			at[i] = pos;
 			u32 r = itemRef[i];
-			u8 *P = code + at[i];
 			if (itemKind[i] == 0) {
-				memcpy(P, glueBin + glueOff[r], glueOff[r + 1] - glueOff[r]);
-				for (u32 k = glueRelOff[r]; k < glueRelOff[r + 1]; k++)
-					rel[nr++] = (Rel){at[i] + grelOff[k], grelAdd[k], grelSym[k], grelType[k], grelSiz[k]};
-				continue;
+				pos += glueOff[r + 1] - glueOff[r];
+			} else {
+				u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[t];
+				pos += tsegEnd[b + s] - (s ? tsegEnd[b + s - 1] : 0);
 			}
-			u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[t];
-			u32 lo = s ? tsegEnd[b + s - 1] : 0, hi = tsegEnd[b + s];
-			memcpy(P, tmplBin + tmplOff[t] + lo, hi - lo);
-			// the template's holes in [lo, hi): they are sorted by offset
-			u32 h0 = tmplHoleOff[t], h1 = tmplHoleOff[t + 1];
-			while (h0 < h1) {
-				u32 mid = (h0 + h1) / 2;
-				if (holeAt[mid] < lo) h0 = mid + 1; else h1 = mid;
-			}
-			for (u32 h = h0; h < tmplHoleOff[t + 1] && holeAt[h] < hi; h++) {
-				u32 o = nodeOp[r] + (h - tmplHoleOff[t]);
-				u64 hp = at[i] + holeAt[h] - lo;
-				i64 v = opVal[o];
-				switch (holeEnc[h]) {
-				case encInt:
-					switch (holeW[h]) {
-					case 1: code[hp] = (u8)v; break;
-					case 2: { u16 x = (u16)v; memcpy(code + hp, &x, 2); break; }
-					case 4: { u32 x = (u32)v; memcpy(code + hp, &x, 4); break; }
-					case 8: memcpy(code + hp, &v, 8); break;
+		}
+		at[nitem] = pos;
+		double t1 = now();
+
+		// ---- 2. emit: copy each item's bytes, patch the holes of node segments
+		nr = nerr = 0;
+		for (u32 f = 0; f < nfn; f++) {
+			u64 fstart = at[fnItem[f]];
+			for (u32 m = fnMarkOff[f]; m < fnMarkOff[f + 1]; m++)
+				rel[nr++] = (Rel){fstart + markOff[m], markAdd[m], markSym[m], markType[m], 0};
+			for (u32 i = fnItem[f]; i < fnItem[f + 1]; i++) {
+				u32 r = itemRef[i];
+				u8 *P = code + at[i];
+				if (itemKind[i] == 0) {
+					memcpy(P, glueBin + glueOff[r], glueOff[r + 1] - glueOff[r]);
+					for (u32 k = glueRelOff[r]; k < glueRelOff[r + 1]; k++)
+						rel[nr++] = (Rel){at[i] + grelOff[k], grelAdd[k], grelSym[k], grelType[k], grelSiz[k]};
+					continue;
+				}
+				u32 t = nodeTmpl[r], s = itemSeg[i], b = tmplSegOff[t];
+				u32 lo = s ? tsegEnd[b + s - 1] : 0, hi = tsegEnd[b + s];
+				memcpy(P, tmplBin + tmplOff[t] + lo, hi - lo);
+				// the template's holes in [lo, hi): they are sorted by offset
+				u32 h0 = tmplHoleOff[t], h1 = tmplHoleOff[t + 1];
+				while (h0 < h1) {
+					u32 mid = (h0 + h1) / 2;
+					if (holeAt[mid] < lo) h0 = mid + 1; else h1 = mid;
+				}
+				for (u32 h = h0; h < tmplHoleOff[t + 1] && holeAt[h] < hi; h++) {
+					u32 o = nodeOp[r] + (h - tmplHoleOff[t]);
+					u64 hp = at[i] + holeAt[h] - lo;
+					i64 v = opVal[o];
+					switch (holeEnc[h]) {
+					case encInt:
+						switch (holeW[h]) {
+						case 1: code[hp] = (u8)v; break;
+						case 2: { u16 x = (u16)v; memcpy(code + hp, &x, 2); break; }
+						case 4: { u32 x = (u32)v; memcpy(code + hp, &x, 4); break; }
+						case 8: memcpy(code + hp, &v, 8); break;
+						default: nerr++;
+						}
+						break;
+					case encRel32: { // a jump to (item, offset) of the same function
+						i32 x = (i32)((i64)(at[v] + opAux[o]) - (i64)(hp + 4));
+						memcpy(code + hp, &x, 4);
+						break;
+					}
+					case encReloc:
+						if (nr < nrel) rel[nr] = (Rel){hp, opAux[o], (u32)v, holeRtype[h], holeW[h]};
+						nr++;
+						break;
 					default: nerr++;
 					}
-					break;
-				case encRel32: { // a jump to (item, offset) of the same function
-					i32 x = (i32)((i64)(at[v] + opAux[o]) - (i64)(hp + 4));
-					memcpy(code + hp, &x, 4);
-					break;
-				}
-				case encReloc:
-					if (nr < nrel) rel[nr] = (Rel){hp, opAux[o], (u32)v, holeRtype[h], holeW[h]};
-					nr++;
-					break;
-				default: nerr++;
 				}
 			}
 		}
+		double t2 = now();
+		if (rep) {
+			if (t1 - t0 < layoutBest) layoutBest = t1 - t0;
+			if (t2 - t1 < emitBest) emitBest = t2 - t1;
+			total += t2 - t0;
+		}
 	}
-	double t2 = now();
+	double ts = now();
 	qsort(rel, nr < nrel ? nr : nrel, sizeof(Rel), cmpRel);
-	double t3 = now();
-	printf("p4 (1 core): lay out %.1f ms, emit %.1f ms (%llu bytes, %u items), sort relocations %.1f ms (%llu); %llu errors\n",
-	       (t1 - t0) * 1e3, (t2 - t1) * 1e3, (unsigned long long)pos, nitem, (t3 - t2) * 1e3, (unsigned long long)nr,
-	       (unsigned long long)nerr);
+	printf("p4 (1 core): lay out %.3f ms, emit %.3f ms (%llu bytes, %u items), sort relocations %.3f ms (%llu); %llu errors; reps %d total %.3f s\n",
+	       layoutBest * 1e3, emitBest * 1e3, (unsigned long long)pos, nitem, (now() - ts) * 1e3,
+	       (unsigned long long)nr, (unsigned long long)nerr, reps, total);
 
 	// ---- check
 	long bad = nerr != 0;
