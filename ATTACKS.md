@@ -41,3 +41,29 @@ a gather inside a fixpoint. Futhark/Halide want the edge list materialized (the 
 Soufflé's rule `live(t) <- live(s), rel(s, r), target(r, t)` evaluated semi-naively is exactly the lazy shape,
 if its join on `rel` runs over the columns rather than a B-tree. That is the kill test for each paradigm's P2 cell:
 does it beat 108.7 / 30.1 ms (the eager pipeline) when its own input decode is counted?
+
+## 2. Relocate: the output's page faults are half the work (draft: quiet-machine numbers pending)
+
+**Problem.** Relocate (3b): copy 76 MB of symbol bytes into a 109 MB image and patch 2.05 M relocations (MinIO).
+
+**Before.** The plain C reference callocs the image and writes it: 48-68 ms on 1 core (85-115 in noisy runs).
+The FLOOR.md floor for hlink's write phase is 4.92 ms on 8 cores.
+
+**Observation.** First-touching the image (memset outside the timed region, `P3_PREFAULT=1 build/p3`) costs 45-64 ms,
+and the copy + patch that remains is 31-35 ms: on 4 KB pages, **the kernel zeroing and mapping 26,700 pages is
+about half of relocate.** (2026-11-16T16:05Z, load ~1-2.)
+
+**Attack.** Put the output on 2 MB huge pages (53 faults): `P3_THP=1 build/p3` maps the image MAP_HUGETLB (with
+`vm.nr_hugepages=512` reserved; this kernel has no transparent huge pages), faults included in the timed region.
+
+**Number (provisional, load 2-4.6 from the builders).** 1 thread: **25.0-29.2 ms vs 48-68 ms** on 4 KB pages (2x),
+P3 OK. 8 threads (`build/p3par`, the same loop under `omp parallel for`; placed symbols have disjoint ranges):
+16.8-27.4 ms huge vs 30.0-35.9 ms 4 KB. Still 3-5x the 4.92 ms floor; the 8-thread numbers need a quiet machine.
+
+**Note for the grid.** This VM had `vm.nr_hugepages=0`, and hlink was built to write its output on hugetlbfs: GRID's hlink
+times so far were taken without huge pages. hlink rerun with 512 reserved pages vs 0 (16:06Z, load 2.4-4.3, noisy):
+whole process 215-229 vs 250-287 ms on 8 cores. Redo quietly before using.
+
+**What it would take.** Quiet 8-thread numbers; then the paradigms' 3b cells should report whether their runtime lets
+the output live on huge pages (Futhark's and Halide's buffers, Goose's arenas, DuckDB's blobs), because on this
+problem that matters as much as the loop.

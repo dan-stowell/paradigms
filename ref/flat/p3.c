@@ -19,6 +19,12 @@ static int cmpTL(const void *a, const void *b) {
 	return psym[x] < psym[y] ? -1 : psym[x] > psym[y];
 }
 
+#ifdef _OPENMP
+#include <omp.h>
+static int nthreads(void) { return omp_get_max_threads(); }
+#else
+static int nthreads(void) { return 1; }
+#endif
 int main(int argc, char **argv) {
 	flatDir = argc > 1 ? argv[1] : "data/minio";
 	int pipeline = argc > 2 && strcmp(argv[2], "--pipeline") == 0;
@@ -113,9 +119,26 @@ int main(int argc, char **argv) {
 	u32 sect[8] = {(u32)metaGet("lay_text"), (u32)metaGet("lay_rodata"), (u32)metaGet("lay_pclntab"), (u32)metaGet("lay_types"),
 	               (u32)metaGet("lay_noptrdata"), (u32)metaGet("lay_data"), (u32)metaGet("lay_bss"), (u32)metaGet("lay_noptrbss")};
 	u32 unreach = (u32)metaGet("addr_unreachableMethod"), mapinit = (u32)metaGet("addr_mapinitnoop");
-	u8 *img = calloc(nimg, 1);
+	u8 *img;
+	if (getenv("P3_THP")) { // the output on 2 MB huge pages (MAP_HUGETLB): 53 faults instead of 26,700 (ATTACKS 2)
+		size_t hp = 2u << 20, n = (nimg + hp - 1) / hp * hp;
+		img = mmap(NULL, n, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+		if (img == MAP_FAILED) { // no reserved huge pages (vm.nr_hugepages): transparent ones if the kernel has them
+			img = mmap(NULL, n, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+			madvise(img, n, MADV_HUGEPAGE);
+		}
+	} else img = calloc(nimg, 1);
 	long nerr = 0;
+	double tf = now();
+	if (getenv("P3_PREFAULT")) { // first-touch the output and the input bytes outside the timed region (ATTACKS 2)
+		memset(img, 0, nimg);
+		volatile u8 sink = 0;
+		for (size_t k = 0; k < doff[L]; k += 4096) sink ^= dbin[k];
+	}
 	double t2 = now();
+	if (getenv("P3_PREFAULT")) printf("p3b prefault %.1f ms\n", (t2 - tf) * 1e3);
+	// Built with -fopenmp (build/p3par) the placed symbols are split over threads: their byte ranges are disjoint.
+#pragma omp parallel for schedule(dynamic, 1024) reduction(+ : nerr)
 	for (u32 i = 0; i < L; i++) {
 		u32 b = pb[i];
 		if (b == bBSS || b == bNoptrBSS || b == bCov) continue;
@@ -168,7 +191,7 @@ int main(int argc, char **argv) {
 		for (size_t k = 0; k < n; k++) sum = sum * 1099511628211ull + img[o + k];
 		if (memcmp(img + o, want + o, n) != 0 && nbad++ < 5) printf("  symbol %u (id %u, bucket %u) differs\n", i, psym[i], b);
 	}
-	printf("p3b (1 core): copy + relocate %.1f ms, %llu bytes, %u relocations, %ld errors; checksum %016llx\n", (t3 - t2) * 1e3,
+	printf("p3b (%d threads): copy + relocate %.1f ms, %llu bytes, %u relocations, %ld errors; checksum %016llx\n", nthreads(), (t3 - t2) * 1e3,
 	       (unsigned long long)nbytes, rstart[L], nerr, (unsigned long long)sum);
 	printf("image: %ld placed symbols differ from oracle/p3_image.bin\n", nbad);
 	if (output) {
