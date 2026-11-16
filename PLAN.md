@@ -50,6 +50,6 @@ Milestones log:
 Now (2026-11-16T17:20Z, session 3): M3/M4 running. Opus builders in worktrees (Agent, isolation=worktree): Halide P4,
 Futhark P4, DuckDB P2 + Soufflé 3a second attempts (results/second-attempts.md), GraphBLAS column (systems/graphblas),
 level-free floods in Futhark + Goose (results/levelfree.md). Codex in ~/paradigms-w branch codex-kube: every paradigm's
-cells on kube-apiserver (results/codex-kube.md); Codex in ~/paradigms-c branch codex-p4par: tuned 8-thread C for P4 (results/codex-p4par.md). Next: as each lands, rebuild + rerun its
+cells on kube-apiserver (results/codex-kube.md); codex-p4par merged; Codex in ~/paradigms-c branch codex-cp: CP1 width-relaxed templates + CP4 generated emitter (results/codex-cp.md). Next: as each lands, rebuild + rerun its
 oracle check in a copy, merge, paste CELLS into GRID.md; then M3/M4 milestone steps (LOOP.md). If the session was lost,
 check `git branch -a` for the builders' worktree branches and their reports before relaunching.
