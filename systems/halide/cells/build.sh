@@ -38,6 +38,16 @@ for p in $probs; do
         done
         { cat p1_variants.inc; table p1 resolve resolves; table p1 reltarget reltargets; table p1 contentjoin cjoins; } > p1_variants.h
         ;;
+    p2)
+        gen p2 init init
+        for par in false true; do
+            gen p2 prep prep_${par:0:1} par=$par
+            gen p2 methods methods_${par:0:1} par=$par
+        done
+        for lazy in true false; do for par in false true; do
+            gen p2 flood flood_${lazy:0:1}_${par:0:1} lazy=$lazy par=$par; done; done
+        { cat p2_variants.inc; table p2 prep preps; table p2 methods meths; table p2 flood floods; } > p2_variants.h
+        ;;
     p3)
         for c in 0 1 2 3; do for w in 0 1; do gen p3 layout layout_c${c}_w$w csched=$c wsched=$w; done; done
         for rf in 0 1; do for par in false true; do for vec in 0 32; do
