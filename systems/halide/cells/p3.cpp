@@ -146,6 +146,18 @@ int main(int argc, char **argv) {
                     faults += r1.ru_minflt - r0.ru_minflt, n++;
                 });
                 if (!ok) { printf("3b %-16s %s: mmap failed (huge pages reserved?)\n", relocs[v].name, huge ? "2 MB" : "4 KB"); continue; }
+                {   // check a fresh image too (untimed; M3 review): it must equal the reused buffer, which checkImage() compared with the oracle
+                    void *m = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | (huge ? MAP_HUGETLB : 0), -1, 0);
+                    if (m == MAP_FAILED) { bad++; printf("3b fresh check: mmap failed\n"); }
+                    else {
+                        Buffer<u8, 1> im((u8 *)m, (int)nimg + 8);
+                        relocs[v].fn(bucket, addr, doff, dbin, rstart, roff, rsiz, rkind, radd, rtgt, addrAll, sect, imageBase, unreach, mapinit, im, nerr);
+                        int d = memcmp(m, imgp, nimg) != 0;
+                        printf("3b %-16s fresh %s image %s the checked one\n", relocs[v].name, huge ? "2MB" : "4KB", d ? "DIFFERS from" : "equals");
+                        bad += d;
+                        munmap(m, len);
+                    }
+                }
                 printf("3b %-16s fresh %s " STAT_FMT ", %ld minor faults/run\n", relocs[v].name, huge ? "2MB" : "4KB", STAT_ARGS(sf), faults / n);
             }
         }

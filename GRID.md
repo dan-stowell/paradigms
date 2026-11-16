@@ -46,6 +46,10 @@ reads, so for the flat files they are an upper bound on the floor.
 
 ## The paradigms
 
+**Caveat (M3 review finding 3).** Warm numbers for Goose P1 (213 ms first run vs 79-115 later) and Futhark 3b reuse
+buffers whose pages are already mapped, while the plain C references include their first-touch faults; those warm
+cells flatter the paradigm by up to ~2x. The e2e numbers in each system's CELLS.md include the faults.
+
 Added columns (M3): **GraphBLAS** (SuiteSparse 10.5.2, JIT on; lead rebuilt + reran 18:24Z, P1/P2 OK, all files `cmp`). 8 threads warm, min/med/max, load 7-10, tuned C same window: **P2 reach 179/186/213** (p2par 15/20/26: 9x); 1 thread 192-203, i.e. it does not scale (frontier ~7 K is below SuiteSparse's per-call threading threshold: 379 of 382 vxm calls on one thread); 178 synchronous steps (97 BFS + 81 iface levels) in 7 rounds; pull direction 40x slower. **1a** 268/306/339 (18x p1par; the 128-bit key must be hashed into a 60-bit index and checked), **1b** 162/194/203 (21x), **1c** 279/349/392 (24x). P3: not attempted (no scan; the round-up-then-add fold is no monoid). Easy: reach is ~the shortest legible form (masked vxm); forced: the iface rule as its own closure per round. `systems/graphblas/CELLS.md`.
 
 | problem | Goose | Futhark | Halide | Soufflé | DuckDB (added 15:58Z) |
