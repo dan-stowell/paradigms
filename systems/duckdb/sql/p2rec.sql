@@ -16,8 +16,8 @@ CREATE OR REPLACE TEMP TABLE e0 AS SELECT DISTINCT src, e.dst FROM (SELECT id AS
 -- leaf (added in one join after the recursion). A recursion's iteration scans its whole edge table, so the split
 -- halves every BFS level's work (5.2 M distinct plain edges, 2.7 M inner).
 CREATE OR REPLACE TEMP TABLE srcs AS SELECT DISTINCT src AS id FROM e0;
-CREATE OR REPLACE TEMP TABLE ei AS FROM e0 SEMI JOIN srcs ON srcs.id = e0.dst ORDER BY src;
-CREATE OR REPLACE TEMP TABLE el AS FROM e0 ANTI JOIN srcs ON srcs.id = e0.dst ORDER BY src;
+CREATE OR REPLACE TEMP TABLE ei AS FROM e0 SEMI JOIN srcs ON srcs.id = e0.dst;
+CREATE OR REPLACE TEMP TABLE el AS FROM e0 ANTI JOIN srcs ON srcs.id = e0.dst;
 CREATE OR REPLACE TEMP TABLE eo AS SELECT src, e.kind, e.dst FROM (SELECT id AS src, unnest(out) AS e FROM sym WHERE len(out) > 0) WHERE e.kind <> 0;
 CREATE OR REPLACE TEMP TABLE gt AS SELECT id FROM sym WHERE fl & 9 = 9;
 CREATE OR REPLACE TEMP TABLE rf AS SELECT id FROM sym WHERE fl & 4 <> 0;
