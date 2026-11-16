@@ -255,6 +255,8 @@ static void dumpFlat(void) {
 	umInit(&sigs, 1 << 12);
 	long nMethErr = 0;
 	vecu32 tmp = {0};
+	struct timespec p2t0, p2t1; // decode-to-CSR cost, for ATTACKS 1 (one core, eager: every canonical definition with relocations)
+	clock_gettime(CLOCK_MONOTONIC, &p2t0);
 	for (u32 g = 1; g <= N; g++) {
 		u8 f1 = flatFL1[g];
 		u8 sf = SF(g);
@@ -403,6 +405,9 @@ static void dumpFlat(void) {
 		}
 #undef EMIT
 	}
+	clock_gettime(CLOCK_MONOTONIC, &p2t1);
+	fprintf(stderr, "dumpflat: P2 decode to CSR (1 core): %.1f ms, %zu edges, %zu methods\n",
+	        (p2t1.tv_sec - p2t0.tv_sec) * 1e3 + (p2t1.tv_nsec - p2t0.tv_nsec) / 1e6, edst.n, mName.n);
 	eoff[N + 1] = (u32)edst.n;
 	moff[N + 1] = (u32)mName.n;
 	eoff[0] = moff[0] = 0;
