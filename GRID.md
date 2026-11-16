@@ -19,7 +19,7 @@ Two references, measured 2026-11-16T15:33Z (load 0.4):
 
 | problem | floor (8 cores, FLOOR.md model) | hlink 1 core / 8 cores | plain C, flat, 1 core warm | tuned C, flat (p1par/p2par), 1 / 8 threads | check |
 |---|---|---|---|---|---|
-| 1a+1b. resolve: join by name, relocation targets | 1.36 (resolve) | 125 / 24 (resolve phase, 16:56Z) | 194-203 (join) + 43-44 (9.4 M targets) | 74-77 / **13.9-16.8** (join 8.6-10.5 + targets 5.3-6.3) | `build/p1 data/minio`, `build/p1par` -> P1 OK |
+| 1a+1b. resolve: join by name, relocation targets | 1.36 (resolve) | 125 / 24 (resolve phase, 15:56Z) | 194-203 (join) + 43-44 (9.4 M targets) | 74-77 / **13.9-16.8** (join 8.6-10.5 + targets 5.3-6.3) | `build/p1 data/minio`, `build/p1par` -> P1 OK |
 | 1c. content-hash join | (in resolve) | 37-39 / 8-9 (inside deadcode) | 300-309 (untuned: a 400 MB table) | (Codex writing it) | same |
 | 2. reach | 2.78 | 98-103 / 22-23 floods + 7 / 1.5 methods | 39-43 | 27-30 / **13.0-17.0** | `build/p2 data/minio`, `build/p2par` -> P2 OK |
 | 2'. reach incl. eager decode to CSR | | (= the row above: hlink decodes lazily) | dumpflat's untuned loop 133-139 + flood 39-43 | (Codex measuring p2pipe) | |
@@ -39,7 +39,7 @@ reads, so for the flat files they are an upper bound on the floor.
 
 ## The paradigms
 
-| problem | Goose | Futhark | Halide | Soufflé | DuckDB (added 16:00Z) |
+| problem | Goose | Futhark | Halide | Soufflé | DuckDB (added 15:58Z) |
 |---|---|---|---|---|---|
 | 1. resolve | | | | | |
 | 2. reach | | | | | |
