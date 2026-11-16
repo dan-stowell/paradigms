@@ -1,0 +1,1150 @@
+{
+  "start": "2026-11-16T16:41:51.324551+00:00",
+  "uptime_before": "16:41:51 up  1:26,  0 user,  load average: 2.30, 3.75, 5.29",
+  "runs": [
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 45.629762,
+      "total_ms": 77.664666,
+      "kernel_s": 4.970539,
+      "wall_s": 7.658382397999958
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 36.282777,
+      "total_ms": 68.355467,
+      "kernel_s": 4.37475,
+      "wall_s": 7.087658686000395
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 29.528048,
+      "total_ms": 61.719534,
+      "kernel_s": 3.95005,
+      "wall_s": 6.577130715999374
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 28.135094,
+      "total_ms": 59.370174,
+      "kernel_s": 3.799691,
+      "wall_s": 6.622934629000156
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 38.944866,
+      "total_ms": 71.765439,
+      "kernel_s": 4.592988,
+      "wall_s": 7.34624082099981
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 30.475096,
+      "total_ms": 63.249914,
+      "kernel_s": 4.047994,
+      "wall_s": 6.714004794000175
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 28.917316,
+      "total_ms": 61.436839,
+      "kernel_s": 3.931958,
+      "wall_s": 6.651614190000146
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 46.085184,
+      "total_ms": 78.843337,
+      "kernel_s": 5.045974,
+      "wall_s": 7.824836918000074
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 29.006125,
+      "total_ms": 60.771435,
+      "kernel_s": 3.889372,
+      "wall_s": 6.4555817869995735
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 28.483134,
+      "total_ms": 60.698963,
+      "kernel_s": 3.884734,
+      "wall_s": 6.506253585000195
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 46.205835,
+      "total_ms": 78.32763,
+      "kernel_s": 5.012968,
+      "wall_s": 7.731568143000004
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 37.185886,
+      "total_ms": 69.250458,
+      "kernel_s": 4.432029,
+      "wall_s": 7.12414230900049
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 29.674277,
+      "total_ms": 64.588041,
+      "kernel_s": 4.133635,
+      "wall_s": 6.991147837000426
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 47.891231,
+      "total_ms": 81.695556,
+      "kernel_s": 5.228516,
+      "wall_s": 7.941483960000369
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 36.848822,
+      "total_ms": 68.32871,
+      "kernel_s": 4.373037,
+      "wall_s": 7.023200028999781
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 29.349008,
+      "total_ms": 61.410563,
+      "kernel_s": 3.930276,
+      "wall_s": 6.582250560999455
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 43.215751,
+      "total_ms": 74.462635,
+      "kernel_s": 4.765609,
+      "wall_s": 7.44200081300005
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 36.325937,
+      "total_ms": 67.96445,
+      "kernel_s": 4.349725,
+      "wall_s": 7.035603118999461
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 30.037291,
+      "total_ms": 63.426582,
+      "kernel_s": 4.059301,
+      "wall_s": 6.718284209000558
+    },
+    {
+      "dataset": "minio",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 29.380983,
+      "total_ms": 63.225357,
+      "kernel_s": 4.046423,
+      "wall_s": 6.742778119999457
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 13.98366,
+      "total_ms": 22.955051,
+      "kernel_s": 1.469123,
+      "wall_s": 2.355558734000624
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 11.207407,
+      "total_ms": 20.38343,
+      "kernel_s": 1.30454,
+      "wall_s": 2.124762279000606
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 9.855648,
+      "total_ms": 19.495689,
+      "kernel_s": 1.247724,
+      "wall_s": 2.124227886999506
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 8.945194,
+      "total_ms": 18.380533,
+      "kernel_s": 1.176354,
+      "wall_s": 2.086693163999371
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 11.124716,
+      "total_ms": 20.310585,
+      "kernel_s": 1.299877,
+      "wall_s": 2.1901987370001734
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 9.803878,
+      "total_ms": 19.02621,
+      "kernel_s": 1.217677,
+      "wall_s": 2.1006609140004002
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 8.329683,
+      "total_ms": 16.984732,
+      "kernel_s": 1.087023,
+      "wall_s": 1.94586790700032
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 13.967862,
+      "total_ms": 23.946008,
+      "kernel_s": 1.532544,
+      "wall_s": 2.4435809380001956
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 9.578049,
+      "total_ms": 18.808643,
+      "kernel_s": 1.203753,
+      "wall_s": 2.1160213359999034
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 9.001276,
+      "total_ms": 18.272099,
+      "kernel_s": 1.169414,
+      "wall_s": 2.0128626599998825
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 12.219844,
+      "total_ms": 21.035605,
+      "kernel_s": 1.346279,
+      "wall_s": 2.133590237000135
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 10.922311,
+      "total_ms": 19.346293,
+      "kernel_s": 1.238163,
+      "wall_s": 2.0862051340000107
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 7.680111,
+      "total_ms": 15.771309,
+      "kernel_s": 1.009364,
+      "wall_s": 1.7303005129997473
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 12.228864,
+      "total_ms": 20.385152,
+      "kernel_s": 1.30465,
+      "wall_s": 2.173318809000193
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 10.053702,
+      "total_ms": 18.259013,
+      "kernel_s": 1.168577,
+      "wall_s": 1.9960811079999985
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 17.904234,
+      "total_ms": 34.014605,
+      "kernel_s": 2.176935,
+      "wall_s": 3.4126938579993293
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 14.040131,
+      "total_ms": 23.457966,
+      "kernel_s": 1.50131,
+      "wall_s": 2.289803738000046
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 10.912241,
+      "total_ms": 19.960075,
+      "kernel_s": 1.277445,
+      "wall_s": 2.2430700830000205
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 8.567471,
+      "total_ms": 17.307186,
+      "kernel_s": 1.10766,
+      "wall_s": 1.9284736140007226
+    },
+    {
+      "dataset": "minio",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 8.466487,
+      "total_ms": 17.395408,
+      "kernel_s": 1.113306,
+      "wall_s": 1.90499325699966
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 104.287257,
+      "total_ms": 166.258864,
+      "kernel_s": 10.640567,
+      "wall_s": 16.58838775300046
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 86.076594,
+      "total_ms": 149.135803,
+      "kernel_s": 9.544691,
+      "wall_s": 15.535717261999707
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 74.634105,
+      "total_ms": 139.634713,
+      "kernel_s": 8.936622,
+      "wall_s": 14.94165055600024
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 0,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 69.002502,
+      "total_ms": 132.040548,
+      "kernel_s": 8.450595,
+      "wall_s": 14.169272623000325
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 84.405022,
+      "total_ms": 146.178409,
+      "kernel_s": 9.355418,
+      "wall_s": 15.167585316999975
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 75.691388,
+      "total_ms": 140.984235,
+      "kernel_s": 9.022991,
+      "wall_s": 15.342108896999889
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 67.328512,
+      "total_ms": 130.598708,
+      "kernel_s": 8.358317,
+      "wall_s": 13.891366498000025
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 1,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 101.933724,
+      "total_ms": 162.990739,
+      "kernel_s": 10.431407,
+      "wall_s": 16.167911323000226
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 67.01969,
+      "total_ms": 127.268665,
+      "kernel_s": 8.145195,
+      "wall_s": 13.93406503999995
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 63.427746,
+      "total_ms": 123.166295,
+      "kernel_s": 7.882643,
+      "wall_s": 13.683926064999469
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 101.5221,
+      "total_ms": 161.940232,
+      "kernel_s": 10.364175,
+      "wall_s": 16.089918751999903
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 2,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 82.657365,
+      "total_ms": 145.50993,
+      "kernel_s": 9.312636,
+      "wall_s": 15.052649166000265
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 62.84727,
+      "total_ms": 124.159705,
+      "kernel_s": 7.946221,
+      "wall_s": 13.563276305999352
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 100.398083,
+      "total_ms": 161.776191,
+      "kernel_s": 10.353676,
+      "wall_s": 16.297204915000293
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 81.935711,
+      "total_ms": 143.733513,
+      "kernel_s": 9.198945,
+      "wall_s": 14.97775116199955
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 3,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 73.838311,
+      "total_ms": 139.100302,
+      "kernel_s": 8.902419,
+      "wall_s": 15.111689599000783
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 112.930078,
+      "total_ms": 179.797591,
+      "kernel_s": 11.507046,
+      "wall_s": 17.55837001799955
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 85.861734,
+      "total_ms": 148.781118,
+      "kernel_s": 9.521992,
+      "wall_s": 15.250539233000382
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 68.772017,
+      "total_ms": 130.139249,
+      "kernel_s": 8.328912,
+      "wall_s": 13.990451170000597
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 1,
+      "iteration": 4,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 61.101167,
+      "total_ms": 123.009632,
+      "kernel_s": 7.872616,
+      "wall_s": 13.606887701000232
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 28.142444,
+      "total_ms": 45.648853,
+      "kernel_s": 2.921527,
+      "wall_s": 4.719131895999453
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 23.317192,
+      "total_ms": 40.860138,
+      "kernel_s": 2.615049,
+      "wall_s": 4.410249636999652
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 20.481956,
+      "total_ms": 36.892299,
+      "kernel_s": 2.361107,
+      "wall_s": 4.133971625000413
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 0,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 20.15292,
+      "total_ms": 36.493847,
+      "kernel_s": 2.335606,
+      "wall_s": 4.242738498000108
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 20.504536,
+      "total_ms": 35.996863,
+      "kernel_s": 2.303799,
+      "wall_s": 4.148296588999983
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 18.170569,
+      "total_ms": 33.215887,
+      "kernel_s": 2.125817,
+      "wall_s": 4.084855122999215
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 20.434508,
+      "total_ms": 38.395495,
+      "kernel_s": 2.457312,
+      "wall_s": 4.437092115000269
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 1,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 28.248381,
+      "total_ms": 44.525486,
+      "kernel_s": 2.849631,
+      "wall_s": 4.648151223000241
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 20.211798,
+      "total_ms": 36.764772,
+      "kernel_s": 2.352945,
+      "wall_s": 4.144546601000002
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 20.69277,
+      "total_ms": 38.868558,
+      "kernel_s": 2.487588,
+      "wall_s": 4.489292268000099
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 29.846102,
+      "total_ms": 46.767208,
+      "kernel_s": 2.993101,
+      "wall_s": 5.053109557000425
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 2,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 25.76604,
+      "total_ms": 45.68637,
+      "kernel_s": 2.923928,
+      "wall_s": 4.944553091000671
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 20.331053,
+      "total_ms": 38.815894,
+      "kernel_s": 2.484217,
+      "wall_s": 4.616524875999858
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 31.965987,
+      "total_ms": 50.707531,
+      "kernel_s": 3.245282,
+      "wall_s": 5.301166946000194
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 25.516581,
+      "total_ms": 45.811977,
+      "kernel_s": 2.931967,
+      "wall_s": 4.6949147089999315
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 3,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 20.421456,
+      "total_ms": 38.239192,
+      "kernel_s": 2.447308,
+      "wall_s": 4.198081913999886
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1par",
+      "reps": 64,
+      "join_ms": 28.357187,
+      "total_ms": 45.004195,
+      "kernel_s": 2.880268,
+      "wall_s": 4.596481219999987
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1onlyA",
+      "reps": 64,
+      "join_ms": 22.683476,
+      "total_ms": 39.659961,
+      "kernel_s": 2.538238,
+      "wall_s": 4.448544026000491
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1onlyB",
+      "reps": 64,
+      "join_ms": 22.082544,
+      "total_ms": 39.992569,
+      "kernel_s": 2.559524,
+      "wall_s": 4.713374453000142
+    },
+    {
+      "dataset": "kube-apiserver",
+      "threads": 8,
+      "iteration": 4,
+      "version": "p1compact",
+      "reps": 64,
+      "join_ms": 20.543433,
+      "total_ms": 40.028036,
+      "kernel_s": 2.561794,
+      "wall_s": 4.673520145999646
+    }
+  ],
+  "phases": [
+    {
+      "dataset": "minio",
+      "version": "p1par",
+      "iteration": 0,
+      "ms": [
+        6.479014,
+        7.272645,
+        5.509411,
+        7.526124,
+        6.954664,
+        8.016443
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1compact",
+      "iteration": 0,
+      "ms": [
+        7.713604,
+        7.394293,
+        6.567969,
+        0.932584,
+        0.809659,
+        2.990078
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1compact",
+      "iteration": 1,
+      "ms": [
+        7.860542,
+        7.602159,
+        6.055972,
+        0.928296,
+        0.788821,
+        3.00421
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1par",
+      "iteration": 1,
+      "ms": [
+        6.350376,
+        7.814923,
+        6.030628,
+        7.907345,
+        7.275206,
+        8.484387
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1par",
+      "iteration": 2,
+      "ms": [
+        6.375319,
+        7.794357,
+        6.310552,
+        7.935422,
+        7.02472,
+        8.394691
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1compact",
+      "iteration": 2,
+      "ms": [
+        7.978827,
+        7.830459,
+        6.597428,
+        0.918566,
+        0.829821,
+        3.158751
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1compact",
+      "iteration": 3,
+      "ms": [
+        8.415435,
+        7.917197,
+        5.867216,
+        0.940061,
+        0.805521,
+        3.387815
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1par",
+      "iteration": 3,
+      "ms": [
+        6.981317,
+        8.439789,
+        7.124847,
+        8.993133,
+        8.788116,
+        9.969776
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1par",
+      "iteration": 4,
+      "ms": [
+        7.186653,
+        8.299008,
+        6.850314,
+        9.122849,
+        8.878387,
+        9.819097
+      ]
+    },
+    {
+      "dataset": "minio",
+      "version": "p1compact",
+      "iteration": 4,
+      "ms": [
+        7.966779,
+        8.148294,
+        6.916612,
+        0.920873,
+        0.795603,
+        3.243629
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1par",
+      "iteration": 0,
+      "ms": [
+        18.405622,
+        21.859527,
+        15.514191,
+        16.547455,
+        15.766431,
+        22.293017
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1compact",
+      "iteration": 0,
+      "ms": [
+        21.364785,
+        19.648493,
+        16.347706,
+        0.973042,
+        0.769876,
+        11.801491
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1compact",
+      "iteration": 1,
+      "ms": [
+        20.576751,
+        19.067894,
+        15.896845,
+        0.903226,
+        0.739709,
+        11.480956
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1par",
+      "iteration": 1,
+      "ms": [
+        16.943542,
+        20.393613,
+        15.439185,
+        15.665559,
+        15.003502,
+        21.456324
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1par",
+      "iteration": 2,
+      "ms": [
+        16.423739,
+        19.14762,
+        12.188206,
+        13.546478,
+        13.296707,
+        18.560269
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1compact",
+      "iteration": 2,
+      "ms": [
+        18.611704,
+        17.066535,
+        14.870386,
+        0.806156,
+        0.655202,
+        9.291779
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1compact",
+      "iteration": 3,
+      "ms": [
+        19.848743,
+        18.005169,
+        13.850349,
+        0.825681,
+        0.662996,
+        9.936336
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1par",
+      "iteration": 3,
+      "ms": [
+        16.840105,
+        21.029364,
+        13.909551,
+        14.439377,
+        13.989713,
+        20.570973
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1par",
+      "iteration": 4,
+      "ms": [
+        16.622835,
+        20.083867,
+        13.941914,
+        14.325164,
+        13.853331,
+        20.724391
+      ]
+    },
+    {
+      "dataset": "kube-apiserver",
+      "version": "p1compact",
+      "iteration": 4,
+      "ms": [
+        19.820656,
+        17.552831,
+        14.182396,
+        0.83468,
+        0.657575,
+        9.934311
+      ]
+    }
+  ],
+  "end": "2026-11-16T16:55:09.775595+00:00",
+  "uptime_after": "16:55:09 up  1:39,  0 user,  load average: 3.98, 4.39, 4.64"
+}

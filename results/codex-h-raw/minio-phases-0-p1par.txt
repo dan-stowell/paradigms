@@ -1,0 +1,9 @@
+p1par (1 threads): best 69.1 ms = join by name 38.7 + relocation targets 30.4
+p1par mean: join 41.760786 ms total 73.043625 ms (64 reps, 4.674792 s kernel)
+phases ms: 6.479014 7.272645 5.509411 7.526124 6.954664 8.016443
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (1 threads): content-hash join 37.8 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
