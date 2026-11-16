@@ -182,3 +182,105 @@ Sources: `ref/flat/p3inc.c`, `p3compare.c`, `p3inc_check.c`, `p3bench.c`; runner
 ## ATTACKS section 5 — Observation 4 draft
 
 **Observation 4: layout must retain space as well as identities; package slack makes the addition local but does not make the deletion cheap** ([results/c-relayout.md](c-relayout.md), C, 1 core, five interleaved rounds). Today's layout moves **261,723 / 352,863** common placed symbols after edits 1 / 2, changes **1.23 M / 1.82 M** relocation values and **35.1 / 76.7 MB** of produced image bytes. Retained package/bucket arenas (next 4 KB, global typelink arena) reduce this to **3 / 101,483** moved addresses, **34 / 869,439** repatches and **1,013 B / 32.9 MB** changed bytes. A maintained reverse target→site index updates edit 1 in **0.443 µs**, versus **112.8 ms** for full p3; edit 2 takes **95.1 ms versus 98.9 ms**, overlapping ranges: no demonstrated win. Padding stops cross-package cascades but leaves within-package compaction and typelink sorting; the conservative policy costs **58.8 MB of produced-region slack**, plus **17.4 MB** for BSS/counters. Incremental and from-scratch slack images agree byte for byte, and an independent evaluator checks relocation semantics; literal old relocated bytes cannot remain identical at new addresses. Next: smaller/shared spare reservations and stable placement inside large packages and the global type list, with the omitted linker-generated metadata brought into the maintained state.
+
+## Attempt 2: holes, no compaction — 2026-11-16
+
+The earlier 404,622 typelink repatches were not stores to a small sorted table. Bucket 6 holds full type descriptors: 32,424 moved descriptors account for 404,617 actual relocation stores (420,604 records minus 15,987 missing-target ADDROFF skips), and five reverse-index sites in four unmoved descriptors account for the remaining five. A has 3,416,136 bytes of these descriptors, containing 428,898 relocation records. See [reproducible diagnosis](c-relayout2-typelink.md) and [raw counts](c-relayout2-typelink.txt).
+
+The new experiment keeps descriptors at stable addresses and maintains a separate sorted array of 32-bit offsets from the types anchor. Its capacity is 133,044 bytes; deletion writes 129,712 bytes of offsets and clears a 3,332-byte suffix. Restoration writes 133,044 bytes. Edit 1 does not change this table. This is an exact alternative lookup representation **under the new rule**, not ABI compatibility: the frozen hlink writes a contiguous sorted descriptor span into moduledata (`ref/hlink/layout.c`, `ref/hlink/special.c`). A runtime consumer and generated metadata change would be required for an executable. Those changes remain outside this P3 experiment.
+
+### Allocation rule and space
+
+`p3holes.c` gives each existing arena 64 bytes of tail slack (rounded only for alignment), and each bucket a shared 64 KiB spare extent. These reservations depend on A, not on either edit. A common symbol retains its address and allocation capacity if its arena, size and alignment still fit. Shrinking retains capacity. Removal, or growth beyond capacity, releases the old slot; allocation takes the first aligned hole in its own arena, then its tail, then the shared bucket spare. Free lists coalesce adjacent holes, including overflow allocations owned by that arena. All frees precede allocations, in ascending unified ID. There is no compaction. The one necessary growth move is edit 1's 266→532-byte function; edit 2 grows no common allocations.
+
+Initial reserved slack is **2,313,220 bytes total (2.113% of the original 109,486,380-byte image)**, including **1,817,765 produced-region bytes (1.660%)**. This replaces 76,203,036 / 58,847,229 bytes respectively. The complete virtual check image is 145,913,440 bytes; total slack is 1.585% of that span. The additional offset table has 133,044 bytes of capacity, counted separately from arena slack. Free overflow stays owned by its arena; new packages and exhausted fixed spare extents fail checks rather than moving neighbors. This is a measured policy for these histories, not a general capacity guarantee.
+
+### Correctness and scope
+
+The from-scratch rule is now history-dependent: start with compact A plus its reservations, then apply the same deterministic allocation decisions for every transition. The reference reconstructs allocator state from A, discovers replacements by full scans, and renders every final symbol into a fresh zero image. Incremental and reference results agree over all 145,913,440 image bytes, all addresses and capacities, exact hole lists, arena tails, shared-spare cursors, and the offset table. Shared allocation primitives are deliberate; this is not a second independent allocator implementation.
+
+The existing `p3inc_check.c` independently evaluates raw relocation inputs and checks original oracle bytes, new symbol bytes, whole-image bytes, alignment, overlap and non-relocation bytes. It passes both edits and every endpoint of A→B2→A→B1→A. A separate checker derives table ordering from raw type strings and verifies all offsets and the zero suffix. Existing corruption negatives (relocation byte, misalignment, overlap) pass for both edits; an added corrupt-table negative is rejected. The original serial/OpenMP p3 pipelines still pass A and both edits, and the complete previous attempt's check runner also passes unchanged. A capped UBSan allocator test checks 20,000 deterministic random allocation/free steps plus explicit growth, shrink, overflow, coalescing and zero-size retention cases. Review found and fixed a zero-size common-symbol movement bug. [Review](c-relayout2-review.md), [implementation details](c-relayout2-implementation.md), [new checks](c-relayout2-check.txt), [unchanged legacy checks](c-relayout2-legacy-check.txt).
+
+Setup still loads and normalizes both versions, builds the reverse index and prepares symbol replacement lists and sorted membership outside timing. Updates perform actual allocation, reverse-index mutation, clears, copies, relocations and table stores. There is no precomputed image patch. The ID maps for B1 and B2 are each relative to A; the tested chain goes through A between them, with no simultaneous live B1/B2-only symbols. This does not establish a general identity map between arbitrary edited versions.
+
+### Mechanism and fragmentation
+
+Fresh-history counts below are from the first pair or first chain. “Image changed” excludes the separate offset table; table changes are 0 bytes for edit 1, 82,779 bytes for the first deletion and 83,104 bytes on its return (the table is rewritten with 133,044 bytes of stores in either direction). “Written” counts clear + copy + relocation stores + table stores, including repeated writes; it is not unique changed bytes or measured DRAM traffic.
+
+| Transition | Common moved | Repatches | Image changed B | Table written B | Total written B | Reverse sites visited |
+|---|---:|---:|---:|---:|---:|---:|
+| A→B1 | 1 | 12 | 755 | 0 | 884 | 4 |
+| B1→A | 0 | 5 | 514 | 0 | 846 | 0 |
+| A→B2 | 0 | 45,336 | 20,807,401 | 133,044 | 23,011,289 | 937 |
+| B2→A | 0 | 82,848 | 20,807,505 | 133,044 | 23,164,467 | 14,724 |
+| chain A→B2 | 0 | 45,336 | 20,807,401 | 133,044 | 23,011,289 | 937 |
+| chain B2→A | 0 | 82,848 | 20,807,505 | 133,044 | 23,164,467 | 14,724 |
+| chain A→B1 | 1 | 12 | 755 | 0 | 884 | 4 |
+| chain B1→A | 0 | 5 | 514 | 0 | 846 | 0 |
+
+The deletion clears 21,877,879 bytes, copies 791,390, and writes 208,976 relocation bytes; restoration clears 795,768, copies 21,841,851, and writes 393,804 relocation bytes. The remaining bulk work is deletion/restoration of payload, rather than movement of surviving descriptors. Hole zeros are included in the whole-image check.
+
+| First chain endpoint | Free holes | Hole bytes | Unused arena tails B | Unused bucket spare B | Unused retained live capacity B |
+|---|---:|---:|---:|---:|---:|
+| chain A→B2 | 1,077 | 21,090,008 | 1,327,410 | 978,645 | 0 |
+| chain B2→A | 756 | 16,210 | 1,325,905 | 971,088 | 17 |
+| chain A→B1 | 757 | 16,498 | 1,325,889 | 970,544 | 17 |
+| chain B1→A | 758 | 16,514 | 1,325,889 | 970,544 | 273 |
+
+Returning A does not restore its original compact addresses for symbols that were removed and later added. Common symbols that remain live and fit their retained capacity stay fixed. After repeated chains the allocator reaches a checked fixed point: final A has 766 holes totaling 16,514 bytes, 1,325,889 unused tail bytes, 970,544 unused shared-spare bytes, and 273 unused bytes retained inside live allocations. Repeated deletion exposes 1,116 holes totaling 21,099,374 bytes. The first chain's final 758 holes become 766, but hole bytes do not increase; no unbounded fragmentation is observed in these repeated histories. This is not evidence for arbitrary edit sequences.
+
+Warm edit 1 uses the already enlarged function slot: forward movement falls from 1 to 0, repatches from 12 to 8, changed image bytes from 755 to 514, writes from 884 to 868, and reverse visits from 4 to 0. Its return remains 0 moved / 5 repatches / 514 changed / 846 written / 0 visits. Warm edit 2 has 0 moved and the same repatch/write/visit counts as above; changed bytes become 20,807,505 in both directions. The repeated chain has those same warm mechanism counts. Timing below measures these maintained histories, not the initial growth move.
+
+### Timing: five interleaved rounds on one core
+
+Measured **2026-11-16 20:50:31–20:53:14 UTC**, pinned CPU 0, `OMP_NUM_THREADS=1`, GCC 13.3.0 `-O3`, `prlimit --as=8589934592`, one-minute uptime load **3.21–3.72**. Every reference process runs its pipeline for ≥1 second; pair processes accumulate ≥1 second separately in each direction; each chain process accumulates ≥1 second across complete four-step cycles. Five process means are reported as min / median / max, in milliseconds. Setup, full-history replay, independent checks and reporting are excluded. Initial correctness work overlapped the start of the window; no quiet-machine selection was used. The same `p3bench.c` and OpenMP build as attempt 1 provide the full 3a+propagate+3b baselines, now including full A for a matched reverse comparison.
+
+| Operation | Edit 1 min / median / max ms | Edit 2 min / median / max ms |
+|---|---:|---:|
+| Maintained A→B | 0.000144 / 0.000151 / 0.000157 | 4.448853 / 4.881273 / 5.781769 |
+| Maintained B→A | 0.000123 / 0.000129 / 0.000143 | 6.497711 / 6.961310 / 8.058126 |
+| Full p3 B | 101.240832 / 102.155579 / 108.474510 | 84.920457 / 87.484673 / 89.899610 |
+| Full p3par B, 1 thread | 93.463467 / 96.788175 / 111.563251 | 76.113474 / 80.541478 / 82.198053 |
+| Full p3 A (reverse baseline) | 100.851895 / 104.378179 / 128.794972 | 101.047109 / 102.753216 / 108.308166 |
+| Full p3par A, 1 thread | 92.711534 / 93.667449 / 113.285430 | 93.617489 / 95.509769 / 98.521815 |
+
+The deletion is now **17.9× faster than full p3 and 16.5× faster than one-thread p3par** by medians, with non-overlapping ranges. Restoration is 14.8× / 13.7× faster than its matched full-A baselines. The standalone addition costs 0.151 µs forward and 0.129 µs reverse after its enlarged slot is retained. These are prepared-diff maintenance times, not end-to-end source-edit times.
+
+| Repeated chain step | Min / median / max ms |
+|---|---:|
+| A→B2 | 4.420412 / 4.656871 / 5.045008 |
+| B2→A | 6.389357 / 7.003920 / 7.364053 |
+| A→B1 | 0.004286 / 0.004326 / 0.004955 |
+| B1→A | 0.000956 / 0.000989 / 0.001438 |
+
+The chain's addition is slower than the isolated repeated pair despite identical warm mechanism counts: its state follows the large deletion/restoration work instead of an uninterrupted sub-microsecond loop. The chain remains sequential, retaining its allocator and reverse index throughout.
+
+For transparency, the first transition in each of the five fresh pair processes was also timed once (these individual first-update observations do not each accumulate a second):
+
+| First-history transition | Min / median / max ms |
+|---|---:|
+| A→B1 | 0.022324 / 0.023406 / 0.025760 |
+| B1→A | 0.006169 / 0.006640 / 0.007411 |
+| A→B2 | 7.041479 / 7.864617 / 7.954365 |
+| B2→A | 7.305309 / 8.906149 / 11.965453 |
+
+### Reproduce attempt 2
+
+```sh
+# Old checks remain unchanged and continue to pass.
+ref/flat/check-p3inc.sh > results/c-relayout2-legacy-check.txt 2>&1
+# New rule, both directions, full chain, independent evaluator/table checks,
+# original p3/p3par pipelines, allocator UBSan tests, all negatives.
+ref/flat/check-p3holes.sh > results/c-relayout2-check.txt 2>&1
+# Five interleaved rounds, pinned core, 8 GiB limit; pair and chain timings.
+ref/flat/bench-p3holes.py 5 > results/c-relayout2-bench.txt 2>&1
+# Exact attribution of the old 404,622 stores.
+prlimit --as=8589934592 python3 ref/flat/diagnose-typelink.py \
+  /home/exedev/paradigms/data build-relayout/check-edit2
+```
+
+All outputs/builds are inside this clone; data inputs are read-only. [Raw benchmark evidence](c-relayout2-bench.txt). The final check rebuild also includes restored dataset/fixed-anchor preconditions; these are outside the timed update and do not change the benchmark kernel. No ATTACKS.md changes or push are made.
+
+### Updated ATTACKS section 5 — Observation 4 draft
+
+**Observation 4: retain individual allocations, not just package reservations; deletion becomes local in addresses but still writes its removed payload.** Attempt 1's package compaction and globally sorted type descriptors moved 101,483 common symbols and required 869,439 repatches after edit 2, costing 95.1 ms. A history-defined allocator with holes, 64-byte arena tails and shared 64 KiB bucket spares moves **zero common addresses**, performs **45,336 repatches**, changes **20.8 MB** of image bytes, and writes **23.0 MB** including clearing deleted payload and rewriting a **133,044-byte sorted offset table**. Five interleaved one-core rounds measure **4.88 ms versus 87.48 ms full p3 / 80.54 ms p3par at one thread**; restoration is **6.96 ms versus 102.75 / 95.51 ms**, with non-overlapping ranges. Initial produced slack falls from **58.8 MB to 1.82 MB (1.66% of the original image)**; total slack including virtual buckets is **2.31 MB (2.11%)**. Edit 1 moves only its growing function on the first application, then runs in **0.151 µs** with no moves after retaining the larger slot. The A→B2→A→B1→A chain passes history-replay equality and independent relocation/table evaluation; its final free holes total **16,514 bytes**, with **273 bytes** retained unused inside live allocations. The old typelink repatches were relocations inside moved descriptors, not 4-byte table entries. Stable descriptors plus a sorted offset sidecar require a runtime lookup-format change for this frozen toolchain; these are checked P3 images, not executable binaries. Next boundary: generated metadata and consumer integration, plus spare growth and fragmentation under broader edit histories.

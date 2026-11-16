@@ -274,6 +274,17 @@ package) arenas rounded up to the next 4 KB (one global typelink arena) cut that
 reasons: arenas re-lay-out (compact) inside a changed package, and the typelink arena is a global sort (32,424 moved,
 404,622 repatches). The 4 KB policy costs 58.8 MB of produced slack (54% of the image) where the edits grew arenas by
 only 272 / 7,056 bytes in total: per-arena reservation is the wrong allocator.
+**Attempt 2 (holes, no compaction; `ref/flat/p3holes.c`, 1 core, 5 interleaved rounds 20:50-20:53Z, load 3.2-3.7;
+lead reran `ref/flat/check-p3holes.sh` 21:00Z: all OK, negatives rejected): retain each symbol's allocation, not just
+its package's.** Removed symbols leave coalescing holes; a symbol that grows past its capacity takes the first hole in
+its arena, then a 64 B arena tail, then a shared 64 KiB spare per bucket; nothing compacts. Type descriptors stay put
+and the sorted typelink order becomes a separate 133 KB array of offsets (the old 404,622 "typelink" repatches were
+relocations inside moved descriptors, not table entries). Edit 2: **0 common addresses moved, 45,336 repatches,
+4.88 ms vs 87.5 ms full p3 (18x) and 80.5 ms p3par on 1 thread**; restore 6.96 vs 102.8 ms; edit 1 0.15 µs once its
+grown slot is kept. Ranges apart. Slack falls from 58.8 MB to **1.82 MB (1.7% of the image)**. A->B2->A->B1->A
+reaches a fixed point (766 holes, 16.5 KB). What is left is the payload itself: the deletion clears 21.9 MB. Caveats:
+images are checked against a from-scratch replay of the same allocation history and an independent relocation
+evaluator, not run; the offset sidecar changes the runtime's typelinks format, and pclntab/GC metadata are outside it.
 
 **Attack.** (1) Give symbols a stable identity at extraction: (package path, name) or content hash, per-object
 order only as a last resort, and tie-breaks by name hash, not position; then the input diff of an edit is the edit's

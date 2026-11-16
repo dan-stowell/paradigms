@@ -1,0 +1,333 @@
+ROUND 1 UTC 2026-11-16T20:50:31Z CPU 0
+ 20:50:31 up  5:34,  0 user,  load average: 3.31, 2.64, 2.31
+RUN edit inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.022795
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.006620
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=6995206 forward_ms=0.000157 reverse_ms=0.000143 timed=1.100/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.021556 mean_ms 102.155579 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.028098 mean_ms 93.463467 OK
+RUN edit refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.121924 mean_ms 112.192404 OK
+RUN edit parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.025576 mean_ms 93.234173 OK
+RUN edit2 inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.864617
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=7.305309
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=197 forward_ms=5.092555 reverse_ms=7.646929 timed=1.003/1.506
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.019045 mean_ms 84.920457 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 14 seconds 1.065589 mean_ms 76.113474 OK
+RUN edit2 refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.010471 mean_ms 101.047109 OK
+RUN edit2 parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.054539 mean_ms 95.867177 OK
+RUN chain chain
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=6.695252
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=7.917207
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.017477
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.007732
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=88 forward_ms=4.651891 reverse_ms=6.725416 timed=0.409/0.592
+chain_step=1 mean_ms=4.651891 timed=0.409
+chain_step=2 mean_ms=6.725416 timed=0.592
+chain_step=3 mean_ms=0.004303 timed=0.000
+chain_step=4 mean_ms=0.001070 timed=0.000
+ROUND 2 UTC 2026-11-16T20:51:05Z CPU 0
+ 20:51:05 up  5:35,  0 user,  load average: 3.22, 2.70, 2.34
+RUN chain chain
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=6.795225
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=8.189832
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.015103
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.006530
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=93 forward_ms=4.420412 reverse_ms=6.389357 timed=0.411/0.594
+chain_step=1 mean_ms=4.420412 timed=0.411
+chain_step=2 mean_ms=6.389357 timed=0.594
+chain_step=3 mean_ms=0.004326 timed=0.000
+chain_step=4 mean_ms=0.000989 timed=0.000
+RUN edit2 parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.083740 mean_ms 98.521815 OK
+RUN edit2 refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.083082 mean_ms 108.308166 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.047039 mean_ms 80.541478 OK
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.024693 mean_ms 85.391065 OK
+RUN edit2 inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.041479
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=8.906149
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=225 forward_ms=4.448853 reverse_ms=6.497711 timed=1.001/1.462
+RUN edit parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.019827 mean_ms 92.711534 OK
+RUN edit refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.043782 mean_ms 104.378179 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.038329 mean_ms 94.393572 OK
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.012408 mean_ms 101.240832 OK
+RUN edit inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.023406
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.007411
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=7652736 forward_ms=0.000151 reverse_ms=0.000131 timed=1.158/1.000
+ROUND 3 UTC 2026-11-16T20:51:37Z CPU 0
+ 20:51:37 up  5:36,  0 user,  load average: 3.21, 2.74, 2.37
+RUN edit inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.022324
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.006169
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=8103972 forward_ms=0.000144 reverse_ms=0.000123 timed=1.168/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.014326 mean_ms 101.432578 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.064670 mean_ms 96.788175 OK
+RUN edit refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.008519 mean_ms 100.851895 OK
+RUN edit parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.066655 mean_ms 96.968675 OK
+RUN edit2 inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.954365
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=8.597069
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=213 forward_ms=4.706920 reverse_ms=6.735112 timed=1.003/1.435
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.049816 mean_ms 87.484673 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.012653 mean_ms 77.896375 OK
+RUN edit2 refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.015543 mean_ms 101.554267 OK
+RUN edit2 parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.029792 mean_ms 93.617489 OK
+RUN chain chain
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=6.834223
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=8.594886
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.015724
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.006510
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=86 forward_ms=4.656871 reverse_ms=7.046587 timed=0.400/0.606
+chain_step=1 mean_ms=4.656871 timed=0.400
+chain_step=2 mean_ms=7.046587 timed=0.606
+chain_step=3 mean_ms=0.004286 timed=0.000
+chain_step=4 mean_ms=0.000956 timed=0.000
+ROUND 4 UTC 2026-11-16T20:52:08Z CPU 0
+ 20:52:08 up  5:36,  0 user,  load average: 3.24, 2.80, 2.40
+RUN chain chain
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.876415
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=8.809712
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.013561
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.007452
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=81 forward_ms=5.045008 reverse_ms=7.364053 timed=0.409/0.596
+chain_step=1 mean_ms=5.045008 timed=0.409
+chain_step=2 mean_ms=7.364053 timed=0.596
+chain_step=3 mean_ms=0.004696 timed=0.000
+chain_step=4 mean_ms=0.001438 timed=0.000
+RUN edit2 parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.050607 mean_ms 95.509769 OK
+RUN edit2 refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.050288 mean_ms 105.028752 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.068575 mean_ms 82.198053 OK
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.078795 mean_ms 89.899610 OK
+RUN edit2 inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.886600
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=9.613472
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=174 forward_ms=5.781769 reverse_ms=8.058126 timed=1.006/1.402
+RUN edit parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 9 seconds 1.019569 mean_ms 113.285430 OK
+RUN edit refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 8 seconds 1.030360 mean_ms 128.794972 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.115633 mean_ms 111.563251 OK
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.084745 mean_ms 108.474510 OK
+RUN edit inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.024237
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.007041
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=7723835 forward_ms=0.000152 reverse_ms=0.000129 timed=1.172/1.000
+ROUND 5 UTC 2026-11-16T20:52:42Z CPU 0
+ 20:52:42 up  5:37,  0 user,  load average: 3.42, 2.89, 2.44
+RUN edit inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.025760
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.006640
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=8128190 forward_ms=0.000146 reverse_ms=0.000123 timed=1.189/1.000
+RUN edit ref
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.046539 mean_ms 104.653888 OK
+RUN edit par
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.084603 mean_ms 98.600312 OK
+RUN edit refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.018198 mean_ms 101.819771 OK
+RUN edit parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.030342 mean_ms 93.667449 OK
+RUN edit2 inc
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.652756
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=11.965453
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=206 forward_ms=4.881273 reverse_ms=6.961310 timed=1.006/1.434
+RUN edit2 ref
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 12 seconds 1.063987 mean_ms 88.665571 OK
+RUN edit2 par
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 13 seconds 1.057979 mean_ms 81.383030 OK
+RUN edit2 refA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 10 seconds 1.027532 mean_ms 102.753216 OK
+RUN edit2 parA
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3BENCH threads 1 reps 11 seconds 1.042234 mean_ms 94.748553 OK
+RUN chain chain
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=7.403798
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=9.193855
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.014852
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.007642
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=85 forward_ms=4.875865 reverse_ms=7.003920 timed=0.414/0.595
+chain_step=1 mean_ms=4.875865 timed=0.414
+chain_step=2 mean_ms=7.003920 timed=0.595
+chain_step=3 mean_ms=0.004955 timed=0.000
+chain_step=4 mean_ms=0.000959 timed=0.000
+ 20:53:14 up  5:37,  0 user,  load average: 3.72, 3.01, 2.50
+SUMMARY milliseconds min median max (per-process means)
+chain chain 1 4.420412 4.656871 5.045008
+chain chain 2 6.389357 7.003920 7.364053
+chain chain 3 0.004286 0.004326 0.004955
+chain chain 4 0.000956 0.000989 0.001438
+edit inc forward 0.000144 0.000151 0.000157
+edit inc reverse 0.000123 0.000129 0.000143
+edit par full 93.463467 96.788175 111.563251
+edit parA full 92.711534 93.667449 113.285430
+edit ref full 101.240832 102.155579 108.474510
+edit refA full 100.851895 104.378179 128.794972
+edit2 inc forward 4.448853 4.881273 5.781769
+edit2 inc reverse 6.497711 6.961310 8.058126
+edit2 par full 76.113474 80.541478 82.198053
+edit2 parA full 93.617489 95.509769 98.521815
+edit2 ref full 84.920457 87.484673 89.899610
+edit2 refA full 101.047109 102.753216 108.308166

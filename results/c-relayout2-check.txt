@@ -1,0 +1,151 @@
+REVIEW allocator: 20000 random allocate/free steps, alignment, first fit splitting, coalescing, live/live and live/hole disjointness OK
+bucket added removed common moved rel_added rel_removed rel_common rel_value_changed image_union image_changed
+1 0 0 109877 89289 8 5 1144391 806879 40765306 26804270
+2 0 0 803 803 0 0 8384 5646 507544 480189
+3 0 0 57032 0 0 0 40137 19495 22272104 22652
+4 0 0 23 0 0 0 0 0 3300 0
+5 1 0 35599 35599 0 0 18988 362 1870913 939408
+6 0 0 33261 33261 0 0 428898 151328 3416264 2189623
+7 0 0 95151 95151 0 0 347641 202655 6476196 4554306
+8 0 0 7620 7620 0 0 31827 28066 315704 122689
+9 0 0 2342 0 0 0 1082 982 1228534 984
+10 0 0 23 0 0 0 0 0 99504 0
+11 0 0 13236 0 0 0 32448 11122 619896 16131
+12 0 0 0 0 0 0 0 0 0 0
+13 0 0 3795 0 0 0 0 0 0 0
+14 0 0 1553 0 0 0 0 0 0 0
+15 0 0 0 0 0 0 0 0 0 0
+global_image_union 77574856 global_image_changed 35129895
+common_extractor_unit_changes 0
+P3COMPARE OK
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+first_step=1 ms=0.039540
+step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+first_step=2 ms=0.006099
+warm_step=1 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=1 hole_bytes=288 tail_free=1330164 spare_free=982496 retained_unused=0
+warm_step=2 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=2 hole_bytes=304 tail_free=1330164 spare_free=982496 retained_unused=256
+P3HOLES OK reps=84178 forward_ms=0.000143 reverse_ms=0.000119 timed=0.012/0.010
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833464 relocations=2053804
+P3INC INDEPENDENT OK
+p3a (1 core): layout 8.791685 ms (360316 symbols, 33261 sorted by type string), reps 1 total 0.008792 s
+p3b (1 threads): copy + relocate 56.7 ms, 76360168 bytes, 2053804 relocations, 0 errors; checksum e12e80fdfefe6bc3
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 8.937656 ms (360316 symbols, 33261 sorted by type string), reps 1 total 0.008938 s
+p3b (1 threads): copy + relocate 74.3 ms, 76360168 bytes, 2053804 relocations, 0 errors; checksum e12e80fdfefe6bc3
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360316 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=33261 bytes=133044
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=33261 bytes=133044
+TYPELINK NEGATIVE OK corrupted table rejected; restored table passes
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833464 relocations=2053804
+P3INC INDEPENDENT OK
+negative relocation byte: rejected (1)
+negative misaligned address: rejected (2)
+negative overlapping address: rejected (2)
+bucket added removed common moved rel_added rel_removed rel_common rel_value_changed image_union image_changed
+1 9 1636 108241 107987 73 21267 1123129 999112 41218578 38646079
+2 0 0 803 803 0 0 8384 5832 989660 949637
+3 148 1117 55915 55915 7 460 39677 39624 23047302 22634283
+4 0 0 23 23 0 0 0 0 6600 4821
+5 134 877 34722 34722 34 374 18614 1762 3641337 1360144
+6 0 833 32428 32428 0 8278 420620 383749 6755312 3602508
+7 145 2262 92889 92889 0 6692 340949 330426 12805489 8191308
+8 4 170 7450 7450 58 642 31185 31183 625152 298977
+9 0 5 2337 2337 0 0 1082 1081 2456730 1654798
+10 0 0 23 23 0 0 0 0 199008 197298
+11 0 270 12966 12966 0 488 31960 31960 1233648 294869
+12 0 0 0 0 0 0 0 0 0 0
+13 0 12 3783 3783 0 0 0 0 0 0
+14 0 16 1537 1537 0 0 0 0 0 0
+15 0 0 0 0 0 0 0 0 0 0
+global_image_union 91796980 global_image_changed 76696695
+common_extractor_unit_changes 95
+P3COMPARE OK
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=6.960486
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=9.015725
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1114 hole_bytes=21099070 tail_free=1325905 spare_free=971088 retained_unused=0
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=764 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+P3HOLES OK reps=2 forward_ms=5.261847 reverse_ms=6.922713 timed=0.011/0.014
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181103 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+p3a (1 core): layout 18.887760 ms (353557 symbols, 32428 sorted by type string), reps 1 total 0.018888 s
+p3b (1 threads): copy + relocate 47.0 ms, 55307665 bytes, 2015772 relocations, 0 errors; checksum 2d8ff0f8b47cb70e
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 8.244634 ms (353557 symbols, 32428 sorted by type string), reps 1 total 0.008245 s
+p3b (1 threads): copy + relocate 48.7 ms, 55307665 bytes, 2015772 relocations, 0 errors; checksum 2d8ff0f8b47cb70e
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 353557 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=32428 bytes=133044
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=32428 bytes=133044
+TYPELINK NEGATIVE OK corrupted table rejected; restored table passes
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181103 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+negative relocation byte: rejected (1)
+negative misaligned address: rejected (2)
+negative overlapping address: rejected (2)
+p3a (1 core): layout 13.392920 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.013393 s
+p3b (1 threads): copy + relocate 73.1 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+p3a (1 core): layout 11.690606 ms (360315 symbols, 33261 sorted by type string), reps 1 total 0.011691 s
+p3b (1 threads): copy + relocate 75.8 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 pipeline OK
+reservation total_slack=2313220 produced_slack=1817765 image=145913440 original_image=109486380
+step=1 moved=0 repatched=45336 bytes_changed=20807401 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1077 hole_bytes=21090008 tail_free=1327410 spare_free=978645 retained_unused=0
+first_step=1 ms=9.401330
+step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=756 hole_bytes=16210 tail_free=1325905 spare_free=971088 retained_unused=17
+first_step=2 ms=11.174661
+step=3 moved=1 repatched=12 bytes_changed=755 copied=548 cleared=288 patch_bytes=48 reverse_visits=4 table_bytes=0 written=884 holes=757 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+first_step=3 ms=0.015954
+step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=758 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+first_step=4 ms=0.008623
+warm_step=1 moved=0 repatched=45336 bytes_changed=20807505 copied=791390 cleared=21877879 patch_bytes=208976 reverse_visits=937 table_bytes=133044 written=23011289 holes=1116 hole_bytes=21099374 tail_free=1325889 spare_free=970544 retained_unused=256
+warm_step=2 moved=0 repatched=82848 bytes_changed=20807505 copied=21841851 cleared=795768 patch_bytes=393804 reverse_visits=14724 table_bytes=133044 written=23164467 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+warm_step=3 moved=0 repatched=8 bytes_changed=514 copied=548 cleared=288 patch_bytes=32 reverse_visits=0 table_bytes=0 written=868 holes=765 hole_bytes=16498 tail_free=1325889 spare_free=970544 retained_unused=17
+warm_step=4 moved=0 repatched=5 bytes_changed=514 copied=266 cleared=560 patch_bytes=20 reverse_visits=0 table_bytes=0 written=846 holes=766 hole_bytes=16514 tail_free=1325889 spare_free=970544 retained_unused=273
+P3HOLES OK reps=1 forward_ms=7.242163 reverse_ms=9.049095 timed=0.007/0.009
+chain_step=1 mean_ms=7.242163 timed=0.007
+chain_step=2 mean_ms=9.049095 timed=0.009
+chain_step=3 mean_ms=0.006260 timed=0.000
+chain_step=4 mean_ms=0.001041 timed=0.000
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181103 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=32428 bytes=133044
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181103 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=32428 bytes=133044
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833464 relocations=2053804
+P3INC INDEPENDENT OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=33261 bytes=133044
+CHECK A original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=184545 nonrel_bytes_differ=0 relocation_bytes=9833452 relocations=2053801
+CHECK B original_symbols_bad=0 slack_symbols_bad=0 slack_image_bytes_bad=0 literal_symbols_differ=181103 nonrel_bytes_differ=0 relocation_bytes=9646556 relocations=2015772
+P3INC INDEPENDENT OK
+TYPELINK INDEPENDENT OK a count=33261 bytes=133044
+TYPELINK INDEPENDENT OK b count=32428 bytes=133044
