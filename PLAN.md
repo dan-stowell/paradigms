@@ -52,8 +52,8 @@ Milestones log:
   in C, GraphBLAS column (P1, P2), kube-apiserver for every paradigm's P1-P3 cells (all correct). M4: Futhark P4 correct
   (3.2x / ~5x C), tuned C P4 (p4par). Oracle number: **17/20** (+ DuckDB 3, GraphBLAS 2); **4 ATTACKS backed**.
 
-Now (2026-11-16T18:40Z): M3 done (MORNING.md). Running: Halide P4 builder (worktree, Agent; report
-systems/halide/P4-REPORT.md or its reply), M3 skeptic (reviews/inbox/*-M3.md: triage into REVIEWS.md). Also running (18:45Z): Goose P4 builder
-(worktree), the Futhark P4 builder resumed on 3b with its slice-update copy (IDEAS I18), Codex codex-cp7 in ~/paradigms-c
-(CP7 runs: pieces vs emit time, results/codex-cp7.md). Next: merge Halide P4 after rerunning its check (that makes M4),
-then Goose P4, CP7, Futhark 3b; and quiet-machine reruns of the 8-thread numbers (load was 7-26 all of M3).
+Now (2026-11-16T18:50Z): M3 done and reviewed (REVIEWS.md). Running: Halide P4 builder (worktree; its reply or
+systems/halide/P4-REPORT.md), Goose P4 builder (worktree), Futhark P4 builder resumed on a variant reading the flattened
+emit stream (ATTACKS 4's next; ref/p4/p4runs.c control D). Next: merge each after rerunning its check (Halide P4 makes M4
+with Futhark), then M4 milestone steps; then a Halide batched-level flood (M3 review 5), quiet-machine reruns of the
+8-thread numbers (the machine is quiet when no helpers run: p4par fell from 51-68 to 16-23 ms), and Soufflé P4.
