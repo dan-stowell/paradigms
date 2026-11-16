@@ -1,0 +1,81 @@
+// Problem 4, code generation by shape (ref/p4/README.md): every function body fc wrote, from templates, operands
+// and glue. The rules compute everything relational: each item's length, where it goes (a prefix sum, which
+// Datalog does not have: a radix-16 tree of block sums, walked top down), each hole's value (a rel32 needs where its
+// target item landed), every relocation and every function's offset. flatio's code writer (C, Soufflé has no
+// bytes) only does what the `emit` relation says: copy n bytes from glue.bin/tmpl.bin to a position, store the low
+// w bytes of a value at a position.
+
+.decl meta(k: symbol, v: unsigned)
+.input meta(IO=flat, meta="true")
+.decl item(i: unsigned, kind: unsigned, ref: unsigned, seg: unsigned)    // in output order
+.input item(IO=flat, index="true", cols="item_kind.u8,item_ref.u32,item_seg.u32")
+.decl goff(g: unsigned, o: unsigned)                                     // glue g is [goff(g), goff(g + 1))
+.input goff(IO=flat, index="true", cols="glue.off.u64")
+.decl ntmpl(r: unsigned, t: unsigned)
+.input ntmpl(IO=flat, index="true", cols="node_tmpl.u32")
+.decl toff(t: unsigned, o: unsigned)                                     // template t's bytes start in tmpl.bin
+.input toff(IO=flat, index="true", cols="tmpl.off.u64")
+.decl tsegend(t: unsigned, s: unsigned, e: unsigned)                     // the end of segment s in t's bytes
+.input tsegend(IO=flat, csr="tmpl_seg_off.u32", pos="true", cols="tseg_end.u32")
+.decl thole(t: unsigned, k: unsigned, h: unsigned, w: unsigned, enc: unsigned, rt: unsigned)   // t's k-th hole
+.input thole(IO=flat, csr="tmpl_hole_off.u32", pos="true", cols="hole_at.u32,hole_w.u8,hole_enc.u8,hole_rtype.u16")
+.decl op(r: unsigned, k: unsigned, v: number, a: number)                 // node r's operand for its k-th hole
+.input op(IO=flat, csr="node_op.u32", pos="true", cols="op_val.i64,op_aux.i64")
+.decl grel(g: unsigned, off: unsigned, w: unsigned, ty: unsigned, sy: unsigned, a: number)
+.input grel(IO=flat, csr="glue_rel_off.u32", cols="grel_off.u32,grel_siz.u8,grel_type.u16,grel_sym.u32,grel_add.i64")
+.decl fnitem(f: unsigned, i: unsigned)                                   // function f starts at item fnitem(f)
+.input fnitem(IO=flat, index="true", cols="fn_item.u32")
+.decl fmark(f: unsigned, id: unsigned, off: unsigned, ty: unsigned, sy: unsigned, a: number)
+.input fmark(IO=flat, csr="fn_mark_off.u32", index="true", cols="mark_off.u32,mark_type.u16,mark_sym.u32,mark_add.i64")
+
+// ---- 1. lengths. Segment s of template t is [lo, hi) of its bytes.
+.decl seg(t: unsigned, s: unsigned, lo: unsigned, hi: unsigned)
+seg(t, 0, 0, e) :- tsegend(t, 0, e).
+seg(t, s, lo, hi) :- tsegend(t, s, hi), s > 0, tsegend(t, s - 1, lo).
+.decl len(i: unsigned, n: unsigned)
+len(i, b - a) :- item(i, 0, g, _), goff(g, a), goff(g + 1, b).
+len(i, hi - lo) :- item(i, 1, r, s), ntmpl(r, t), seg(t, s, lo, hi).
+len(n, 0) :- meta("nitem", n).                                           // one past the last item: the end
+
+// ---- 2. places: at(i) = the lengths of the items before i. Block c of level L holds items [c 16^L, (c+1) 16^L);
+// its start is its parent's start plus its earlier siblings' sums (at most 15, a range of an index).
+#define TOP 6
+.decl bsum(L: unsigned, p: unsigned, c: unsigned, n: unsigned)                 // block c of level L, parent p
+bsum(0, i bshr 4, i, n) :- len(i, n).
+bsum(L, c bshr 4, c, n) :- meta("nitem", m), L = range(1, TOP), c = range(0, (m bshr (4 * L)) + 1),
+                           lo = c bshl (4 * L), hi = (c + 1) bshl (4 * L), n = sum x : { len(i, x), i >= lo, i < hi }.
+.decl start(L: unsigned, c: unsigned, a: unsigned)
+start(TOP, 0, 0).
+start(L, c, y + z) :- start(L + 1, p, y), bsum(L, p, c, _), z = sum x : { bsum(L, p, c2, x), c2 < c }.
+.decl at(i: unsigned, a: unsigned)
+at(i, a) :- start(0, i, a).
+.decl error(what: symbol)
+error("more items than 16^TOP") :- meta("nitem", m), m >= 1 bshl (4 * TOP).
+
+// ---- 3. the holes: which segment each template hole is in, then each node segment's holes with their operands
+.decl holeseg(t: unsigned, s: unsigned, k: unsigned, d: unsigned, w: unsigned, enc: unsigned, rt: unsigned)
+holeseg(t, s, k, h - lo, w, enc, rt) :- thole(t, k, h, w, enc, rt), seg(t, s, lo, hi), h >= lo, h < hi.
+.decl hole(p: unsigned, w: unsigned, enc: unsigned, rt: unsigned, v: number, a: number) inline
+hole(x + d, w, enc, rt, v, a) :- item(i, 1, r, s), at(i, x), ntmpl(r, t), holeseg(t, s, k, d, w, enc, rt), op(r, k, v, a).
+
+// ---- 4. the output: emit(kind, at, a, b) = copy b bytes from glue (0) / templates (1) at a; store (2) value a in b bytes
+.decl emit(kind: unsigned, p: unsigned, a: number, b: unsigned)
+emit(0, x, to_number(a), n) :- item(i, 0, g, _), at(i, x), goff(g, a), len(i, n).
+emit(1, x, to_number(o + lo), hi - lo) :- item(i, 1, r, s), at(i, x), ntmpl(r, t), toff(t, o), seg(t, s, lo, hi).
+emit(2, p, v, w) :- hole(p, w, 1, _, v, _).                                         // an integer
+emit(2, p, to_number(y) + a - to_number(p + 4), 4) :- hole(p, _, 2, _, v, a), at(to_unsigned(v), y).   // rel32
+
+// a relocation. The oracle is a list, and 38 K markers repeat another one exactly, so a marker's tuple carries its
+// id + 1 (holes and glue relocations carry 0: no two have the same position and contents).
+.decl reloc(p: unsigned, ty: unsigned, sy: unsigned, a: number, w: unsigned, id: unsigned)
+reloc(p, rt, to_unsigned(v), a, w, 0) :- hole(p, w, 3, rt, v, a).
+reloc(x + off, ty, sy, a, w, 0) :- item(i, 0, g, _), at(i, x), grel(g, off, w, ty, sy, a).
+reloc(x + off, ty, sy, a, 0, k + 1) :- fmark(f, k, off, ty, sy, a), fnitem(f, i), at(i, x).
+
+.decl fnoff(f: unsigned, a: unsigned)
+fnoff(f, a) :- fnitem(f, i), at(i, a).
+
+.output error(IO=flat, cols="-")
+.output fnoff(IO=flat, cols="-,p4_fn_off.out.u64", exitafter="4")
+.output reloc(IO=flat, cols="p4_rel_off.out.u64,p4_rel_type.out.u16,p4_rel_sym.out.u32,p4_rel_add.out.i64,p4_rel_siz.out.u8,-", exitafter="4")
+.output emit(IO=flat, code="p4_code.out.bin", exitafter="4")

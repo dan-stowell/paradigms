@@ -40,3 +40,14 @@ e2e 1893-2061-3409 · 8 thr warm 1725-1937-3541, e2e 1922-2128-3790 (attempt 2 s
 8 thr warm 320-451, e2e 1205-1374 · image assembly (C writer): 54-56 / 18-29 ms on 4 KB pages; on 2 MB pages
 (ATTACKS 2) 20.0-34.7 / 7.8-16.2 ms, 39 / 150-172 minor faults vs 19,108 · 31 lines · easy: one rule per kind;
 forced: bytes (copy + patch) in C; `site` inlined (5.2 s -> 2.5 s at load 11).
+
+**4 code generation by shape** — correct, both attempts, 1 and 8 threads (`build/emit2 -j8 -F $P4 -D out &&
+build/check_p4 $P4 out` -> P4 OK: 60,733,909 bytes = oracle/p4_code.bin, 136,635 function offsets, 1,780,281
+relocations sorted) · attempt 2 (emit2.dl), 19:19Z load 7-10, 5 rounds interleaved with the C: 1 thr warm
+7246/8316/9046, e2e 9642/11097/12282 · 8 thr warm 2722/3814/4741, e2e 5056/6161/8002 · same rounds p4.c 107/111/155,
+p4par 8 threads 21.6/27.0/46.9: **~70x / ~130x** · attempt 1 (emit.dl) 8781/9507 (1), 3328/3598 (8) · 74 lines (60 for
+attempt 1) + the C code writer (42 lines C++: memcpy runs and store low bytes, at positions the rules computed) ·
+easy: lengths, holes to segments, rel32 as a join with `at` of the target item, relocations, fn offsets; forced: the
+prefix sum as a radix-16 tree of block sums walked top down (11% of compute), marker ids kept as a column (set
+semantics drops 37,703 exact duplicates), bytes in C; the cost is 8.65 M output tuples, each a B-tree insert after
+2-4 probes; driving the hole join in output order beat driving it from operands or template holes 1.5x.

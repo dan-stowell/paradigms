@@ -363,6 +363,54 @@ void writeImage(std::map<std::string, std::string> d, const R& rel) {
 	        all.size(), sorted[0], sorted[sorted.size() / 2], sorted.back(), reps, getenv("FLATIO_HUGE") ? "2 MB" : "4 KB", flt.back(), toVec, fileMs);
 }
 
+// code="NAME": problem 4's emit. The relation is (kind, at, a, b), computed by the rules: kind 0 copies b bytes
+// from glue.bin at offset a to position at, kind 1 copies b bytes from tmpl.bin at a; kind 2 stores the low b bytes
+// of a (little-endian) at at. The writer does exactly that (C, not Datalog: Soufflé has no bytes): every copy, then
+// every store (a hole lies in bytes a copy wrote, so stores go second), into code_bytes (meta.txt) bytes; NAME.
+// FLATIO_IMG_REPS=n: assemble n times into a fresh mapping, report min/median/max ms.
+template <class R>
+void writeCode(std::map<std::string, std::string> d, const R& rel) {
+	auto t0 = Clock::now();
+	const std::string& fd = factDir;
+	size_t n = metaGet(fd, "code_bytes"), b;
+	const uint8_t* src[2] = {mapFile(fd + "/glue.bin", b), mapFile(fd + "/tmpl.bin", b)};
+	std::vector<typename R::t_tuple> all(rel.begin(), rel.end());
+	double toVec = msSince(t0);
+	int reps = getenv("FLATIO_IMG_REPS") ? atoi(getenv("FLATIO_IMG_REPS")) : 1;
+	std::vector<double> ms;
+	uint8_t* img = nullptr;
+	size_t mapped = 0;
+	for (int rep = 0; rep < reps; rep++) {
+		if (img) munmap(img, mapped);
+		auto t1 = Clock::now();
+		size_t hp = 2u << 20;
+		mapped = (n + hp - 1) / hp * hp;
+		img = (uint8_t*)MAP_FAILED;
+		if (getenv("FLATIO_HUGE")) img = (uint8_t*)mmap(nullptr, mapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+		if (img == MAP_FAILED) img = (uint8_t*)mmap(nullptr, mapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#pragma omp parallel for schedule(static)
+		for (size_t i = 0; i < all.size(); i++)
+			if (all[i][0] < 2) memcpy(img + (uint64_t)all[i][1], src[all[i][0]] + (uint64_t)all[i][2], (size_t)all[i][3]);
+#pragma omp parallel for schedule(static)
+		for (size_t i = 0; i < all.size(); i++)
+			if (all[i][0] == 2) {
+				uint64_t v = (uint64_t)all[i][2];
+				memcpy(img + (uint64_t)all[i][1], &v, (size_t)all[i][3]);
+			}
+		ms.push_back(msSince(t1));
+	}
+	auto t2 = Clock::now();
+	std::string path = (opt(d, "output-dir").empty() ? std::string(".") : opt(d, "output-dir")) + "/" + opt(d, "code");
+	FILE* f = fopen(path.c_str(), "wb");
+	if (!f || fwrite(img, 1, n, f) != n) throw std::runtime_error("flatio: cannot write " + path);
+	fclose(f);
+	double fileMs = msSince(t2);
+	std::vector<double> sorted = ms;
+	std::sort(sorted.begin(), sorted.end());
+	fprintf(stderr, "flatio: code %zu copies+stores, assemble min %.1f median %.1f max %.1f ms over %d, tuples->vector %.1f ms, file %.1f ms\n",
+	        all.size(), sorted[0], sorted[sorted.size() / 2], sorted.back(), reps, toVec, fileMs);
+}
+
 template <class R>
 void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable& rt, const R& rel) {
 	if (opt(d, "IO") != "flat") {
@@ -377,6 +425,9 @@ void writeAll(std::map<std::string, std::string> d, SymbolTable& st, RecordTable
 	auto names = split(opt(d, "cols"));
 	if (!opt(d, "image").empty()) {
 		if constexpr (arity == 3) writeImage(d, rel);
+		names.clear();
+	} else if (!opt(d, "code").empty()) {
+		if constexpr (arity == 4) writeCode(d, rel);
 		names.clear();
 	} else if (names.size() != arity) throw std::runtime_error("flatio: " + opt(d, "name") + ": output columns do not match arity");
 	std::vector<T> all;
