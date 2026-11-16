@@ -122,3 +122,18 @@ Common kill-test conventions: "grid" = MinIO columns (5.2 M slots, 9.4 M relocs,
 - No Futhark paper on hash joins as such; the only hash-table code is the `diku-dk/containers` library (two-level static hashing, built with `hist`/retry rounds), whose speed I measured (I7).
 - No Futhark paper on reachability with conditional edges, or on linking/symbol resolution.
 - Futhark papers report GPU numbers; none of the CPU (`multicore`) backend beyond the compiler docs, and I found no published CPU comparison against PBBS C++. Treat CPU claims as untested until a kill test above runs.
+
+## Measured on the cells (2026-11-16, NOTES.md)
+
+- **I14. Run every array runtime on 2 MB pages.** `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` with no code change:
+  1a 143-158 -> 89-111 ms, 1b 74-94 -> 47-48, 1c 197-225 -> 115-133 (1 core, interleaved, 16:33Z); faults per warm
+  rep 16-33 K -> 18-67. Any system that allocates per operation (Futhark, Halide's buffers, DuckDB's vectors) should
+  be rerun with it before its time is compared. Next: the same tunable on the other paradigms' cells.
+- **I15. Owner-of-item by scatter + max-scan, never by binary search.** 1b 459 -> 76 ms, 3b 180 -> 115 ms (1 core).
+- **I16. A level-synchronous flood has a per-level floor.** Futhark's flood is ~0.9 ms per level x 111 levels at
+  1 core (C: 0.4); on 8 threads each level is ~25 barriers. Kill test for a fix: flood the first ~10 levels
+  level-synchronously, then switch to fewer, fatter rounds (e.g. iterate the whole remaining edge set to a fixpoint
+  with a dense `live` bitmap pass per round); dead if the round count times a full pass (~9.4 M edges, ~5 ms) is
+  not below 111 x 0.9 ms.
+- **I17. The I1 idea (expand-based BFS) does not carry the lazy decode cheaply.** Lazy (decode inside the flood)
+  165-200 ms vs eager flood 97-119 ms at 1 core in Futhark, the reverse of C (52.6 vs 108.7 incl. decode).
