@@ -275,7 +275,7 @@ reasons: arenas re-lay-out (compact) inside a changed package, and the typelink 
 404,622 repatches). The 4 KB policy costs 58.8 MB of produced slack (54% of the image) where the edits grew arenas by
 only 272 / 7,056 bytes in total: per-arena reservation is the wrong allocator.
 **Attempt 2 (holes, no compaction; `ref/flat/p3holes.c`, 1 core, 5 interleaved rounds 20:50-20:53Z, load 3.2-3.7;
-lead reran `ref/flat/check-p3holes.sh` 21:00Z: all OK, negatives rejected): retain each symbol's allocation, not just
+lead reran `ref/flat/check-p3holes.sh` 20:56Z: all OK, negatives rejected): retain each symbol's allocation, not just
 its package's.** Removed symbols leave coalescing holes; a symbol that grows past its capacity takes the first hole in
 its arena, then a 64 B arena tail, then a shared 64 KiB spare per bucket; nothing compacts. Type descriptors stay put
 and the sorted typelink order becomes a separate 133 KB array of offsets (the old 404,622 "typelink" repatches were
