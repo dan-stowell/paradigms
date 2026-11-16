@@ -82,6 +82,28 @@ The grid is a starting frame, not a cage. Leave room to be surprised in both dir
 - **Abuse a paradigm if that's where the idea is.** Using Halide on a graph or Datalog for
   layout is fair, and the place it strains is a finding.
 
+## Measuring on a noisy machine
+
+The VM shares its host with other VMs, and the run's own builders compile in the background,
+so a single millisecond timing means little. Don't trust one, and don't stall on noise either.
+
+- **Speed here is about orders of magnitude.** The grid asks whether a paradigm is at 2x, 10x or
+  100x of the reference and the floor, and why. A 5% difference is not a finding; don't spend
+  effort resolving it.
+- **Make the work meaty.** Repeat a kernel inside one process until a run takes at least a
+  second, and report time per iteration; or use the bigger dataset (kube-apiserver), or scale
+  the data up (MinIO's data several times over, with renumbered IDs). Then report the per-unit
+  number next to the floor.
+- **Repeat and report the range.** At least five runs, interleaved with whatever it's compared
+  against, in the same window. Report min, median and max. A difference counts only when the
+  ranges don't overlap; otherwise write "within noise" and move on.
+- **Count the mechanism when you can.** Bytes touched, passes over the data, cache misses
+  (`perf stat` if it works here), instructions. A count explains a time and doesn't drift.
+- **Never wait for a quiet machine.** Note the load (`uptime`) next to a measurement. Pin a
+  benchmark to cores the builders aren't using (`taskset`) if the comparison needs it, or take
+  the repeats. A measurement left as "to redo when quiet" goes in the Now line once, not as a
+  blocker.
+
 ## ATTACKS.md
 
 The deliverable that matters most. Each entry: the problem, the old shape, the new attack and
@@ -108,8 +130,7 @@ kill test that the grid can run. An idea from a paper is a hypothesis until a ce
   agreeing with the stock linker on all of the standard library and MinIO's tests in about an
   hour. Installing a toolchain and getting a first correct cell is an hour, not a day.
 - **Commit and push often** with real messages. Report absolute numbers (ms, GB/s) and
-  timestamps from `date -u`. The host is noisy: compare configurations interleaved in the same
-  window.
+  timestamps from `date -u`, measured as in "Measuring on a noisy machine".
 
 ## Anti-goals
 
