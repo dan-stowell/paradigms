@@ -1,11 +1,12 @@
 # STATUS (at most ten lines; updated at every milestone and whenever Dan is needed)
 
-2026-11-16T16:23Z. Campaign 1, M0 done, M1/M2 in flight: five builders resumed (Soufflé, Futhark, Halide, Goose, DuckDB); 0/20 cells merged yet.
-**2 ATTACKS entries backed by measurement.** 1: reach, decoding relocation columns inside the flood is 2x the eager decode+CSR+flood
-(52.6 / 13.6-15.4 vs 108.7 / 30.1 ms; Codex reproduced 2.1-2.6x); the hlink ratio is withdrawn (not equivalent work).
-2: relocate on 2 MB output pages, 24 vs 49 ms on 1 thread and **5.4-6.8 ms on 8 = 1.1-1.4x the 4.92 ms floor** (14 on 4 KB pages).
-Next lead hypothesis (Codex testing): resolve's join is bound by 4 passes over the dense 83 MB key array, of which 15% is keyed.
-VM bandwidth measured: 25 GB/s read on 1 thread, 36 on 8 (FLOOR.md assumes more; floors here are optimistic by ~2x).
+2026-11-16T17:22Z. **M1 + M2 done**: Goose, Futhark, Halide, Soufflé and DuckDB are each correct on problems 1-3 (lead-verified).
+Oracle number: **16/20 cells + DuckDB 3; 3 ATTACKS backed by measurement.** No paradigm beats tuned C on any cell (Halide is
+closest, 1.2-2.5x; Soufflé furthest, 30-200x); the distances and their causes are in GRID.md and MORNING.md.
+ATTACKS 1: decode in the flood, 2x the eager graph build (C). 2: huge pages: relocate at the VM's bandwidth bound
+(5.4-6.8 ms on 8), and `GLIBC_TUNABLES=glibc.malloc.hugetlb=2` gets it with no code. 3: drop level sync: 111 levels cost
+every paradigm; a worklist flood is 1.7x passive OpenMP under overload, 25x default spinning.
+Next (M3/M4): problem 4 in two paradigms, kube-apiserver for paradigm cells, second attempts on falls-downs, GraphBLAS.
 
 ## Decisions for Dan
-- None. (PLAN.md's campaign text had been truncated by an agent's Now-line edit; restored from git at 16:22Z.)
+- None. (vm.nr_hugepages is 1536 now; not persistent across a reboot.)

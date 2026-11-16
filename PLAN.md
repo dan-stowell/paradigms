@@ -46,14 +46,11 @@ Milestones log:
   (Soufflé 3a: no sort; DuckDB P2: 45 rounds x 25 statements; Futhark and Halide: lazy reach slower than eager; Goose:
   one-array 8-worker 3b). Oracle number: **16/20** (4 paradigms x P1-P3 + the C column's 4; P4 0/4 paradigms) **+ DuckDB 3**;
   **3 ATTACKS entries backed by measurement** (lazy decode in the flood; huge-page output; drop level synchronization).
-Now (2026-11-16T16:45Z, lead session paradigms-46): M1/M2 in flight. Merged: Goose, Futhark (GRID columns), codex-e/f/g.
-**A /clear or session end kills the session's subagents**: still running inside paradigms-46: builders souffle
-(.claude/worktrees/agent-a04daa..), halide (agent-a45ed3..), duckdb (agent-a66651..); if the session is gone, relaunch
-each with ideas/RESUME.md (prompt = "You are the <sys> cell builder ... worktree <path> ... follow ideas/RESUME.md").
-When a builder replies: rebuild its cells from source, rerun every check, merge its branch, fill its GRID column by table
-position (the C table has rows with the same names: edit only the rows under "## The paradigms").
-Codex: codex-h (paradigms-e, results/codex-h.md) splits p1compact's two changes (dense single pass vs partition-local
-candidates) to explain its 1.5x. Then: M1 milestone pass (LOOP.md "At each milestone": oracle number, GRID, JOURNAL
-paragraph, skeptic reviewer from a second clone, STATUS, MORNING) once Soufflé/Halide/DuckDB merge.
-Open threads: ATTACKS 3 quiet-machine run (p2async vs p2par passive, nothing else running); Futhark's
-glibc.malloc.hugetlb=2 tunable tried on the C refs and the other paradigms.
+
+Now (2026-11-16T17:23Z, lead session paradigms-46): M2 done; all builders finished and merged; no subagents running.
+Next: (1) triage the M2 skeptic review (reviews/inbox/20261116T1713-codex-skeptic.md, running until ~17:55Z) into
+REVIEWS.md; (2) fresh context (LOOP.md); (3) M3/M4: launch builders for problem 4 (ref/p4/README.md, data/minio-p4) in
+two paradigms (Halide and Futhark first: templates + operand patch is a gather/scatter), kube-apiserver for each paradigm's
+cells (bench.sh with data/kube-apiserver), second attempts on falls-downs (DuckDB P2 as one recursive query, 425 ms
+plain edges; Soufflé 3a sort via a functor or a ranked relation), GraphBLAS column (IDEAS.md). Quiet-machine reruns of
+8-thread numbers are owed once (ref/flat/bench.sh, systems/*/bench.sh) but never block.
