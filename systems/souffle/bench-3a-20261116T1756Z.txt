@@ -1,0 +1,9 @@
+# 2026-11-16T17:56:50Z  17:56:50 up  2:41,  0 user,  load average: 10.87, 15.72, 16.23
+3a       -j1 warm     min   7647.4  median   8269.7  max   9096.7 ms  (5 runs)
+3a       -j1 e2e      min   7800.3  median   8426.6  max   9310.2 ms  (5 runs)
+3a       -j8 warm     min   2860.1  median   3388.4  max   7054.8 ms  (5 runs)
+3a       -j8 e2e      min   3006.4  median   3604.1  max   7301.8 ms  (5 runs)
+3a-rank  -j1 warm     min   1711.9  median   1929.6  max   3085.6 ms  (5 runs)
+3a-rank  -j1 e2e      min   1893.2  median   2060.8  max   3408.7 ms  (5 runs)
+3a-rank  -j8 warm     min   1725.4  median   1936.5  max   3541.1 ms  (5 runs)
+3a-rank  -j8 e2e      min   1921.5  median   2127.8  max   3790.0 ms  (5 runs)
