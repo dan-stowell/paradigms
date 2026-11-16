@@ -403,6 +403,7 @@ static void scatter(const char *sql, int ints) {
 	duckdb_destroy_result(&r);
 	getrusage(RUSAGE_SELF, &ru1);
 	if (ncell >= 0) cellMs[ncell] += (now() - t0) * 1e3, cellFlt[ncell] += ru1.ru_minflt - ru0.ru_minflt;
+	if (!quiet) printf("  %9.2f ms  (the scatter into the image: %ld minor faults)\n", (now() - t0) * 1e3, ru1.ru_minflt - ru0.ru_minflt);
 }
 
 // ---- the script
@@ -526,7 +527,10 @@ static void exec(int from, int to) {
 			size_t hp = 2u << 20;
 			imgMapped = (imgSize + hp - 1) / hp * hp;
 			img = MAP_FAILED;
-			if (getenv("DK_THP")) img = mmap(NULL, imgMapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+			if (getenv("DK_THP") && *getenv("DK_THP")) {
+				img = mmap(NULL, imgMapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+				if (img == MAP_FAILED && !quiet) printf("  (no huge pages: MAP_HUGETLB failed, 4 KB pages)\n");
+			}
 			if (img == MAP_FAILED) img = mmap(NULL, imgMapped, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 			if (img == MAP_FAILED) die("image", "mmap");
 		} else if (!strcmp(d, "blob") || !strcmp(d, "int")) {
