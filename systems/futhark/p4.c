@@ -1,6 +1,13 @@
 // p4.c: driver for p4.fut. Loads the flat files, calls the entry, times it, checks against the oracles
 // (the code byte for byte, the function offsets, the relocations as a sorted list, as ref/p4/p4.c).
-//   p4 DATADIR THREADS REPS CELL [nocheck]     CELL: 4 (chunked scatter copy, CHUNK=32), 4g (gather copy), 4lay (lay out only)
+//   p4 DATADIR THREADS REPS CELL [nocheck]     CELL (p4.fut's `how`):
+//     4   copy as a scatter of CHUNK-byte rows (default 32), patch as a second scatter     (how 0)
+//     4g  copy as a gather, patch as a scatter                                              (how 1)
+//     4f  copy and patch in one scatter of 32-byte rows                                     (how 2)
+//     4b  copy in CHUNK blocks (default 64; map over blocks, sequential slice copies inside), patch as a scatter (how 3)
+//     4bf copy and patch in CHUNK blocks (default 64)                                       (how 4)
+//     4lay  the lay out alone
+//   PARTS=n (bits: 1 copy, 2 patch, 4 relocations; default 7) switches pieces off for timing (no check)
 #include "p4.h"
 #include "drv.h"
 LOADER(u8, uint8_t) LOADER(u16, uint16_t) LOADER(u32, uint32_t) LOADER(u64, uint64_t) LOADER(i64, int64_t)
@@ -28,7 +35,11 @@ int main(int argc, char **argv) {
 	fut_init(argc, argv);
 	const char *cell = argc > 4 ? argv[4] : "4";
 	int check = !(argc > 5 && strcmp(argv[5], "nocheck") == 0);
-	int64_t chunk = strcmp(cell, "4g") == 0 ? 0 : getenv("CHUNK") ? atol(getenv("CHUNK")) : 32;
+	const char *hows[] = {"4", "4g", "4f", "4b", "4bf"};
+	int64_t how = 0;
+	for (int k = 0; k < 5; k++)
+		if (strcmp(cell, hows[k]) == 0) how = k;
+	int64_t chunk = getenv("CHUNK") ? atol(getenv("CHUNK")) : how >= 3 ? 64 : 32;
 	int64_t parts = getenv("PARTS") ? atol(getenv("PARTS")) : 7;
 	if ((parts & 7) != 7) check = 0;
 	u32 nfn = (u32)metaGet("nfn"), nrel = (u32)metaGet("nrel");
@@ -70,7 +81,7 @@ int main(int argc, char **argv) {
 	struct TUP *out = NULL;
 	TIMEIT(cell, {
 		if (out) futhark_free_opaque_tup8_arr1d_u8_arr1d_i64_arr1d_i64_arr1d_u8_arr1d_u16_arr1d_u32_arr1d_i64_i64(ctx, out);
-		fut_check(futhark_entry_emit(ctx, &out, parts, chunk, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,
+		fut_check(futhark_entry_emit(ctx, &out, parts, how, chunk, fn_item, fn_mark_off, mark_off, mark_type, mark_sym, mark_add, item_kind,
 		                             item_ref, item_seg, glue_off, glue_bin, glue_rel_off, grel_off, grel_siz, grel_type, grel_sym,
 		                             grel_add, node_tmpl, node_op, op_val, op_aux, tmpl_off, tmpl_bin, tmpl_seg_off, tseg_end,
 		                             tmpl_hole_off, hole_at, hole_w, hole_enc, hole_rtype),
