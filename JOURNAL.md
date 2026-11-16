@@ -116,3 +116,4 @@ cheap and should have come first. **What did the oracle number do since the last
 the blocker, and what am I doing about it?** 17/20 -> 19/20, ATTACKS 4 backed. The last cell is Soufflé P4, next in
 the Now line; after it the grid is full, and the work turns to the open attacks (holes, level sync in Halide).
 - 2026-11-16T19:05Z M4 review triaged (GRID Goose P4 join cost, Halide CPU-time label, ATTACKS 3 Futhark worklist); builders: Soufflé P4, Halide batched flood; Codex: hole cost (codex-holes), Goose P4 offset check (codex-goose-fnoff).
+- 2026-11-16T19:12Z ref/fc/run.sh + ref/p4/extract.sh take TARGET/PKG (default MinIO); kube-apiserver P4 extraction started (data/kube-p4).

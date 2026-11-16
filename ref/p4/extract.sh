@@ -3,6 +3,7 @@
 # while it dumps every function body it emits (FC_P4DUMP), check that the dump did not change the program
 # (the same binary with and without it), and turn the dump into data/minio-p4/.
 #   ref/p4/extract.sh [out dir (data/minio-p4 in the main checkout)]
+#   kube-apiserver: TARGET=/home/exedev/targets/kubernetes PKG=./cmd/kube-apiserver GOCACHE=<dir> ref/p4/extract.sh data/kube-p4
 set -euo pipefail
 here=$(cd "$(dirname "$0")/../.." && pwd)
 d=${1:-/home/exedev/paradigms/data/minio-p4}
