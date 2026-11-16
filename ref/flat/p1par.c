@@ -1,10 +1,12 @@
-// p1par.c: problem 1a+1b from the flat files on all cores (OpenMP): a partitioned hash join. Pass 1 counts the
+// p1par.c: problem 1a+1b+1c from the flat files on all cores (OpenMP): a partitioned hash join. Pass 1 counts the
 // keyed slots per partition (top 8 bits of k1) per thread-chunk, a prefix sum places them, pass 2 scatters
 // (key, val) records; each partition is joined in a table that fits in L2; pass 3 gives every slot its winner;
-// then the relocation targets are a parallel gather. Checks oracle/p1_canon.u32 and oracle/p1_reltarget.u32.
+// then the relocation targets are a parallel gather. 1c uses p1c.h's partitioned content join.
+// Checks name canon, builtins, relocation targets, and final content canon against their oracles.
 //   gcc -O2 -march=native -fopenmp -o build/p1par ref/flat/p1par.c && build/p1par data/minio
 #include "flat.h"
 #include <omp.h>
+#include "p1c.h"
 
 #define NP 256
 #define rankDef (1u << 29)
@@ -145,6 +147,18 @@ int main(int argc, char **argv) {
 	long bad = check32("canon", canon, (size_t)N + 1, "oracle/p1_canon.u32");
 	bad += check32("builtin", builtin, nb, "oracle/p1_builtin.u32");
 	bad += check32("reltarget", tgt, nrel, "oracle/p1_reltarget.u32");
+	const u64 *hkey = FMAP(u64, "p1_hashkey.u64x2", NULL);
+	const u8 *hmark = FMAP(u8, "p1c_mark.u8", NULL);
+	u32 *canon2 = malloc(4 * ((size_t)N + 1));
+	double hcBest = 1e9;
+	for (int rep = 0; rep < (argc > 2 ? atoi(argv[2]) : 7); rep++) {
+		double t0 = now();
+		contentJoin(N, kind, hmark, hkey, canon, canon2, C);
+		double elapsed = now() - t0;
+		if (elapsed < hcBest) hcBest = elapsed;
+	}
+	printf("p1cpar (%d threads): content-hash join %.1f ms\n", T, hcBest * 1e3);
+	bad += check32("canon after 1c", canon2, (size_t)N + 1, "oracle/p1c_canon.u32");
 	printf(bad ? "P1 FAIL\n" : "P1 OK\n");
 	return bad != 0;
 }
