@@ -62,11 +62,10 @@ Milestones log:
   Differential Dataflow (incremental relink, builder running). Oracle number: **20/20** (+ DuckDB 3, GraphBLAS 2);
   **4 ATTACKS backed** (3 and 4 extended).
 
-Now (2026-11-16T19:00Z): Running: Opus builders (worktrees) Soufflé P4 (systems/souffle/P4-REPORT.md) and Halide
-batched-level flood (results/halide-levelfree.md); Sonnet installer for a new column, Differential Dataflow
-(systems/ddflow, incremental relink); Codex in /home/exedev/paradigms-c (branch codex-holes, results/codex-holes.md, log
-codex-holes.log) and /home/exedev/paradigms-k (branch codex-kube-p4: every P4 cell on data/kube-p4, results/codex-kube-p4.md,
-log codex-kp4.log); each log ends with "EXIT n". Done: Goose P4 offset check merged; kube-apiserver P4 data extracted
-(ref/p4/README.md). On each finish: rebuild + rerun its check in main, merge, GRID/ATTACKS. Then: a Halide cell on
-the flattened P4 stream (to the Halide builder after its flood); DD's incremental relink as a real cell (P1+P2 under
-an edit: which symbols change between two MinIO builds); quiet reruns of the 8-thread numbers once no builder runs.
+Now (2026-11-16T19:36Z): grid full (20/20). Running: Opus builders (worktrees) Differential Dataflow P2 exact +
+incremental relink after a real MinIO edit (branch worktree-agent-aa18026fc1e40ed2c, results/ddflow-incremental.md)
+and Halide P4 on the flattened stream (branch worktree-agent-ac1d106352ebc93ed, results/halide-p4flat.md); skeptic on
+5e179fe (reviews/inbox/*-codex-skeptic-full.md: triage into REVIEWS.md). On each finish: rebuild + rerun its check in
+main, merge, GRID/ATTACKS (DD: a new ATTACKS entry if the update beats recompute by orders of magnitude on a real
+edit). Then: quiet reruns of the 8-thread numbers once no builder runs (systems/*/bench.sh one at a time); Futhark 3b
+with the blocked copy (MORNING surprise, not yet applied); then a fresh context.
