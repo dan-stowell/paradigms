@@ -1,0 +1,108 @@
+p1 (1 core): join by name 422.0 ms, relocation targets 66.2 ms
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1c (1 core): content-hash join 97.4 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+p2 (1 core): flood 57.9 ms, 663630 live, 7 rounds, 11450 methods pruned, reflect 1
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p3a (1 core): layout 11.2 ms (360315 symbols, 33261 sorted by type string)
+p3b (1 threads): copy + relocate 76.2 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+p1par (8 threads): best 52.1 ms = join by name 32.3 + relocation targets 19.9
+canon: 5205428 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 31.7 ms
+canon after 1c: 5205428 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+p2par (8 threads): flood best 57.8 ms, 663630 live, 111 levels in 7 rounds
+mean 73.391 ms, total 0.513738 s, 111 barriers, 678212 items
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 48.807 ms, mean 57.743 ms, total 0.404199 s, 663630 live, 7 rounds, 7 barriers, 672231 items, 270 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+sample decode=20.265 csr=54.541 flood=113.516 total=188.322 ms
+sample decode=30.123 csr=40.363 flood=139.515 total=210.000 ms
+sample decode=34.829 csr=70.624 flood=101.191 total=206.644 ms
+sample decode=42.725 csr=47.005 flood=100.368 total=190.097 ms
+sample decode=31.473 csr=49.385 flood=104.765 total=185.624 ms
+sample decode=21.201 csr=50.898 flood=85.583 total=157.682 ms
+sample decode=26.336 csr=41.183 flood=90.104 total=157.623 ms
+merged CSR: all source multisets match (8320873 edges)
+p2pipe (8 threads): flood best 85.6 ms, 663630 live, 111 levels in 7 rounds
+best decode=20.265 csr=40.363 flood=85.583 total=157.623 ms
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+decoded targets: 9403582 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 7446678; inherited aux=704023 kinds1/2/3=131247/38588/337 methods=106079
+p2lazy (8 threads): lazy-decode flood best 109.9 ms, 663630 live, 111 levels in 7 rounds
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p3a (1 core): layout 29.3 ms (360315 symbols, 33261 sorted by type string)
+p3b (8 threads): copy + relocate 44.2 ms, 76359886 bytes, 2053801 relocations, 0 errors; checksum 065963d1b7a64b22
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 360315 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+P3 pipeline OK
+p1 (1 core): join by name 1044.5 ms, relocation targets 152.0 ms
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1c (1 core): content-hash join 215.1 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+p2 (1 core): flood 207.2 ms, 926486 live, 7 rounds, 10580 methods pruned, reflect 1
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p3a (1 core): layout 19.2 ms (430349 symbols, 45475 sorted by type string)
+p3b (1 threads): copy + relocate 78.9 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+p1par (8 threads): best 108.7 ms = join by name 73.3 + relocation targets 35.4
+canon: 13270145 entries, 0 differ from oracle/p1_canon.u32
+builtin: 299 entries, 0 differ from oracle/p1_builtin.u32
+reltarget: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+p1cpar (8 threads): content-hash join 45.9 ms
+canon after 1c: 13270145 entries, 0 differ from oracle/p1c_canon.u32
+P1 OK
+p2par (8 threads): flood best 61.3 ms, 926486 live, 103 levels in 7 rounds
+mean 104.022 ms, total 0.728151 s, 103 barriers, 939332 items
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 33.608 ms, mean 68.532 ms, total 0.479723 s, 926486 live, 7 rounds, 7 barriers, 935054 items, 231 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+sample decode=39.964 csr=99.057 flood=105.512 total=244.533 ms
+sample decode=26.199 csr=63.628 flood=108.681 total=198.509 ms
+sample decode=40.597 csr=67.800 flood=70.792 total=179.190 ms
+sample decode=37.011 csr=68.789 flood=106.761 total=212.561 ms
+sample decode=40.344 csr=69.357 flood=129.827 total=239.528 ms
+sample decode=38.418 csr=63.652 flood=121.129 total=223.198 ms
+sample decode=25.334 csr=76.969 flood=96.952 total=199.255 ms
+merged CSR: all source multisets match (15600772 edges)
+p2pipe (8 threads): flood best 70.8 ms, 926486 live, 102 levels in 7 rounds
+best decode=25.334 csr=63.628 flood=70.792 total=179.190 ms
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+decoded targets: 19824324 entries, 0 differ from oracle/p1_reltarget.u32
+verified relocation multisets: 14008368; inherited aux=1301437 kinds1/2/3=207601/76192/7174 methods=192391
+p2lazy (8 threads): lazy-decode flood best 34.6 ms, 926486 live, 103 levels in 7 rounds
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p3a (1 core): layout 35.7 ms (430349 symbols, 45475 sorted by type string)
+p3b (8 threads): copy + relocate 31.0 ms, 72579169 bytes, 2823088 relocations, 0 errors; checksum a5794be11bbc7703
+image: 0 placed symbols differ from oracle/p3_image.bin
+addr: 430349 entries, 0 differ from oracle/p3_addr.u32
+P3 OK
+P3 pipeline OK

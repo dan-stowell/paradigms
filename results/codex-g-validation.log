@@ -1,0 +1,360 @@
+p2async (1 threads): flood best 38.030 ms, mean 38.030 ms, total 0.038030 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 41.335 ms, mean 41.335 ms, total 0.041335 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 40.022 ms, mean 40.022 ms, total 0.040022 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 41.640 ms, mean 41.640 ms, total 0.041640 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 39.950 ms, mean 39.950 ms, total 0.039950 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.204 ms, mean 38.204 ms, total 0.038204 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.043 ms, mean 38.043 ms, total 0.038043 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.828 ms, mean 38.828 ms, total 0.038828 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 40.462 ms, mean 40.462 ms, total 0.040462 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 40.591 ms, mean 40.591 ms, total 0.040591 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 41.150 ms, mean 41.150 ms, total 0.041150 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.881 ms, mean 38.881 ms, total 0.038881 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 42.710 ms, mean 42.710 ms, total 0.042710 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.663 ms, mean 38.663 ms, total 0.038663 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 44.963 ms, mean 44.963 ms, total 0.044963 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 37.712 ms, mean 37.712 ms, total 0.037712 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 37.845 ms, mean 37.845 ms, total 0.037845 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 38.234 ms, mean 38.234 ms, total 0.038234 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 43.844 ms, mean 43.844 ms, total 0.043844 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 40.340 ms, mean 40.340 ms, total 0.040340 s, 663630 live, 7 rounds, 7 barriers, 672505 items, 0 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 30.284 ms, mean 30.284 ms, total 0.030284 s, 663630 live, 7 rounds, 7 barriers, 672319 items, 8 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 31.853 ms, mean 31.853 ms, total 0.031853 s, 663630 live, 7 rounds, 7 barriers, 672385 items, 13 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 34.767 ms, mean 34.767 ms, total 0.034767 s, 663630 live, 7 rounds, 7 barriers, 672154 items, 12 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 84.409 ms, mean 84.409 ms, total 0.084409 s, 663630 live, 7 rounds, 7 barriers, 671712 items, 53 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.691 ms, mean 40.691 ms, total 0.040691 s, 663630 live, 7 rounds, 7 barriers, 672133 items, 18 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 32.622 ms, mean 32.622 ms, total 0.032622 s, 663630 live, 7 rounds, 7 barriers, 672321 items, 20 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 45.473 ms, mean 45.473 ms, total 0.045473 s, 663630 live, 7 rounds, 7 barriers, 672342 items, 25 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 39.399 ms, mean 39.399 ms, total 0.039399 s, 663630 live, 7 rounds, 7 barriers, 672339 items, 15 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 41.708 ms, mean 41.708 ms, total 0.041708 s, 663630 live, 7 rounds, 7 barriers, 672448 items, 12 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 37.327 ms, mean 37.327 ms, total 0.037327 s, 663630 live, 7 rounds, 7 barriers, 672338 items, 30 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.819 ms, mean 40.819 ms, total 0.040819 s, 663630 live, 7 rounds, 7 barriers, 672325 items, 18 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 33.542 ms, mean 33.542 ms, total 0.033542 s, 663630 live, 7 rounds, 7 barriers, 672377 items, 16 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 35.821 ms, mean 35.821 ms, total 0.035821 s, 663630 live, 7 rounds, 7 barriers, 672252 items, 19 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 36.431 ms, mean 36.431 ms, total 0.036431 s, 663630 live, 7 rounds, 7 barriers, 672296 items, 15 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 30.583 ms, mean 30.583 ms, total 0.030583 s, 663630 live, 7 rounds, 7 barriers, 672253 items, 18 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 43.132 ms, mean 43.132 ms, total 0.043132 s, 663630 live, 7 rounds, 7 barriers, 672459 items, 22 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 33.054 ms, mean 33.054 ms, total 0.033054 s, 663630 live, 7 rounds, 7 barriers, 672308 items, 19 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 34.693 ms, mean 34.693 ms, total 0.034693 s, 663630 live, 7 rounds, 7 barriers, 672077 items, 24 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 35.160 ms, mean 35.160 ms, total 0.035160 s, 663630 live, 7 rounds, 7 barriers, 672089 items, 12 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 44.766 ms, mean 44.766 ms, total 0.044766 s, 663630 live, 7 rounds, 7 barriers, 672593 items, 15 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 22.200 ms, mean 22.200 ms, total 0.022200 s, 663630 live, 7 rounds, 7 barriers, 672501 items, 291 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 21.144 ms, mean 21.144 ms, total 0.021144 s, 663630 live, 7 rounds, 7 barriers, 672675 items, 262 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 21.354 ms, mean 21.354 ms, total 0.021354 s, 663630 live, 7 rounds, 7 barriers, 672647 items, 286 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 24.369 ms, mean 24.369 ms, total 0.024369 s, 663630 live, 7 rounds, 7 barriers, 672385 items, 289 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 25.394 ms, mean 25.394 ms, total 0.025394 s, 663630 live, 7 rounds, 7 barriers, 672790 items, 280 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 36.736 ms, mean 36.736 ms, total 0.036736 s, 663630 live, 7 rounds, 7 barriers, 672329 items, 273 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 20.852 ms, mean 20.852 ms, total 0.020852 s, 663630 live, 7 rounds, 7 barriers, 672255 items, 297 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 20.470 ms, mean 20.470 ms, total 0.020470 s, 663630 live, 7 rounds, 7 barriers, 673150 items, 276 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 18.730 ms, mean 18.730 ms, total 0.018730 s, 663630 live, 7 rounds, 7 barriers, 672709 items, 305 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 21.275 ms, mean 21.275 ms, total 0.021275 s, 663630 live, 7 rounds, 7 barriers, 672235 items, 269 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 20.886 ms, mean 20.886 ms, total 0.020886 s, 663630 live, 7 rounds, 7 barriers, 672953 items, 287 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 21.709 ms, mean 21.709 ms, total 0.021709 s, 663630 live, 7 rounds, 7 barriers, 672430 items, 266 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 22.541 ms, mean 22.541 ms, total 0.022541 s, 663630 live, 7 rounds, 7 barriers, 672221 items, 265 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 18.342 ms, mean 18.342 ms, total 0.018342 s, 663630 live, 7 rounds, 7 barriers, 672270 items, 222 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 17.822 ms, mean 17.822 ms, total 0.017822 s, 663630 live, 7 rounds, 7 barriers, 672745 items, 289 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 18.504 ms, mean 18.504 ms, total 0.018504 s, 663630 live, 7 rounds, 7 barriers, 672710 items, 272 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 19.149 ms, mean 19.149 ms, total 0.019149 s, 663630 live, 7 rounds, 7 barriers, 672185 items, 229 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 18.918 ms, mean 18.918 ms, total 0.018918 s, 663630 live, 7 rounds, 7 barriers, 672785 items, 211 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 15.785 ms, mean 15.785 ms, total 0.015785 s, 663630 live, 7 rounds, 7 barriers, 672601 items, 269 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 17.771 ms, mean 17.771 ms, total 0.017771 s, 663630 live, 7 rounds, 7 barriers, 672293 items, 200 steals
+live: 663630 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 62.319 ms, mean 62.319 ms, total 0.062319 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 60.404 ms, mean 60.404 ms, total 0.060404 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 60.229 ms, mean 60.229 ms, total 0.060229 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 52.191 ms, mean 52.191 ms, total 0.052191 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 56.364 ms, mean 56.364 ms, total 0.056364 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 52.463 ms, mean 52.463 ms, total 0.052463 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 57.623 ms, mean 57.623 ms, total 0.057623 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 61.970 ms, mean 61.970 ms, total 0.061970 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 70.107 ms, mean 70.107 ms, total 0.070107 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 63.547 ms, mean 63.547 ms, total 0.063547 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 65.812 ms, mean 65.812 ms, total 0.065812 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 60.775 ms, mean 60.775 ms, total 0.060775 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 56.936 ms, mean 56.936 ms, total 0.056936 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 52.886 ms, mean 52.886 ms, total 0.052886 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 56.904 ms, mean 56.904 ms, total 0.056904 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 53.082 ms, mean 53.082 ms, total 0.053082 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 54.361 ms, mean 54.361 ms, total 0.054361 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 54.282 ms, mean 54.282 ms, total 0.054282 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 56.040 ms, mean 56.040 ms, total 0.056040 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (1 threads): flood best 50.328 ms, mean 50.328 ms, total 0.050328 s, 926486 live, 7 rounds, 7 barriers, 945046 items, 0 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 44.050 ms, mean 44.050 ms, total 0.044050 s, 926486 live, 7 rounds, 7 barriers, 945229 items, 11 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 51.557 ms, mean 51.557 ms, total 0.051557 s, 926486 live, 7 rounds, 7 barriers, 943355 items, 22 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.843 ms, mean 40.843 ms, total 0.040843 s, 926486 live, 7 rounds, 7 barriers, 941774 items, 24 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.681 ms, mean 40.681 ms, total 0.040681 s, 926486 live, 7 rounds, 7 barriers, 940145 items, 22 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 39.864 ms, mean 39.864 ms, total 0.039864 s, 926486 live, 7 rounds, 7 barriers, 939420 items, 15 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 42.299 ms, mean 42.299 ms, total 0.042299 s, 926486 live, 7 rounds, 7 barriers, 939072 items, 17 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 42.947 ms, mean 42.947 ms, total 0.042947 s, 926486 live, 7 rounds, 7 barriers, 940249 items, 17 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 39.279 ms, mean 39.279 ms, total 0.039279 s, 926486 live, 7 rounds, 7 barriers, 940422 items, 16 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 44.279 ms, mean 44.279 ms, total 0.044279 s, 926486 live, 7 rounds, 7 barriers, 944788 items, 20 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 41.935 ms, mean 41.935 ms, total 0.041935 s, 926486 live, 7 rounds, 7 barriers, 939683 items, 17 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 43.225 ms, mean 43.225 ms, total 0.043225 s, 926486 live, 7 rounds, 7 barriers, 939212 items, 14 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 41.990 ms, mean 41.990 ms, total 0.041990 s, 926486 live, 7 rounds, 7 barriers, 940060 items, 17 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.409 ms, mean 40.409 ms, total 0.040409 s, 926486 live, 7 rounds, 7 barriers, 939478 items, 15 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 48.223 ms, mean 48.223 ms, total 0.048223 s, 926486 live, 7 rounds, 7 barriers, 945531 items, 18 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 42.249 ms, mean 42.249 ms, total 0.042249 s, 926486 live, 7 rounds, 7 barriers, 940063 items, 11 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 38.976 ms, mean 38.976 ms, total 0.038976 s, 926486 live, 7 rounds, 7 barriers, 940526 items, 21 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 39.799 ms, mean 39.799 ms, total 0.039799 s, 926486 live, 7 rounds, 7 barriers, 939730 items, 16 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 47.504 ms, mean 47.504 ms, total 0.047504 s, 926486 live, 7 rounds, 7 barriers, 945413 items, 17 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 44.257 ms, mean 44.257 ms, total 0.044257 s, 926486 live, 7 rounds, 7 barriers, 943815 items, 23 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (2 threads): flood best 40.361 ms, mean 40.361 ms, total 0.040361 s, 926486 live, 7 rounds, 7 barriers, 941324 items, 21 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 27.796 ms, mean 27.796 ms, total 0.027796 s, 926486 live, 7 rounds, 7 barriers, 940035 items, 505 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 28.611 ms, mean 28.611 ms, total 0.028611 s, 926486 live, 7 rounds, 7 barriers, 945304 items, 373 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 26.832 ms, mean 26.832 ms, total 0.026832 s, 926486 live, 7 rounds, 7 barriers, 940495 items, 293 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 25.647 ms, mean 25.647 ms, total 0.025647 s, 926486 live, 7 rounds, 7 barriers, 938738 items, 342 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 27.662 ms, mean 27.662 ms, total 0.027662 s, 926486 live, 7 rounds, 7 barriers, 942857 items, 364 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 33.195 ms, mean 33.195 ms, total 0.033195 s, 926486 live, 7 rounds, 7 barriers, 939442 items, 323 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 29.565 ms, mean 29.565 ms, total 0.029565 s, 926486 live, 7 rounds, 7 barriers, 944836 items, 313 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 26.271 ms, mean 26.271 ms, total 0.026271 s, 926486 live, 7 rounds, 7 barriers, 936470 items, 336 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 50.667 ms, mean 50.667 ms, total 0.050667 s, 926486 live, 7 rounds, 7 barriers, 944122 items, 299 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 24.420 ms, mean 24.420 ms, total 0.024420 s, 926486 live, 7 rounds, 7 barriers, 940197 items, 446 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 68.867 ms, mean 68.867 ms, total 0.068867 s, 926486 live, 7 rounds, 7 barriers, 935415 items, 277 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 36.871 ms, mean 36.871 ms, total 0.036871 s, 926486 live, 7 rounds, 7 barriers, 941763 items, 319 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 55.705 ms, mean 55.705 ms, total 0.055705 s, 926486 live, 7 rounds, 7 barriers, 937125 items, 439 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 32.220 ms, mean 32.220 ms, total 0.032220 s, 926486 live, 7 rounds, 7 barriers, 939508 items, 410 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 27.379 ms, mean 27.379 ms, total 0.027379 s, 926486 live, 7 rounds, 7 barriers, 936729 items, 371 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 24.094 ms, mean 24.094 ms, total 0.024094 s, 926486 live, 7 rounds, 7 barriers, 938885 items, 369 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 25.068 ms, mean 25.068 ms, total 0.025068 s, 926486 live, 7 rounds, 7 barriers, 943447 items, 335 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 30.317 ms, mean 30.317 ms, total 0.030317 s, 926486 live, 7 rounds, 7 barriers, 936225 items, 290 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 28.634 ms, mean 28.634 ms, total 0.028634 s, 926486 live, 7 rounds, 7 barriers, 940035 items, 246 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK
+p2async (8 threads): flood best 25.786 ms, mean 25.786 ms, total 0.025786 s, 926486 live, 7 rounds, 7 barriers, 938812 items, 363 steals
+live: 926486 entries, 0 differ from oracle/p2_live.u32
+P2 OK

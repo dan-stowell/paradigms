@@ -165,3 +165,19 @@ relocates (3b) and compares the image. It never reads `p3_addr_all.u32`. P3 pipe
 `p3_addr_all.u32` is hlink's raw `addr` array: besides image addresses it holds PC-table offsets of non-placed
 symbols (layout.c `addrUnit`), so 661,018 ids differ from "placed address through canon"; no relocation reads
 those. Found by Codex (results/codex-c.md), fixed by extracting the specials.
+
+### Asynchronous reach reference
+
+`p2async.c` keeps P2's transfer rules and serial method phase, with private LIFO
+stacks and mutex-protected published chunks (up to 256 items) for stealing.
+Outstanding work credits cover both private work and published chunks; idle
+workers sleep, and each round ends with one pthread join phase. There are no
+per-level barriers. `OMP_NUM_THREADS` selects its pthread count for comparison
+with `p2par`; it does not use the OpenMP runtime or its wait policy.
+
+Build with `gcc -O2 -march=native -pthread -o build-g/p2async ref/flat/p2async.c`;
+run `OMP_NUM_THREADS=8 build-g/p2async data/minio 100` (last argument: repetitions).
+Both reach programs report mean/total kernel time and final-repetition item
+counts in addition to best time. See `results/codex-g.md` for the interleaved
+measurements and the distinction between identical live sets and variable pops.
+`check.sh` defaults to `build-g/`; set `BUILD_DIR` to override it.

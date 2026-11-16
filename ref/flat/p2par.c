@@ -39,7 +39,8 @@ int main(int argc, char **argv) {
 	u64 hs = 1;
 	while (hs < 4 * nsig + 64) hs <<= 1;
 	u64 *sigTab = malloc(hs * 8);
-	double best = 1e9;
+	double best = 1e9, total = 0;
+	u64 items = 0;
 	size_t nlive = 0;
 	int levels = 0, rounds = 0;
 	for (int rep = 0; rep < (argc > 2 ? atoi(argv[2]) : 7); rep++) {
@@ -49,12 +50,14 @@ int main(int argc, char **argv) {
 		double t0 = now();
 		fr.n = mk.n = 0;
 		levels = rounds = 0;
+		items = 0;
 		int reflectSeen = 0;
 		for (size_t i = 0; i < nroots; i++) if (tas(&live[roots[i]])) push(&fr, roots[i]);
 		for (;;) {
 			rounds++;
 			while (fr.n) {
 				levels++;
+				items += fr.n;
 				#pragma omp parallel
 				{
 					int w = omp_get_thread_num();
@@ -127,6 +130,7 @@ int main(int argc, char **argv) {
 			if (fr.n == 0) break;
 		}
 		double t1 = now();
+		total += t1 - t0;
 		if (t1 - t0 < best) best = t1 - t0;
 	}
 	nlive = 0;
@@ -134,6 +138,7 @@ int main(int argc, char **argv) {
 	u32 *list = malloc(4 * nlive), k = 0;
 	for (u32 g = 1; g < N; g++) if (live[g]) list[k++] = g;
 	printf("p2par (%d threads): flood best %.1f ms, %zu live, %d levels in %d rounds\n", T, best * 1e3, nlive, levels, rounds);
+	printf("mean %.3f ms, total %.6f s, %d barriers, %llu items\n", total * 1e3 / (argc > 2 ? atoi(argv[2]) : 7), total, levels, (unsigned long long)items);
 	long bad = check32("live", list, nlive, "oracle/p2_live.u32");
 	printf(bad ? "P2 FAIL\n" : "P2 OK\n");
 	return bad != 0;
