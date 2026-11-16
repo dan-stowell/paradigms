@@ -43,3 +43,19 @@ read-modify-write in parity passes (the obvious split+vectorize: 26 s); the patc
 entry-0 indices on untaken select sides (Halide evaluates both: 200 -> 160 ms). Impossible: fusing copy and patch
 (two updates of one Func; compute_with refused); exact-width stores in a vector loop. Top K templates (rest as glue):
 emit is per piece (~42 ns) and per hole (~5.8 ns), not per byte (all-glue copy of 60.7 MB: 12.8 / 4.8 ms).
+
+
+**4f. codegen from the flattened stream** (ATTACKS 4 step 1; results/halide-p4flat.md). Correct: P4 OK on
+minio-p4 and kube-p4, 1 and 8 threads (`HL_NUM_THREADS=8 $B/p4f $D4 all`: code, all fn offsets, sorted relocations).
+Timed 19:36-19:45Z, load 3.8-9.1, 5 interleaved rounds, emit ms min / median / max:
+- MinIO, D stream: **41.1 / 41.9 / 43.1** (1 thread) and **13.2 / 15.8 / 25.5** (8). The template emit was 157-162 /
+  23-25, so flattening gives 3.8x / 1.5x.
+- MinIO, H1 stream (integers baked in): **12.2 / 12.8 / 14.1** (1) and **5.3 / 6.0 / 8.4** (8).
+- Same window: Futhark 4D 67.4 / 22.7 median, p4runs D 46.3 / 13.8, p4runs B 41.1 / 11.8, p4holes H1 27.6 / 7.7.
+- kube: D 48.4 / 18.3, H1 17.1 / 8.3 median.
+- Prep (serial C, apart): 250-336 ms.
+
+gen_p4f 59 + driver/prep 213 lines. Easy: a pure copy, one flat scatter of records, a relocation copy (D and B are
+the same input here). Forced: scratch bytes for records narrower than 4. Impossible: nothing. H1 cuts the emit
+3.0-3.3x (1 thread) and 2.3-2.6x (8 threads), against C's 1.55x, because the per-record patch (about 5 ns) was 80%
+of Halide's flat emit.

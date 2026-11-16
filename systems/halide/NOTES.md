@@ -230,6 +230,25 @@ Data contract: `ref/p4/README.md`. Check (each run checks itself; ends with `P4 
 Every variant built is correct (all emit variants except the `diag*` diagnostics, and all 4 layouts, checked
 against the oracle at 1 and 8 threads; top-K for K = 0, 256, 1024, 4096, 16384, all).
 
+## P4 over the flattened emit stream (ATTACKS 4 step 1; results/halide-p4flat.md)
+
+`gen_p4f.cpp` (EmitFlat) + `p4f.cpp` (C prep, driver, checks); `systems/halide/bench4f.sh [ROUNDS [DATA]]`.
+- **The prep** is serial C and timed apart (p4runs' construct): the blob with the patched fields zeroed, patch
+  records (an 8-byte integer as two 4-byte parts), the relocations complete. H1 bakes the integers into the blob
+  and leaves only the rel32 records.
+- **The emit** is `code(x) = blob(x)` (vectorized 64, parallel per 64 KB), one update over (byte, record) with 4
+  unrolled byte stores (scratch bytes past the code for narrower records), and `rel(k)` = the columns. `_r32`: one
+  exact 4-lane store per record, for the H1 stream only.
+- **Results**, MinIO, 19:36Z, load 4-6, median ms on 1 / 8 threads:
+  - Halide: D 41.9 / 15.8, H1 12.8 / 6.0. The template emit was 158 / 24.
+  - Same window: Futhark 4D 67.4 / 22.7, p4runs D 46.3 / 13.8, p4runs B 41.1 / 11.8, p4holes H1 27.6 / 7.7.
+  - kube is 1.1-1.3x slower and keeps the same order.
+- **Split** (1 thread): the copy takes 7.1 ms, the 6.34 M records 33 ms (about 5.3 ns each), the relocation copy
+  2 ms. That is why H1 helps Halide 3x and C only 1.55x: Halide's flat emit is almost all records. Once the
+  integers are baked in, what is left is close to bandwidth.
+- Caveat: C's p4runs and p4holes collect relocations and copy run by run inside their timed emit. Halide and
+  Futhark copy prepared columns and one blob, which is less work in the timed region.
+
 ## The shape in Halide
 
 - **Templates** (template-only: a code generator builds it once with its library; 49 lines): per template
