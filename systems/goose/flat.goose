@@ -22,6 +22,10 @@ extern fn flat_read_range(path: const u8[:], out: u64[>..]&, elem: i64, first: i
 extern fn flat_read_range(path: const u8[:], out: i64[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 extern fn flat_read_range(path: const u8[:], out: Key[>..]&, elem: i64, first: i64, count: i64) -> bool = "flat_read_range";
 
+// the output's pages (flatio.c, ATTACKS.md 2): fresh 4 KB or 2 MB pages for out's next n bytes; minor faults so far
+extern fn fresh_pages(out: u8[>..]&, n: i64, huge: bool) -> i64;
+extern fn minor_faults(thread: bool) -> i64;
+
 // the data directory: the first argument
 fn dir_arg() -> u8[>..] {
     let a = args();
@@ -119,6 +123,12 @@ fn ms(t0: f64, t1: f64) -> f64 { (t1 - t0) * 1000.0 }
 fn env_set(name: const u8[:]) -> bool {
     var v: u8[>..] = [];
     return env(name, v) && v.len > 0;
+}
+
+fn env_int(name: const u8[:], dflt: i64) -> i64 {
+    var v: u8[>..] = [];
+    if env(name, v) { let n, ok = parse_int(v); if ok && n >= 1 { return n; } }
+    return dflt;
 }
 
 fn report(note: u8[>..]&, what: const u8[:], t0: f64, t1: f64) {

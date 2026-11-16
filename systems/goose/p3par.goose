@@ -6,7 +6,11 @@
 //   3b: the image is owned by address range: worker k builds bytes [A_k, A_k+1) of it, every placed symbol
 //       that overlaps the range copied and patched (writes clipped to the range), and sends that segment to
 //       main, which puts the segments together. Each worker holds all of 3b's inputs (read in parallel).
+//       Timed two ways: the image left distributed (each worker's segment in its own memory, as a linker that has each
+//       worker write its range of the output file would leave it), and gathered into one array in main.
 //   p3par /home/exedev/paradigms/data/minio [workers 1..8]
+// P3_REPS=n: the distributed 3b n times, each segment into fresh never-touched pages (faults inside the timed
+// region); P3_THP=1: those pages, and main's gathered image, are 2 MB hugetlb pages (ATTACKS.md 2; flatio.c).
 import flat;
 import par;
 
@@ -23,6 +27,7 @@ struct AddrPart { lo: i64, vals: u32[] }
 struct Seg { at: i64, bytes: u8[] }
 struct Ready { k: i64 }
 struct Go { go: bool }
+struct Done { k: i64, ms: f64, faults: i64, huge: i64 }
 
 fn rnd(v: u32, a: u32) -> u32 { (v + a - 1) & ~(a - 1) }
 
@@ -178,19 +183,31 @@ fn run<T>(k: i64, W: i64, tag: T) {
     }
     qput(AddrPart { lo: lo, vals: out[..] });
     let t1 = clock();
-    // ---- 3b: this worker's part of the image
+    // ---- 3b: this worker's part of the image, P3_REPS times (main starts each rep)
     let nimg = meta("image_bytes");
     let a0 = part_lo(nimg, k, W);
     let a1 = part_lo(nimg, k + 1, W);
+    let reps = env_int("P3_REPS", 1);
+    let huge = env_set("P3_THP");
     var seg: u8[>..] = [];
-    let nerr = build_segment(a0, a1, seg);
-    let t2 = clock();
+    var nerr = 0;
+    var t2 = 0.0;
+    for rep in reps {
+        let g = qget<Mail<T, Go>>();
+        seg.clear();
+        let f0 = minor_faults(true);
+        let ta = clock();
+        let hb = fresh_pages(seg, a1 - a0, huge);
+        nerr = build_segment(a0, a1, seg);
+        t2 = clock();
+        qput(Done { k: k, ms: (t2 - ta) * 1000.0, faults: minor_faults(true) - f0, huge: hb });
+    }
+    let g = qget<Mail<T, Go>>();
     qput(Seg { at: a0, bytes: seg[..] });
     if nerr != 0 { print("worker ", k, ": ", nerr, " relocation errors"); }
     var note: u8[>..] = [];
     format(note, "  worker ", k, ": symbols ", lo, "..", hi, ", image ", a0, "..", a1, "; ");
     report(note, "3a", t0, t1);
-    report(note, "3b segment", t1, t2);
     if env_set("P3TRACE") { print(note); }
 }
 
@@ -286,15 +303,42 @@ fn main() {
     }
     place_typelinks(tlv, addr);
     let t2 = clock();
-    // ---- 3b: the segments
+    // ---- 3b distributed: from the go to the last worker's segment built, P3_REPS times
+    let reps = env_int("P3_REPS", 1);
+    let huge = env_set("P3_THP");
+    var times: f64[>..] = [];
+    var wmax = 0.0;
+    var flt = 0;
+    var hb = 0;
+    for rep in reps {
+        let ta = clock();
+        for j in W { send(j, Go { go: true }); }
+        wmax = 0.0;
+        flt = 0;
+        hb = 0;
+        for j in W {
+            let d = qget<Done>();
+            wmax = max(wmax, d.ms);
+            flt += d.faults;
+            hb += if d.huge > 0 { d.huge } else { 0 };
+        }
+        times.push((clock() - ta) * 1000.0);
+    }
+    let t2a = clock();
+    // ---- 3b gathered: the segments into one array in main
     var img: u8[>..] = [];
-    img.resize(meta("image_bytes"), 0);
+    let f0 = minor_faults(false);
     let t2b = clock();
+    let mhb = fresh_pages(img, meta("image_bytes"), huge);
+    img.resize(meta("image_bytes"), 0);
+    let t2c = clock();
+    for j in W { send(j, Go { go: true }); }
     for j in W {
         let s = qget<Seg>();
         img[s.at..s.at + s.bytes.len].move_from(s.bytes[..]);
     }
     let t3 = clock();
+    let gflt = minor_faults(false) - f0;
     for id in ids { thread_wait(id); }
     let t4 = clock();
     var bad = check32("addr", addr, "oracle/p3_addr.u32");
@@ -318,10 +362,22 @@ fn main() {
     format(note, "p3par goose (", W, " workers): ");
     report(note, "spawn+load", t0, t1);
     report(note, "3a", t1, t2);
-    report(note, "3b image alloc", t2, t2b);
-    report(note, "3b segments+gather", t2b, t3);
-    report(note, "warm 3a+3b", t1, t3);
-    report(note, "exit", t3, t4);
+    format(note, "3b distributed (", if huge { "2 MB" } else { "4 KB" }, " pages, x", reps, ") ");
+    sort(times) { x, y => x < y };
+    format_flt(note, times[0], 1);
+    format(note, " / ");
+    format_flt(note, times[times.len / 2], 1);
+    format(note, " / ");
+    format_flt(note, times[times.len - 1], 1);
+    format(note, " ms min/median/max (slowest worker ");
+    format_flt(note, wmax, 1);
+    format(note, " ms, ", flt, " minor faults/rep in workers, ", hb, " bytes on huge pages)  ");
+    report(note, "gather: image alloc", t2b, t2c);
+    report(note, "segments into it", t2c, t3);
+    format(note, "(", gflt, " faults in the process, ", mhb, " image bytes on huge pages)  ");
+    format(note, "warm 3a + best 3b distributed ");
+    format_flt(note, ms(t1, t2) + times[0], 1);
+    format(note, " ms  ");
     format(note, nbad, " placed symbols differ from oracle/p3_image.bin");
     print(note);
     bad += nbad;
