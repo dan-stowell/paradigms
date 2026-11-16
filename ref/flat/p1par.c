@@ -31,7 +31,9 @@ int main(int argc, char **argv) {
 	rec *recs = malloc(sizeof(rec) * ((size_t)N + nw)); // more than enough
 	u32 *slotOf = malloc(4 * ((size_t)N + nw));          // the slot of each record (0: wanted)
 	size_t pbase[NP + 1];
-	double best = 1e9, bj = 0, bt = 0;
+	double best = 1e9, bj = 0, bt = 0, sumj = 0, sumt = 0;
+	int reps = argc > 2 ? atoi(argv[2]) : 7;
+	if (reps < 1) { fprintf(stderr, "rep count must be positive\n"); return 2; }
 	for (int rep = 0; rep < (argc > 2 ? atoi(argv[2]) : 7); rep++) {
 		double t0 = now();
 		memset(cnt, 0, sizeof(size_t) * C * NP);
@@ -141,9 +143,11 @@ int main(int argc, char **argv) {
 			}
 		}
 		double t2 = now();
+		sumj += t1 - t0; sumt += t2 - t0;
 		if (t2 - t0 < best) best = t2 - t0, bj = t1 - t0, bt = t2 - t1;
 	}
 	printf("p1par (%d threads): best %.1f ms = join by name %.1f + relocation targets %.1f\n", T, best * 1e3, bj * 1e3, bt * 1e3);
+	printf("p1par mean: join %.6f ms total %.6f ms (%d reps, %.6f s kernel)\n", sumj/reps*1e3, sumt/reps*1e3, reps, sumt);
 	long bad = check32("canon", canon, (size_t)N + 1, "oracle/p1_canon.u32");
 	bad += check32("builtin", builtin, nb, "oracle/p1_builtin.u32");
 	bad += check32("reltarget", tgt, nrel, "oracle/p1_reltarget.u32");
